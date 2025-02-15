@@ -18,24 +18,31 @@ class FileTabBarState extends State<FileTabBar> {
   int activeDocIndex = 0;
   @override
   Widget build(BuildContext context) {
-    final List<GestureDetector> tabs = [];
+    final List<Widget> tabs = [];
+
     for (int i = 0; i < widget.documents.length; i++) {
       tabs.add(
-        GestureDetector(
-          onTap: () => AffogatoEvents.editorInstanceSetActiveEvents.add(
-            WindowEditorInstanceSetActiveEvent(document: widget.documents[i]),
-          ),
-          child: Text(
-            widget.documents[i].docName,
-            style: TextStyle(
-              color: i == activeDocIndex ? Colors.red : Colors.blue,
+        Container(
+          height: widget.stylingConfigs.tabBarHeight,
+          color: i == activeDocIndex
+              ? widget.stylingConfigs.editorColor
+              : Colors.transparent,
+          child: GestureDetector(
+            onTap: () => AffogatoEvents.editorInstanceSetActiveEvents.add(
+              WindowEditorInstanceSetActiveEvent(document: widget.documents[i]),
+            ),
+            child: Text(
+              widget.documents[i].docName,
+              style: TextStyle(
+                color: i == activeDocIndex ? Colors.red : Colors.blue,
+              ),
             ),
           ),
         ),
       );
     }
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: widget.stylingConfigs.tabBarHeight,
       child: Row(

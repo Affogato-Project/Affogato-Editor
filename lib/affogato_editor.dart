@@ -35,16 +35,27 @@ class AffogatoWindowState extends State<AffogatoWindow> {
   @override
   void initState() {
     AffogatoEvents.editorPaneAddEvents.stream.listen((event) {
-      editorPanes.add(
-        EditorPane(
-          documents: [],
-          layoutConfigs: event.layoutConfigs,
-          stylingConfigs: widget.stylingConfigs,
-          performanceConfigs: widget.performanceConfigs,
-          windowKey: windowKey,
-        ),
-      );
+      setState(() {
+        editorPanes.add(
+          EditorPane(
+            documents: [],
+            layoutConfigs: event.layoutConfigs,
+            stylingConfigs: widget.stylingConfigs,
+            performanceConfigs: widget.performanceConfigs,
+            windowKey: windowKey,
+          ),
+        );
+      });
     });
+    // debug
+    AffogatoEvents.editorPaneAddEvents.add(
+      WindowEditorPaneAddEvent(
+        layoutConfigs: LayoutConfigs(
+          width: widget.stylingConfigs.windowWidth - 80,
+          height: widget.stylingConfigs.windowHeight - 100,
+        ),
+      ),
+    );
     super.initState();
   }
 
@@ -52,7 +63,8 @@ class AffogatoWindowState extends State<AffogatoWindow> {
   Widget build(BuildContext context) {
     return Material(
       key: windowKey,
-      child: Container(
+      color: widget.stylingConfigs.windowColor,
+      child: SizedBox(
         width: widget.stylingConfigs.windowWidth,
         height: widget.stylingConfigs.windowHeight,
         child: Stack(

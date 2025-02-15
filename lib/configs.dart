@@ -18,11 +18,17 @@ class AffogatoStylingConfigs {
   final double windowWidth;
   final double windowHeight;
   final double tabBarHeight;
+  final Color windowColor;
+  final Color editorColor;
+  final Color borderColor;
 
   const AffogatoStylingConfigs({
     required this.windowHeight,
     required this.windowWidth,
     required this.tabBarHeight,
+    required this.windowColor,
+    required this.editorColor,
+    required this.borderColor,
   });
 }
 

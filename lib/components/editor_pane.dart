@@ -26,14 +26,20 @@ class EditorPaneState extends State<EditorPane> {
 
   @override
   void initState() {
+    AffogatoEvents.editorInstanceSetActiveEvents.stream.listen((event) {
+      setState(() {
+        currentDocument = event.document;
+      });
+    });
+
     documents.addAll(widget.documents);
     if (documents.isEmpty) {
       documents.add(AffogatoDocument(srcContent: '', docName: 'Untitled'));
+      AffogatoEvents.editorInstanceSetActiveEvents.add(
+        WindowEditorInstanceSetActiveEvent(document: documents.first),
+      );
     }
     currentDocument = documents.first;
-    AffogatoEvents.editorInstanceSetActiveEvents.stream.listen((event) {
-      currentDocument = event.document;
-    });
     super.initState();
   }
 
@@ -46,12 +52,13 @@ class EditorPaneState extends State<EditorPane> {
         children: [
           FileTabBar(
             stylingConfigs: widget.stylingConfigs,
-            documents: widget.documents,
+            documents: documents,
           ),
-          SizedBox(
+          Container(
             width: widget.layoutConfigs.width,
             height: widget.layoutConfigs.height -
                 widget.stylingConfigs.tabBarHeight,
+            color: widget.stylingConfigs.editorColor,
             child: AffogatoEditorInstance(
               document: currentDocument,
               instanceState: widget.performanceConfigs.rendererType ==
