@@ -12,6 +12,8 @@ dependencies:
     sdk: flutter
   affogato_core:
     path: ../AffogatoCore
+  xml: ^6.5.0
+  highlight: ^0.7.0
 
 dev_dependencies:
   flutter_test:

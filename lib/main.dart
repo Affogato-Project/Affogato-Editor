@@ -9,6 +9,9 @@ void main(List<String> args) {
         windowHeight: 800,
         tabBarHeight: 80,
       ),
+      performanceConfigs: AffogatoPerformanceConfigs(
+        rendererType: InstanceRendererType.adHoc,
+      ),
     ),
   );
 }

@@ -25,3 +25,22 @@ class AffogatoStylingConfigs {
     required this.tabBarHeight,
   });
 }
+
+enum InstanceRendererType {
+  /// Saves the [AffogatoInstanceState] of each opened editor. Uses slightly
+  /// more memory but allows high-speed document switching. More suited for large
+  /// documents which take time to parse and highlight.
+  savedState,
+
+  /// Runs the tokeniser-parser-resolver-painter pipeline every time the document
+  /// is focused. Better suited for small to medium-sized documents.
+  adHoc,
+}
+
+class AffogatoPerformanceConfigs {
+  final InstanceRendererType rendererType;
+
+  const AffogatoPerformanceConfigs({
+    required this.rendererType,
+  });
+}

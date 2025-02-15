@@ -4,11 +4,15 @@ class EditorPane extends StatefulWidget {
   final List<AffogatoDocument> documents;
   final LayoutConfigs layoutConfigs;
   final AffogatoStylingConfigs stylingConfigs;
+  final AffogatoPerformanceConfigs performanceConfigs;
+  final GlobalKey<AffogatoWindowState> windowKey;
 
   const EditorPane({
     required this.stylingConfigs,
     required this.layoutConfigs,
+    required this.performanceConfigs,
     required this.documents,
+    required this.windowKey,
     super.key,
   });
 
@@ -18,10 +22,18 @@ class EditorPane extends StatefulWidget {
 
 class EditorPaneState extends State<EditorPane> {
   final List<AffogatoDocument> documents = [];
+  late AffogatoDocument currentDocument;
 
   @override
   void initState() {
     documents.addAll(widget.documents);
+    if (documents.isEmpty) {
+      documents.add(AffogatoDocument(srcContent: '', docName: 'Untitled'));
+    }
+    currentDocument = documents.first;
+    AffogatoEvents.editorInstanceSetActiveEvents.stream.listen((event) {
+      currentDocument = event.document;
+    });
     super.initState();
   }
 
@@ -36,10 +48,18 @@ class EditorPaneState extends State<EditorPane> {
             stylingConfigs: widget.stylingConfigs,
             documents: widget.documents,
           ),
-          // place the affogato editor instance here
-          // whether you maintain a separate state for each document
-          // or load it on-the-fly
-          // can be a configurable parameter
+          SizedBox(
+            width: widget.layoutConfigs.width,
+            height: widget.layoutConfigs.height -
+                widget.stylingConfigs.tabBarHeight,
+            child: AffogatoEditorInstance(
+              document: currentDocument,
+              instanceState: widget.performanceConfigs.rendererType ==
+                      InstanceRendererType.savedState
+                  ? widget.windowKey.currentState!.savedStates[currentDocument]
+                  : null,
+            ),
+          ),
         ],
       ),
     );

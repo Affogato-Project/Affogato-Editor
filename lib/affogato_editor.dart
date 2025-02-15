@@ -4,18 +4,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:affogato_core/affogato_core.dart';
+import 'package:affogato_editor/battery_langs/generic/language_bundle.dart';
 
 part './configs.dart';
 part './events.dart';
+part './instance_state.dart';
 part './components/editor_pane.dart';
 part './components/file_tab_bar.dart';
 part './components/editor_instance.dart';
 
 class AffogatoWindow extends StatefulWidget {
   final AffogatoStylingConfigs stylingConfigs;
+  final AffogatoPerformanceConfigs performanceConfigs;
 
   const AffogatoWindow({
     required this.stylingConfigs,
+    required this.performanceConfigs,
     super.key,
   });
 
@@ -24,16 +28,20 @@ class AffogatoWindow extends StatefulWidget {
 }
 
 class AffogatoWindowState extends State<AffogatoWindow> {
+  final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
   final List<EditorPane> editorPanes = [];
+  final Map<AffogatoDocument, AffogatoInstanceState> savedStates = {};
 
   @override
   void initState() {
     AffogatoEvents.editorPaneAddEvents.stream.listen((event) {
       editorPanes.add(
         EditorPane(
-          documents: [AffogatoDocument(srcContent: '', docName: 'Untitled')],
+          documents: [],
           layoutConfigs: event.layoutConfigs,
           stylingConfigs: widget.stylingConfigs,
+          performanceConfigs: widget.performanceConfigs,
+          windowKey: windowKey,
         ),
       );
     });
@@ -43,6 +51,7 @@ class AffogatoWindowState extends State<AffogatoWindow> {
   @override
   Widget build(BuildContext context) {
     return Material(
+      key: windowKey,
       child: Container(
         width: widget.stylingConfigs.windowWidth,
         height: widget.stylingConfigs.windowHeight,

@@ -7,6 +7,12 @@ class AffogatoEvents {
       StreamController.broadcast();
   static final StreamController<WindowEditorInstanceSetActiveEvent>
       editorInstanceSetActiveEvents = StreamController.broadcast();
+
+  static final StreamController<EditorInstanceCreateEvent>
+      editorInstanceCreateEvents = StreamController.broadcast();
+
+  static final StreamController<EditorInstanceLoadEvent>
+      editorInstanceLoadEvents = StreamController.broadcast();
 }
 
 sealed class Event {
@@ -43,4 +49,22 @@ class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
   const WindowEditorInstanceSetActiveEvent({
     required this.document,
   }) : super('setActive');
+}
+
+/// EDITOR AND DOCUMENT EVENTS ///
+
+class EditorEvent extends Event {
+  const EditorEvent(String id) : super('editor.$id');
+}
+
+class EditorInstanceEvent extends EditorEvent {
+  const EditorInstanceEvent(String id) : super('instance.$id');
+}
+
+class EditorInstanceCreateEvent extends EditorInstanceEvent {
+  const EditorInstanceCreateEvent() : super('create');
+}
+
+class EditorInstanceLoadEvent extends EditorInstanceEvent {
+  const EditorInstanceLoadEvent() : super('load');
 }
