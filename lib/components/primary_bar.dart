@@ -3,12 +3,14 @@ part of affogato.editor;
 class PrimaryBar extends StatefulWidget {
   final double expandedWidth;
   final EditorTheme editorTheme;
-  final List<FileBrowserEntry> items;
+  final List<AffogatoFileItem> items;
+  final AffogatoWorkspaceConfigs workspaceConfigs;
 
   const PrimaryBar({
     required this.expandedWidth,
     required this.items,
     required this.editorTheme,
+    required this.workspaceConfigs,
     super.key,
   });
 
@@ -32,6 +34,7 @@ class PrimaryBarState extends State<PrimaryBar> {
                     entry: entry,
                     indent: 0,
                     editorTheme: widget.editorTheme,
+                    workspaceConfigs: widget.workspaceConfigs,
                   ),
               ],
             ),
@@ -40,24 +43,41 @@ class PrimaryBarState extends State<PrimaryBar> {
   }
 }
 
-class FileBrowserEntry {
-  const FileBrowserEntry();
+/// Used to represent documents and directories when they are first loaded into
+/// the editor. Afterwards, the editor will work with and manipulate these entities
+/// using the [AffogatoFileItem], which passes IDs around rather than the actual entities.
+sealed class FileItem {
+  const FileItem();
 }
 
-class FileBrowserDocumentEntry extends FileBrowserEntry {
+class FileDocumentItem extends FileItem {
   final AffogatoDocument document;
 
-  const FileBrowserDocumentEntry({
+  const FileDocumentItem({
     required this.document,
   });
 }
 
-class FileBrowserDirectoryEntry extends FileBrowserEntry {
+class FileDirectoryItem extends FileItem {
   final String dirName;
-  final List<FileBrowserEntry> entries;
+  final List<FileItem> entries;
 
-  const FileBrowserDirectoryEntry({
+  const FileDirectoryItem({
     required this.dirName,
     required this.entries,
   });
+}
+
+sealed class AffogatoFileItem {
+  const AffogatoFileItem();
+}
+
+class AffogatoDocumentItem extends AffogatoFileItem {
+  final String id;
+  const AffogatoDocumentItem(this.id);
+}
+
+class AffogatoDirectoryItem extends AffogatoFileItem {
+  final String dirName;
+  const AffogatoDirectoryItem(this.dirName);
 }

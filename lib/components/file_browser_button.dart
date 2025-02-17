@@ -3,12 +3,14 @@ part of affogato.editor;
 class FileBrowserButton extends StatefulWidget {
   final EditorTheme editorTheme;
   final double indent;
-  final FileBrowserEntry entry;
+  final AffogatoFileItem entry;
+  final AffogatoWorkspaceConfigs workspaceConfigs;
 
   const FileBrowserButton({
     required this.entry,
     required this.indent,
     required this.editorTheme,
+    required this.workspaceConfigs,
     super.key,
   });
 
@@ -30,19 +32,18 @@ class FileBrowserButtonState extends State<FileBrowserButton>
         children: [
           GestureDetector(
             onTapUp: (_) {
-              if (widget.entry is FileBrowserDirectoryEntry) {
+              if (widget.entry is AffogatoDirectoryItem) {
                 setState(() {
                   expanded = !expanded;
                 });
               }
             },
             onDoubleTap: () {
-              if (widget.entry is FileBrowserDocumentEntry) {
+              if (widget.entry is AffogatoDocumentItem) {
                 setState(() {
                   AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
                     WindowEditorRequestDocumentSetActiveEvent(
-                      document:
-                          (widget.entry as FileBrowserDocumentEntry).document,
+                      documentId: (widget.entry as AffogatoDocumentItem).id,
                     ),
                   );
                 });
@@ -55,7 +56,7 @@ class FileBrowserButtonState extends State<FileBrowserButton>
                 SizedBox(width: widget.indent),
                 Padding(
                   padding: const EdgeInsets.only(left: 4, right: 4),
-                  child: widget.entry is FileBrowserDirectoryEntry
+                  child: widget.entry is AffogatoDirectoryItem
                       ? Icon(
                           (expanded
                               ? Icons.arrow_downward
@@ -68,25 +69,26 @@ class FileBrowserButtonState extends State<FileBrowserButton>
                         ),
                 ),
                 Text(
-                  widget.entry is FileBrowserDirectoryEntry
-                      ? (widget.entry as FileBrowserDirectoryEntry).dirName
-                      : (widget.entry as FileBrowserDocumentEntry)
-                          .document
+                  widget.entry is AffogatoDirectoryItem
+                      ? (widget.entry as AffogatoDirectoryItem).dirName
+                      : widget.workspaceConfigs
+                          .getDoc((widget.entry as AffogatoDocumentItem).id)
                           .docName,
                   style: TextStyle(color: widget.editorTheme.defaultTextColor),
                 )
               ],
             ),
           ),
-          if (widget.entry is FileBrowserDirectoryEntry && expanded) ...[
-            for (final subentry
-                in (widget.entry as FileBrowserDirectoryEntry).entries)
+          /* if (widget.entry is AffogatoDirectoryItem && expanded) ...[
+            for (final subentry in (widget.workspaceConfigs
+                .getDir((widget.entry as AffogatoDirectoryItem).dirName)))
               FileBrowserButton(
                 entry: subentry,
                 indent: widget.indent + 16,
                 editorTheme: widget.editorTheme,
+                workspaceConfigs: widget.workspaceConfigs,
               ),
-          ],
+          ], */
         ],
       ),
     );

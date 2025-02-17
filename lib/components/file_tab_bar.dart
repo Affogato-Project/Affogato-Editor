@@ -2,13 +2,17 @@ part of affogato.editor;
 
 class FileTabBar extends StatefulWidget {
   final AffogatoStylingConfigs stylingConfigs;
-  final List<AffogatoDocument> documents;
-  final AffogatoDocument? currentDoc;
+  final List<String> documentIds;
+  final String? currentDocId;
+  final String paneId;
+  final AffogatoWorkspaceConfigs workspaceConfigs;
 
   const FileTabBar({
     required this.stylingConfigs,
-    required this.documents,
-    required this.currentDoc,
+    required this.workspaceConfigs,
+    required this.documentIds,
+    required this.currentDocId,
+    required this.paneId,
     super.key,
   });
 
@@ -22,8 +26,8 @@ class FileTabBarState extends State<FileTabBar>
   Widget build(BuildContext context) {
     final List<Widget> tabs = [];
 
-    for (int i = 0; i < widget.documents.length; i++) {
-      final bool isCurrent = widget.documents[i] == widget.currentDoc;
+    for (int i = 0; i < widget.documentIds.length; i++) {
+      final bool isCurrent = widget.documentIds[i] == widget.currentDocId;
       tabs.add(
         Container(
           height: widget.stylingConfigs.tabBarHeight,
@@ -34,7 +38,7 @@ class FileTabBarState extends State<FileTabBar>
             onTap: () {
               AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
                 WindowEditorRequestDocumentSetActiveEvent(
-                  document: widget.documents[i],
+                  documentId: widget.documentIds[i],
                 ),
               );
               setState(() {});
@@ -51,7 +55,9 @@ class FileTabBarState extends State<FileTabBar>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      widget.documents[i].docName,
+                      widget.workspaceConfigs
+                          .getDoc(widget.documentIds[i])
+                          .docName,
                       style: TextStyle(
                         color: isCurrent
                             ? widget.stylingConfigs.themeBundle.editorTheme
@@ -63,7 +69,14 @@ class FileTabBarState extends State<FileTabBar>
                     ),
                     const SizedBox(width: 10),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        AffogatoEvents.editorDocumentClosedEvents.add(
+                          EditorDocumentClosedEvent(
+                            documentId: widget.documentIds[i],
+                            paneId: widget.paneId,
+                          ),
+                        );
+                      },
                       icon: Icon(
                         Icons.close,
                         size: 10,

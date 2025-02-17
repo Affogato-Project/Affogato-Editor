@@ -40,10 +40,11 @@ class AffogatoWindowState extends State<AffogatoWindow>
     with utils.StreamSubscriptionManager {
   final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
   final List<EditorPane> editorPanes = [];
-  final Map<AffogatoDocument, AffogatoInstanceState> savedStates = {};
 
   @override
   void initState() {
+    widget.workspaceConfigs.buildDirStructure();
+
     registerListener(
       AffogatoEvents.editorPaneAddEvents.stream,
       (event) {
@@ -64,7 +65,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
             ),
             performanceConfigs: widget.performanceConfigs,
             workspaceConfigs: widget.workspaceConfigs,
-            documents: [],
+            documentIds: [],
             windowKey: windowKey,
           ),
         ),
@@ -81,7 +82,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
               ),
               performanceConfigs: widget.performanceConfigs,
               workspaceConfigs: widget.workspaceConfigs,
-              documents: entry.value,
+              documentIds: entry.value,
               windowKey: windowKey,
             ),
           ),
@@ -96,14 +97,14 @@ class AffogatoWindowState extends State<AffogatoWindow>
       AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.stream,
       (event) {
         for (final entry in widget.workspaceConfigs.paneDocumentData.entries) {
-          if (entry.value.contains(event.document)) {
+          if (entry.value.contains(event.documentId)) {
             hasBeenSetActive = true;
             // Respond by emitting the event that triggers the corresponding pane
             // to make the specified document active
             AffogatoEvents.editorInstanceSetActiveEvents.add(
               WindowEditorInstanceSetActiveEvent(
                 paneId: entry.key,
-                document: event.document,
+                documentId: event.documentId,
               ),
             );
           }
@@ -111,19 +112,31 @@ class AffogatoWindowState extends State<AffogatoWindow>
 
         // if no current panes contain the document
         if (!hasBeenSetActive) {
-          final MapEntry<String, List<AffogatoDocument>> firstPane =
+          final MapEntry<String, List<String>> firstPane =
               widget.workspaceConfigs.paneDocumentData.entries.first;
           // modify the first pane's document list to include the new document
-          firstPane.value.add(event.document);
+          firstPane.value.add(event.documentId);
           // trigger the event to make said pane activate the document
           AffogatoEvents.editorInstanceSetActiveEvents.add(
             WindowEditorInstanceSetActiveEvent(
               paneId: firstPane.key,
-              document: event.document,
+              documentId: event.documentId,
             ),
           );
         }
       },
+    );
+
+    registerListener(
+      AffogatoEvents.editorDocumentChangedEvents.stream,
+      (event) {},
+    );
+
+    // listen to document closing events, to re-assign the active instance and to
+    // update the workspace data accordingly
+    registerListener(
+      AffogatoEvents.editorDocumentClosedEvents.stream,
+      (event) {},
     );
 
     super.initState();
@@ -142,7 +155,12 @@ class AffogatoWindowState extends State<AffogatoWindow>
           children: [
             PrimaryBar(
               expandedWidth: 300,
-              items: widget.workspaceConfigs.codebase,
+              items: [
+                for (final key
+                    in widget.workspaceConfigs.documentsRegistry.keys)
+                  AffogatoDocumentItem(key)
+              ],
+              workspaceConfigs: widget.workspaceConfigs,
               editorTheme: widget.stylingConfigs.themeBundle.editorTheme,
             ),
             // Status bar

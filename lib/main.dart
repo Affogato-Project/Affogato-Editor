@@ -19,18 +19,18 @@ void main(List<String> args) {
         ),
         workspaceConfigs: AffogatoWorkspaceConfigs(
           paneDocumentData: {},
-          codebase: [
-            FileBrowserDirectoryEntry(
+          initStructure: [
+            FileDirectoryItem(
               dirName: 'MyDir',
               entries: [
-                FileBrowserDocumentEntry(
+                FileDocumentItem(
                   document: AffogatoDocument(
                     docName: 'MyDoc1',
                     srcContent: 'Hello',
                     maxVersioningLimit: 5,
                   ),
                 ),
-                FileBrowserDocumentEntry(
+                FileDocumentItem(
                   document: AffogatoDocument(
                     docName: 'MyDoc2',
                     srcContent: 'ge',

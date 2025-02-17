@@ -23,6 +23,9 @@ class AffogatoEvents {
   static final StreamController<EditorDocumentChangedEvent>
       editorDocumentChangedEvents = StreamController.broadcast();
 
+  static final StreamController<EditorDocumentClosedEvent>
+      editorDocumentClosedEvents = StreamController.broadcast();
+
   static final StreamController<EditorPaneAddDocumentEvent>
       editorPaneAddDocumentEvents = StreamController.broadcast();
 
@@ -62,18 +65,18 @@ class WindowEditorInstanceEvent extends WindowEvent {
 
 class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
   final String paneId;
-  final AffogatoDocument document;
+  final String documentId;
   const WindowEditorInstanceSetActiveEvent({
     required this.paneId,
-    required this.document,
+    required this.documentId,
   }) : super('setActive');
 }
 
 class WindowEditorRequestDocumentSetActiveEvent
     extends WindowEditorInstanceEvent {
-  final AffogatoDocument document;
+  final String documentId;
   const WindowEditorRequestDocumentSetActiveEvent({
-    required this.document,
+    required this.documentId,
   }) : super('requestSetActive');
 }
 
@@ -119,16 +122,26 @@ class EditorDocumentChangedEvent extends EditorDocumentEvent {
   const EditorDocumentChangedEvent(this.newContent) : super('change');
 }
 
+class EditorDocumentClosedEvent extends EditorDocumentEvent {
+  final String documentId;
+  final String paneId;
+
+  const EditorDocumentClosedEvent({
+    required this.documentId,
+    required this.paneId,
+  }) : super('close');
+}
+
 class EditorPaneEvent extends EditorEvent {
   const EditorPaneEvent(String id) : super('pane.$id');
 }
 
 class EditorPaneAddDocumentEvent extends EditorPaneEvent {
   final String paneId;
-  final AffogatoDocument document;
+  final String documentId;
 
   const EditorPaneAddDocumentEvent({
     required this.paneId,
-    required this.document,
+    required this.documentId,
   }) : super('addDoc');
 }

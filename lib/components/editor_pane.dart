@@ -1,7 +1,7 @@
 part of affogato.editor;
 
 class EditorPane extends StatefulWidget {
-  final List<AffogatoDocument> documents;
+  final List<String> documentIds;
   final LayoutConfigs layoutConfigs;
   final AffogatoStylingConfigs stylingConfigs;
   final AffogatoPerformanceConfigs performanceConfigs;
@@ -13,7 +13,7 @@ class EditorPane extends StatefulWidget {
     required this.layoutConfigs,
     required this.performanceConfigs,
     required this.workspaceConfigs,
-    required this.documents,
+    required this.documentIds,
     required this.windowKey,
     super.key,
   });
@@ -25,12 +25,12 @@ class EditorPane extends StatefulWidget {
 class EditorPaneState extends State<EditorPane>
     with utils.StreamSubscriptionManager {
   final String paneId = utils.generateId();
-  AffogatoDocument? currentDocument;
+  String? currentDocumentId;
 
   @override
   void initState() {
     if (!widget.workspaceConfigs.paneDocumentData.containsKey(paneId)) {
-      widget.workspaceConfigs.paneDocumentData[paneId] = widget.documents;
+      widget.workspaceConfigs.paneDocumentData[paneId] = widget.documentIds;
     }
 
     registerListener(
@@ -38,7 +38,7 @@ class EditorPaneState extends State<EditorPane>
           .where((e) => e.paneId == paneId),
       (event) {
         setState(() {
-          currentDocument = event.document;
+          currentDocumentId = event.documentId;
           AffogatoEvents.editorInstanceRequestReloadEvents
               .add(const EditorInstanceRequestReloadEvent());
         });
@@ -55,10 +55,12 @@ class EditorPaneState extends State<EditorPane>
         children: [
           FileTabBar(
             stylingConfigs: widget.stylingConfigs,
-            documents: widget.workspaceConfigs.paneDocumentData[paneId]!,
-            currentDoc: currentDocument,
+            documentIds: widget.workspaceConfigs.paneDocumentData[paneId]!,
+            workspaceConfigs: widget.workspaceConfigs,
+            currentDocId: currentDocumentId,
+            paneId: paneId,
           ),
-          currentDocument != null
+          currentDocumentId != null
               ? Container(
                   width: double.infinity,
                   height: widget.layoutConfigs.height -
@@ -67,13 +69,17 @@ class EditorPaneState extends State<EditorPane>
                   color:
                       widget.stylingConfigs.themeBundle.editorTheme.editorColor,
                   child: AffogatoEditorInstance(
-                    document: currentDocument!,
+                    document:
+                        widget.workspaceConfigs.getDoc(currentDocumentId!),
                     width: widget.layoutConfigs.width,
                     editorTheme: widget.stylingConfigs.themeBundle.editorTheme,
                     instanceState: widget.performanceConfigs.rendererType ==
                             InstanceRendererType.savedState
-                        ? widget.windowKey.currentState!
-                            .savedStates[currentDocument]
+                        ? widget.workspaceConfigs.statesRegistry
+                                .containsKey(currentDocumentId)
+                            ? widget.workspaceConfigs
+                                .statesRegistry[currentDocumentId]
+                            : null
                         : null,
                   ),
                 )

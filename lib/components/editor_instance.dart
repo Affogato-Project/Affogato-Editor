@@ -26,7 +26,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   final TextEditingController textController = TextEditingController();
   late AffogatoInstanceState instanceState;
   final FocusNode keyboardListenerFocusNode = FocusNode();
-  AffogatoDocument? currentDoc;
+  String? currentDocId;
 
   static const double _lineNumbersColWidth = 40;
 
