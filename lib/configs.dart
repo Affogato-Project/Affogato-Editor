@@ -18,17 +18,13 @@ class AffogatoStylingConfigs {
   final double windowWidth;
   final double windowHeight;
   final double tabBarHeight;
-  final Color windowColor;
-  final Color editorColor;
-  final Color borderColor;
+  final ThemeBundle<RenderToken, SyntaxHighlighter, Color> themeBundle;
 
   const AffogatoStylingConfigs({
     required this.windowHeight,
     required this.windowWidth,
     required this.tabBarHeight,
-    required this.windowColor,
-    required this.editorColor,
-    required this.borderColor,
+    required this.themeBundle,
   });
 }
 
@@ -48,5 +44,15 @@ class AffogatoPerformanceConfigs {
 
   const AffogatoPerformanceConfigs({
     required this.rendererType,
+  });
+}
+
+class AffogatoWorkspaceConfigs {
+  final List<FileBrowserEntry> codebase;
+  final Map<String, List<AffogatoDocument>> paneDocumentData;
+
+  const AffogatoWorkspaceConfigs({
+    required this.codebase,
+    required this.paneDocumentData,
   });
 }

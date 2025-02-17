@@ -3,50 +3,95 @@ part of affogato.editor;
 class AffogatoEditorInstance extends StatefulWidget {
   final AffogatoDocument document;
   final AffogatoInstanceState? instanceState;
+  final EditorTheme editorTheme;
+  final double width;
 
-  const AffogatoEditorInstance({
+  AffogatoEditorInstance({
     required this.document,
+    required this.width,
+    required this.editorTheme,
     this.instanceState,
-    super.key,
-  });
+  }) : super(
+            key: ValueKey(
+                '${document.hash}${instanceState?.hashCode}${editorTheme.hashCode}$width'));
 
   @override
   State<StatefulWidget> createState() => AffogatoEditorInstanceState();
 }
 
-class AffogatoEditorInstanceState extends State<AffogatoEditorInstance> {
+class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
+    with utils.StreamSubscriptionManager {
+  final TextSelectionControls selectionControls =
+      AffogatoTextSelectionControls();
+  final TextEditingController textController = TextEditingController();
   late AffogatoInstanceState instanceState;
+  final FocusNode keyboardListenerFocusNode = FocusNode();
+  AffogatoDocument? currentDoc;
+
+  static const double _lineNumbersColWidth = 40;
 
   @override
   void initState() {
-    AffogatoInstanceState? newState;
-    instanceState = widget.instanceState ??
-        (newState = AffogatoInstanceState(
-          cursorPos: 0,
-          scrollHeight: 0,
-          languageBundle: genericLB,
-        ));
-    if (newState != null) {
-      AffogatoEvents.editorInstanceCreateEvents
-          .add(const EditorInstanceCreateEvent());
+    // All actions needed to spin up a new editor instance
+    void loadUpInstance() {
+      textController.text = widget.document.content;
+      // Load or create instance state
+      AffogatoInstanceState? newState;
+      instanceState = widget.instanceState ??
+          (newState = AffogatoInstanceState(
+            cursorPos: 0,
+            scrollHeight: 0,
+            languageBundle: genericLB,
+          ));
+      if (newState != null) {
+        AffogatoEvents.editorInstanceCreateEvents
+            .add(const EditorInstanceCreateEvent());
+      }
+
+      // Set off the event
+      AffogatoEvents.editorInstanceLoadedEvents
+          .add(const EditorInstanceLoadedEvent());
+
+      // Link the text controller to the document
+      textController.addListener(() {
+        widget.document.addVersion(textController.text);
+        AffogatoEvents.editorDocumentChangedEvents
+            .add(EditorDocumentChangedEvent(textController.text));
+        setState(() {});
+      });
     }
-    AffogatoEvents.editorInstanceLoadEvents
-        .add(const EditorInstanceLoadEvent());
+
+    // Call once during initState
+    loadUpInstance();
+
+    // And register a listener to call whenever the instance needs to be reloaded
+    registerListener(
+      AffogatoEvents.editorInstanceRequestReloadEvents.stream,
+      (event) {
+        setState(() {
+          // `saveInstance()`
+          loadUpInstance();
+        });
+      },
+    );
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> lineNumbers = [];
-    for (int i = 1; i <= widget.document.srcContent.split('\n').length; i++) {
+    for (int i = 1; i <= widget.document.content.split('\n').length; i++) {
       lineNumbers.add(SizedBox(
-        width: 40,
+        width: _lineNumbersColWidth,
         height: 20,
         child: Align(
           alignment: Alignment.centerRight,
           child: Text(
             i.toString(),
             textAlign: TextAlign.right,
+            style: TextStyle(
+                color: widget.editorTheme.defaultTextColor.withOpacity(0.4)),
           ),
         ),
       ));
@@ -64,8 +109,32 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance> {
           Column(
             children: [],
           ),
+          Expanded(
+            child: KeyboardListener(
+              focusNode: keyboardListenerFocusNode,
+              onKeyEvent: (key) => AffogatoEvents.editorKeyEvent.add(
+                EditorKeyEvent(
+                  key: key.logicalKey,
+                  keyEventType: key.runtimeType,
+                ),
+              ),
+              child: TextField(
+                maxLines: null,
+                controller: textController,
+                decoration: null,
+
+                // selectionControls: selectionControls,
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() async {
+    cancelSubscriptions();
+    super.dispose();
   }
 }

@@ -3,16 +3,31 @@ part of affogato.editor;
 class AffogatoEvents {
   static final StreamController<WindowEvent> windowEvents =
       StreamController.broadcast();
+  static final StreamController<WindowCloseEvent> windowCloseEvents =
+      StreamController.broadcast();
   static final StreamController<WindowEditorPaneAddEvent> editorPaneAddEvents =
       StreamController.broadcast();
   static final StreamController<WindowEditorInstanceSetActiveEvent>
       editorInstanceSetActiveEvents = StreamController.broadcast();
 
+  static final StreamController<WindowEditorRequestDocumentSetActiveEvent>
+      windowEditorRequestDocumentSetActiveEvents = StreamController.broadcast();
+
   static final StreamController<EditorInstanceCreateEvent>
       editorInstanceCreateEvents = StreamController.broadcast();
 
-  static final StreamController<EditorInstanceLoadEvent>
-      editorInstanceLoadEvents = StreamController.broadcast();
+  static final StreamController<EditorInstanceLoadedEvent>
+      editorInstanceLoadedEvents = StreamController.broadcast();
+  static final StreamController<EditorKeyEvent> editorKeyEvent =
+      StreamController.broadcast();
+  static final StreamController<EditorDocumentChangedEvent>
+      editorDocumentChangedEvents = StreamController.broadcast();
+
+  static final StreamController<EditorPaneAddDocumentEvent>
+      editorPaneAddDocumentEvents = StreamController.broadcast();
+
+  static final StreamController<EditorInstanceRequestReloadEvent>
+      editorInstanceRequestReloadEvents = StreamController.broadcast();
 }
 
 sealed class Event {
@@ -27,17 +42,18 @@ class WindowEvent extends Event {
   const WindowEvent(String id) : super('window.$id');
 }
 
+class WindowCloseEvent extends WindowEvent {
+  const WindowCloseEvent() : super('close');
+}
+
 class WindowEditorPaneEvent extends WindowEvent {
   const WindowEditorPaneEvent(String id) : super('editorPane.$id');
 }
 
 class WindowEditorPaneAddEvent extends WindowEditorPaneEvent {
-  // final AffogatoDocument document;
-  final LayoutConfigs layoutConfigs;
+  final EditorPane editorPane;
 
-  const WindowEditorPaneAddEvent({
-    required this.layoutConfigs,
-  }) : super('add');
+  const WindowEditorPaneAddEvent(this.editorPane) : super('add');
 }
 
 class WindowEditorInstanceEvent extends WindowEvent {
@@ -45,10 +61,20 @@ class WindowEditorInstanceEvent extends WindowEvent {
 }
 
 class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
+  final String paneId;
   final AffogatoDocument document;
   const WindowEditorInstanceSetActiveEvent({
+    required this.paneId,
     required this.document,
   }) : super('setActive');
+}
+
+class WindowEditorRequestDocumentSetActiveEvent
+    extends WindowEditorInstanceEvent {
+  final AffogatoDocument document;
+  const WindowEditorRequestDocumentSetActiveEvent({
+    required this.document,
+  }) : super('requestSetActive');
 }
 
 /// EDITOR AND DOCUMENT EVENTS ///
@@ -65,6 +91,44 @@ class EditorInstanceCreateEvent extends EditorInstanceEvent {
   const EditorInstanceCreateEvent() : super('create');
 }
 
-class EditorInstanceLoadEvent extends EditorInstanceEvent {
-  const EditorInstanceLoadEvent() : super('load');
+class EditorInstanceLoadedEvent extends EditorInstanceEvent {
+  const EditorInstanceLoadedEvent() : super('loaded');
+}
+
+class EditorInstanceRequestReloadEvent extends EditorInstanceEvent {
+  const EditorInstanceRequestReloadEvent() : super('reload');
+}
+
+class EditorKeyEvent extends EditorEvent {
+  final Type keyEventType;
+  final LogicalKeyboardKey key;
+
+  const EditorKeyEvent({
+    required this.key,
+    required this.keyEventType,
+  }) : super('key');
+}
+
+class EditorDocumentEvent extends EditorEvent {
+  const EditorDocumentEvent(String id) : super('document.$id');
+}
+
+class EditorDocumentChangedEvent extends EditorDocumentEvent {
+  final String newContent;
+
+  const EditorDocumentChangedEvent(this.newContent) : super('change');
+}
+
+class EditorPaneEvent extends EditorEvent {
+  const EditorPaneEvent(String id) : super('pane.$id');
+}
+
+class EditorPaneAddDocumentEvent extends EditorPaneEvent {
+  final String paneId;
+  final AffogatoDocument document;
+
+  const EditorPaneAddDocumentEvent({
+    required this.paneId,
+    required this.document,
+  }) : super('addDoc');
 }

@@ -5,12 +5,14 @@ class EditorPane extends StatefulWidget {
   final LayoutConfigs layoutConfigs;
   final AffogatoStylingConfigs stylingConfigs;
   final AffogatoPerformanceConfigs performanceConfigs;
+  final AffogatoWorkspaceConfigs workspaceConfigs;
   final GlobalKey<AffogatoWindowState> windowKey;
 
   const EditorPane({
     required this.stylingConfigs,
     required this.layoutConfigs,
     required this.performanceConfigs,
+    required this.workspaceConfigs,
     required this.documents,
     required this.windowKey,
     super.key,
@@ -20,55 +22,75 @@ class EditorPane extends StatefulWidget {
   State<StatefulWidget> createState() => EditorPaneState();
 }
 
-class EditorPaneState extends State<EditorPane> {
-  final List<AffogatoDocument> documents = [];
-  late AffogatoDocument currentDocument;
+class EditorPaneState extends State<EditorPane>
+    with utils.StreamSubscriptionManager {
+  final String paneId = utils.generateId();
+  AffogatoDocument? currentDocument;
 
   @override
   void initState() {
-    AffogatoEvents.editorInstanceSetActiveEvents.stream.listen((event) {
-      setState(() {
-        currentDocument = event.document;
-      });
-    });
-
-    documents.addAll(widget.documents);
-    if (documents.isEmpty) {
-      documents.add(AffogatoDocument(srcContent: '', docName: 'Untitled'));
-      AffogatoEvents.editorInstanceSetActiveEvents.add(
-        WindowEditorInstanceSetActiveEvent(document: documents.first),
-      );
+    if (!widget.workspaceConfigs.paneDocumentData.containsKey(paneId)) {
+      widget.workspaceConfigs.paneDocumentData[paneId] = widget.documents;
     }
-    currentDocument = documents.first;
+
+    registerListener(
+      AffogatoEvents.editorInstanceSetActiveEvents.stream
+          .where((e) => e.paneId == paneId),
+      (event) {
+        setState(() {
+          currentDocument = event.document;
+          AffogatoEvents.editorInstanceRequestReloadEvents
+              .add(const EditorInstanceRequestReloadEvent());
+        });
+      },
+    );
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.layoutConfigs.width,
-      height: widget.layoutConfigs.height,
+    return Expanded(
       child: Column(
         children: [
           FileTabBar(
             stylingConfigs: widget.stylingConfigs,
-            documents: documents,
+            documents: widget.workspaceConfigs.paneDocumentData[paneId]!,
+            currentDoc: currentDocument,
           ),
-          Container(
-            width: widget.layoutConfigs.width,
-            height: widget.layoutConfigs.height -
-                widget.stylingConfigs.tabBarHeight,
-            color: widget.stylingConfigs.editorColor,
-            child: AffogatoEditorInstance(
-              document: currentDocument,
-              instanceState: widget.performanceConfigs.rendererType ==
-                      InstanceRendererType.savedState
-                  ? widget.windowKey.currentState!.savedStates[currentDocument]
-                  : null,
-            ),
-          ),
+          currentDocument != null
+              ? Container(
+                  width: double.infinity,
+                  height: widget.layoutConfigs.height -
+                      widget.stylingConfigs.tabBarHeight -
+                      utils.AffogatoConstants.tabBarPadding * 2,
+                  color:
+                      widget.stylingConfigs.themeBundle.editorTheme.editorColor,
+                  child: AffogatoEditorInstance(
+                    document: currentDocument!,
+                    width: widget.layoutConfigs.width,
+                    editorTheme: widget.stylingConfigs.themeBundle.editorTheme,
+                    instanceState: widget.performanceConfigs.rendererType ==
+                            InstanceRendererType.savedState
+                        ? widget.windowKey.currentState!
+                            .savedStates[currentDocument]
+                        : null,
+                  ),
+                )
+              : const Center(
+                  child: Icon(
+                    Icons.abc,
+                    size: 40,
+                  ),
+                ),
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() async {
+    cancelSubscriptions();
+    super.dispose();
   }
 }
