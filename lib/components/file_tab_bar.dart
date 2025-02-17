@@ -28,12 +28,27 @@ class FileTabBarState extends State<FileTabBar>
 
     for (int i = 0; i < widget.documentIds.length; i++) {
       final bool isCurrent = widget.documentIds[i] == widget.currentDocId;
+      final Color activeColor = isCurrent
+          ? widget.stylingConfigs.themeBundle.editorTheme.editorColor
+          : Colors.transparent;
       tabs.add(
         Container(
           height: widget.stylingConfigs.tabBarHeight,
-          color: isCurrent
-              ? widget.stylingConfigs.themeBundle.editorTheme.editorColor
-              : Colors.transparent,
+          decoration: BoxDecoration(
+            color: activeColor,
+            border: Border(
+              top: isCurrent
+                  ? BorderSide(
+                      color: widget.stylingConfigs.themeBundle.editorTheme
+                          .defaultTextColor,
+                      width: 1,
+                    )
+                  : BorderSide.none,
+              bottom: BorderSide(
+                color: activeColor,
+              ),
+            ),
+          ),
           child: GestureDetector(
             onTap: () {
               AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(

@@ -7,15 +7,18 @@ class EditorPane extends StatefulWidget {
   final AffogatoPerformanceConfigs performanceConfigs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final GlobalKey<AffogatoWindowState> windowKey;
+  final String paneId;
 
-  EditorPane({
+  const EditorPane({
     required this.stylingConfigs,
     required this.layoutConfigs,
     required this.performanceConfigs,
     required this.workspaceConfigs,
     required this.documentIds,
     required this.windowKey,
-  }) : super(key: ValueKey('$documentIds'));
+    required this.paneId,
+    required super.key,
+  });
 
   @override
   State<StatefulWidget> createState() => EditorPaneState();
@@ -23,18 +26,18 @@ class EditorPane extends StatefulWidget {
 
 class EditorPaneState extends State<EditorPane>
     with utils.StreamSubscriptionManager {
-  final String paneId = utils.generateId();
   String? currentDocumentId;
 
   @override
   void initState() {
-    if (!widget.workspaceConfigs.paneDocumentData.containsKey(paneId)) {
-      widget.workspaceConfigs.paneDocumentData[paneId] = widget.documentIds;
+    if (!widget.workspaceConfigs.paneDocumentData.containsKey(widget.paneId)) {
+      widget.workspaceConfigs.paneDocumentData[widget.paneId] =
+          widget.documentIds;
     }
 
     registerListener(
       AffogatoEvents.editorInstanceSetActiveEvents.stream
-          .where((e) => e.paneId == paneId),
+          .where((e) => e.paneId == widget.paneId),
       (event) {
         setState(() {
           currentDocumentId = event.documentId;
@@ -46,7 +49,7 @@ class EditorPaneState extends State<EditorPane>
 
     registerListener(
       AffogatoEvents.windowEditorInstanceUnsetActiveEvents.stream
-          .where((e) => e.paneId == paneId),
+          .where((e) => e.paneId == widget.paneId),
       (event) {
         setState(() {
           if (widget.documentIds.isEmpty) {
@@ -68,10 +71,11 @@ class EditorPaneState extends State<EditorPane>
         children: [
           FileTabBar(
             stylingConfigs: widget.stylingConfigs,
-            documentIds: widget.workspaceConfigs.paneDocumentData[paneId]!,
+            documentIds:
+                widget.workspaceConfigs.paneDocumentData[widget.paneId]!,
             workspaceConfigs: widget.workspaceConfigs,
             currentDocId: currentDocumentId,
-            paneId: paneId,
+            paneId: widget.paneId,
           ),
           currentDocumentId != null
               ? Container(
@@ -79,8 +83,16 @@ class EditorPaneState extends State<EditorPane>
                   height: widget.layoutConfigs.height -
                       widget.stylingConfigs.tabBarHeight -
                       utils.AffogatoConstants.tabBarPadding * 2,
-                  color:
-                      widget.stylingConfigs.themeBundle.editorTheme.editorColor,
+                  decoration: BoxDecoration(
+                    color: widget
+                        .stylingConfigs.themeBundle.editorTheme.editorColor,
+                    border: Border(
+                      right: BorderSide(
+                        color: widget
+                            .stylingConfigs.themeBundle.editorTheme.borderColor,
+                      ),
+                    ),
+                  ),
                   child: AffogatoEditorInstance(
                     documentId: currentDocumentId!,
                     workspaceConfigs: widget.workspaceConfigs,
@@ -96,10 +108,17 @@ class EditorPaneState extends State<EditorPane>
                         : null,
                   ),
                 )
-              : const Center(
-                  child: Icon(
-                    Icons.abc,
-                    size: 40,
+              : Center(
+                  child: SizedBox(
+                    width: 100,
+                    height: 50,
+                    child: Text(
+                      'Affogato',
+                      style: TextStyle(
+                        color: widget.stylingConfigs.themeBundle.editorTheme
+                            .defaultTextColor,
+                      ),
+                    ),
                   ),
                 ),
         ],

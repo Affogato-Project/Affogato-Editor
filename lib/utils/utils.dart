@@ -19,6 +19,7 @@ String generateId() => String.fromCharCodes(
 
 class AffogatoConstants {
   static const double tabBarPadding = 6;
+  static const double statusBarHeight = 24;
 }
 
 mixin StreamSubscriptionManager<T extends StatefulWidget> on State<T> {

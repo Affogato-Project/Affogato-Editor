@@ -7,6 +7,7 @@ import 'package:affogato_editor/battery_themes/affogato_classic/theme_bundle.dar
 void main(List<String> args) {
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: AffogatoWindow(
         stylingConfigs: AffogatoStylingConfigs(
           windowWidth: 1100,

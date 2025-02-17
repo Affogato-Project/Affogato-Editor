@@ -5,8 +5,10 @@ class AffogatoEvents {
       StreamController.broadcast();
   static final StreamController<WindowCloseEvent> windowCloseEvents =
       StreamController.broadcast();
-  static final StreamController<WindowEditorPaneAddEvent> editorPaneAddEvents =
-      StreamController.broadcast();
+  static final StreamController<WindowEditorPaneAddEvent>
+      windowEditorPaneAddEvents = StreamController.broadcast();
+  static final StreamController<WindowEditorPaneRemoveEvent>
+      windowEditorPaneRemoveEvents = StreamController.broadcast();
   static final StreamController<WindowEditorInstanceSetActiveEvent>
       editorInstanceSetActiveEvents = StreamController.broadcast();
   static final StreamController<WindowEditorInstanceUnsetActiveEvent>
@@ -55,9 +57,12 @@ class WindowEditorPaneEvent extends WindowEvent {
 }
 
 class WindowEditorPaneAddEvent extends WindowEditorPaneEvent {
-  final EditorPane editorPane;
+  final List<String> documentIds;
+  const WindowEditorPaneAddEvent(this.documentIds) : super('add');
+}
 
-  const WindowEditorPaneAddEvent(this.editorPane) : super('add');
+class WindowEditorPaneRemoveEvent extends WindowEditorPaneEvent {
+  const WindowEditorPaneRemoveEvent() : super('remove');
 }
 
 class WindowEditorInstanceEvent extends WindowEvent {

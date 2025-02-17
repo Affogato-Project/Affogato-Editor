@@ -26,7 +26,18 @@ class PrimaryBarState extends State<PrimaryBar> {
     return expanded
         ? Container(
             width: widget.expandedWidth,
-            color: widget.editorTheme.primaryBarColor,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: widget.editorTheme.primaryBarColor,
+              border: Border(
+                left: BorderSide(
+                  color: widget.editorTheme.borderColor,
+                ),
+                right: BorderSide(
+                  color: widget.editorTheme.borderColor,
+                ),
+              ),
+            ),
             child: ListView(
               children: [
                 for (final entry in widget.items)
