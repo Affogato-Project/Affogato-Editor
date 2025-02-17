@@ -8,15 +8,14 @@ class EditorPane extends StatefulWidget {
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final GlobalKey<AffogatoWindowState> windowKey;
 
-  const EditorPane({
+  EditorPane({
     required this.stylingConfigs,
     required this.layoutConfigs,
     required this.performanceConfigs,
     required this.workspaceConfigs,
     required this.documentIds,
     required this.windowKey,
-    super.key,
-  });
+  }) : super(key: ValueKey('$documentIds'));
 
   @override
   State<StatefulWidget> createState() => EditorPaneState();
@@ -45,6 +44,20 @@ class EditorPaneState extends State<EditorPane>
       },
     );
 
+    registerListener(
+      AffogatoEvents.windowEditorInstanceUnsetActiveEvents.stream
+          .where((e) => e.paneId == paneId),
+      (event) {
+        setState(() {
+          if (widget.documentIds.isEmpty) {
+            currentDocumentId = null;
+          } else {
+            currentDocumentId = widget.documentIds.last;
+          }
+        });
+      },
+    );
+
     super.initState();
   }
 
@@ -69,8 +82,8 @@ class EditorPaneState extends State<EditorPane>
                   color:
                       widget.stylingConfigs.themeBundle.editorTheme.editorColor,
                   child: AffogatoEditorInstance(
-                    document:
-                        widget.workspaceConfigs.getDoc(currentDocumentId!),
+                    documentId: currentDocumentId!,
+                    workspaceConfigs: widget.workspaceConfigs,
                     width: widget.layoutConfigs.width,
                     editorTheme: widget.stylingConfigs.themeBundle.editorTheme,
                     instanceState: widget.performanceConfigs.rendererType ==

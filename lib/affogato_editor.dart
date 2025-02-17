@@ -89,13 +89,12 @@ class AffogatoWindowState extends State<AffogatoWindow>
         );
       }
     }
-
     // listens to requests to focus the instance containing the specified document
     // and creates the instance if it doesn't yet exist
-    bool hasBeenSetActive = false;
     registerListener(
       AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.stream,
       (event) {
+        bool hasBeenSetActive = false;
         for (final entry in widget.workspaceConfigs.paneDocumentData.entries) {
           if (entry.value.contains(event.documentId)) {
             hasBeenSetActive = true;
@@ -129,14 +128,25 @@ class AffogatoWindowState extends State<AffogatoWindow>
 
     registerListener(
       AffogatoEvents.editorDocumentChangedEvents.stream,
-      (event) {},
+      (event) {
+        widget.workspaceConfigs.documentsRegistry[event.documentId]!
+            .addVersion(event.newContent);
+      },
     );
 
-    // listen to document closing events, to re-assign the active instance and to
-    // update the workspace data accordingly
+    // listen to document closing events
     registerListener(
       AffogatoEvents.editorDocumentClosedEvents.stream,
-      (event) {},
+      (event) {
+        widget.workspaceConfigs.paneDocumentData[event.paneId]!
+            .remove(event.documentId);
+        AffogatoEvents.windowEditorInstanceUnsetActiveEvents.add(
+          WindowEditorInstanceUnsetActiveEvent(
+            paneId: event.paneId,
+            documentId: event.documentId,
+          ),
+        );
+      },
     );
 
     super.initState();

@@ -9,7 +9,8 @@ class AffogatoEvents {
       StreamController.broadcast();
   static final StreamController<WindowEditorInstanceSetActiveEvent>
       editorInstanceSetActiveEvents = StreamController.broadcast();
-
+  static final StreamController<WindowEditorInstanceUnsetActiveEvent>
+      windowEditorInstanceUnsetActiveEvents = StreamController.broadcast();
   static final StreamController<WindowEditorRequestDocumentSetActiveEvent>
       windowEditorRequestDocumentSetActiveEvents = StreamController.broadcast();
 
@@ -72,6 +73,16 @@ class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
   }) : super('setActive');
 }
 
+class WindowEditorInstanceUnsetActiveEvent extends WindowEditorInstanceEvent {
+  final String paneId;
+  final String documentId;
+
+  const WindowEditorInstanceUnsetActiveEvent({
+    required this.paneId,
+    required this.documentId,
+  }) : super('unsetActive');
+}
+
 class WindowEditorRequestDocumentSetActiveEvent
     extends WindowEditorInstanceEvent {
   final String documentId;
@@ -118,8 +129,12 @@ class EditorDocumentEvent extends EditorEvent {
 
 class EditorDocumentChangedEvent extends EditorDocumentEvent {
   final String newContent;
+  final String documentId;
 
-  const EditorDocumentChangedEvent(this.newContent) : super('change');
+  const EditorDocumentChangedEvent({
+    required this.newContent,
+    required this.documentId,
+  }) : super('change');
 }
 
 class EditorDocumentClosedEvent extends EditorDocumentEvent {

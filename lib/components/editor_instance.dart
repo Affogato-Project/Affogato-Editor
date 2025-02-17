@@ -1,19 +1,21 @@
 part of affogato.editor;
 
 class AffogatoEditorInstance extends StatefulWidget {
-  final AffogatoDocument document;
+  final String documentId;
   final AffogatoInstanceState? instanceState;
   final EditorTheme editorTheme;
   final double width;
+  final AffogatoWorkspaceConfigs workspaceConfigs;
 
   AffogatoEditorInstance({
-    required this.document,
+    required this.documentId,
     required this.width,
     required this.editorTheme,
+    required this.workspaceConfigs,
     this.instanceState,
   }) : super(
             key: ValueKey(
-                '${document.hash}${instanceState?.hashCode}${editorTheme.hashCode}$width'));
+                '$documentId${instanceState?.hashCode}${editorTheme.hashCode}$width'));
 
   @override
   State<StatefulWidget> createState() => AffogatoEditorInstanceState();
@@ -26,7 +28,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   final TextEditingController textController = TextEditingController();
   late AffogatoInstanceState instanceState;
   final FocusNode keyboardListenerFocusNode = FocusNode();
-  String? currentDocId;
+  late AffogatoDocument currentDoc;
 
   static const double _lineNumbersColWidth = 40;
 
@@ -34,7 +36,9 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   void initState() {
     // All actions needed to spin up a new editor instance
     void loadUpInstance() {
-      textController.text = widget.document.content;
+      currentDoc = widget.workspaceConfigs.getDoc(widget.documentId);
+      // Assume instant autosave
+      textController.text = currentDoc.content;
       // Load or create instance state
       AffogatoInstanceState? newState;
       instanceState = widget.instanceState ??
@@ -54,9 +58,13 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
       // Link the text controller to the document
       textController.addListener(() {
-        widget.document.addVersion(textController.text);
-        AffogatoEvents.editorDocumentChangedEvents
-            .add(EditorDocumentChangedEvent(textController.text));
+        currentDoc.addVersion(textController.text);
+        AffogatoEvents.editorDocumentChangedEvents.add(
+          EditorDocumentChangedEvent(
+            newContent: textController.text,
+            documentId: widget.documentId,
+          ),
+        );
         setState(() {});
       });
     }
@@ -81,7 +89,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   @override
   Widget build(BuildContext context) {
     final List<Widget> lineNumbers = [];
-    for (int i = 1; i <= widget.document.content.split('\n').length; i++) {
+    for (int i = 1; i <= currentDoc.content.split('\n').length; i++) {
       lineNumbers.add(SizedBox(
         width: _lineNumbersColWidth,
         height: 20,
