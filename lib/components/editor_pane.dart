@@ -95,6 +95,7 @@ class EditorPaneState extends State<EditorPane>
                   ),
                   child: AffogatoEditorInstance(
                     documentId: currentDocumentId!,
+                    stylingConfigs: widget.stylingConfigs,
                     workspaceConfigs: widget.workspaceConfigs,
                     width: widget.layoutConfigs.width,
                     editorTheme: widget.stylingConfigs.themeBundle.editorTheme,

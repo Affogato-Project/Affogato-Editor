@@ -6,12 +6,14 @@ class AffogatoEditorInstance extends StatefulWidget {
   final EditorTheme editorTheme;
   final double width;
   final AffogatoWorkspaceConfigs workspaceConfigs;
+  final AffogatoStylingConfigs stylingConfigs;
 
   AffogatoEditorInstance({
     required this.documentId,
     required this.width,
     required this.editorTheme,
     required this.workspaceConfigs,
+    required this.stylingConfigs,
     this.instanceState,
   }) : super(
             key: ValueKey(
@@ -27,10 +29,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
       AffogatoTextSelectionControls();
   final TextEditingController textController = TextEditingController();
   late AffogatoInstanceState instanceState;
-  final FocusNode keyboardListenerFocusNode = FocusNode();
+  final FocusNode textFieldFocusNode = FocusNode();
   late AffogatoDocument currentDoc;
-
-  static const double _lineNumbersColWidth = 40;
 
   @override
   void initState() {
@@ -83,26 +83,97 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
       },
     );
 
+    // the actual document parsing and interceptors
+    registerListener(
+      AffogatoEvents.editorKeyEvent.stream
+          .where((e) => e.documentId == widget.documentId),
+      (event) {
+        if (event.keyEventType == KeyDownEvent) {
+          textFieldFocusNode.requestFocus();
+
+          if (event.key == LogicalKeyboardKey.tab) {
+            setState(() {
+              insertTextAtCursorPos(
+                  ' ' * widget.workspaceConfigs.tabSizeInSpaces);
+            });
+          }
+        }
+      },
+    );
+
     super.initState();
+  }
+
+  void insertTextAtCursorPos(String text, {bool moveCursorToEnd = true}) {
+    if (textController.selection.isValid) {
+      textController.value = TextEditingValue(
+        text: textController.selection.isCollapsed
+            ? textController.text.substring(0, textController.selection.start) +
+                text +
+                textController.text.substring(
+                    textController.selection.end, textController.text.length)
+            : textController.text.replaceRange(
+                textController.selection.start,
+                textController.selection.end,
+                text,
+              ),
+        selection: moveCursorToEnd
+            ? TextSelection.collapsed(
+                offset: textController.selection.start + 4)
+            : textController.selection,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> leftGutterIndicators = [];
     final List<Widget> lineNumbers = [];
     for (int i = 1; i <= currentDoc.content.split('\n').length; i++) {
-      lineNumbers.add(SizedBox(
-        width: _lineNumbersColWidth,
-        height: 20,
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            i.toString(),
-            textAlign: TextAlign.right,
-            style: TextStyle(
-                color: widget.editorTheme.defaultTextColor.withOpacity(0.4)),
+      lineNumbers.add(
+        SizedBox(
+          width: utils.AffogatoConstants.lineNumbersColWidth,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              i.toString(),
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: widget.editorTheme.defaultTextColor.withOpacity(0.4),
+                height: utils.AffogatoConstants.lineHeight,
+                fontSize: widget.stylingConfigs.editorFontSize,
+              ),
+            ),
           ),
         ),
-      ));
+      );
+
+      leftGutterIndicators.add(
+        Padding(
+          padding: const EdgeInsets.only(
+              right: utils.AffogatoConstants.lineNumbersGutterRightmostPadding),
+          child: Container(
+            width: utils.AffogatoConstants.lineNumbersGutterWidth -
+                utils.AffogatoConstants.lineNumbersGutterRightmostPadding,
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(
+                  color: widget.editorTheme.defaultTextColor.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Text(
+              '',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                height: utils.AffogatoConstants.lineHeight,
+                fontSize: widget.stylingConfigs.editorFontSize,
+              ),
+            ),
+          ),
+        ),
+      );
     }
     return SingleChildScrollView(
       child: Row(
@@ -113,24 +184,34 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           Column(
             children: lineNumbers,
           ),
-          // Git indicators
+          // Left gutter indicators, such as for Git
           Column(
-            children: [],
+            children: leftGutterIndicators,
           ),
+
           Expanded(
-            child: KeyboardListener(
-              focusNode: keyboardListenerFocusNode,
-              onKeyEvent: (key) => AffogatoEvents.editorKeyEvent.add(
-                EditorKeyEvent(
-                  key: key.logicalKey,
-                  keyEventType: key.runtimeType,
-                ),
-              ),
+            child: Focus(
+              onKeyEvent: (_, key) {
+                AffogatoEvents.editorKeyEvent.add(
+                  EditorKeyEvent(
+                    documentId: widget.documentId,
+                    key: key.logicalKey,
+                    keyEventType: key.runtimeType,
+                  ),
+                );
+                return KeyEventResult.ignored;
+              },
               child: TextField(
+                focusNode: textFieldFocusNode,
                 maxLines: null,
                 controller: textController,
                 decoration: null,
-
+                style: TextStyle(
+                  color: widget.editorTheme.defaultTextColor,
+                  fontFamily: 'IBMPlexMono',
+                  height: utils.AffogatoConstants.lineHeight,
+                  fontSize: widget.stylingConfigs.editorFontSize,
+                ),
                 // selectionControls: selectionControls,
               ),
             ),
@@ -142,6 +223,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
   @override
   void dispose() async {
+    textController.dispose();
     cancelSubscriptions();
     super.dispose();
   }

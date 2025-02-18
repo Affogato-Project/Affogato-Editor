@@ -121,10 +121,12 @@ class EditorInstanceRequestReloadEvent extends EditorInstanceEvent {
 class EditorKeyEvent extends EditorEvent {
   final Type keyEventType;
   final LogicalKeyboardKey key;
+  final String documentId;
 
   const EditorKeyEvent({
     required this.key,
     required this.keyEventType,
+    required this.documentId,
   }) : super('key');
 }
 

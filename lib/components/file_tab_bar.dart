@@ -32,33 +32,36 @@ class FileTabBarState extends State<FileTabBar>
           ? widget.stylingConfigs.themeBundle.editorTheme.editorColor
           : Colors.transparent;
       tabs.add(
-        Container(
-          height: widget.stylingConfigs.tabBarHeight,
-          decoration: BoxDecoration(
-            color: activeColor,
-            border: Border(
-              top: isCurrent
-                  ? BorderSide(
-                      color: widget.stylingConfigs.themeBundle.editorTheme
-                          .defaultTextColor,
-                      width: 1,
-                    )
-                  : BorderSide.none,
-              bottom: BorderSide(
-                color: activeColor,
+        GestureDetector(
+          onTap: () {
+            AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
+              WindowEditorRequestDocumentSetActiveEvent(
+                documentId: widget.documentIds[i],
               ),
-            ),
-          ),
-          child: GestureDetector(
-            onTap: () {
-              AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
-                WindowEditorRequestDocumentSetActiveEvent(
-                  documentId: widget.documentIds[i],
+            );
+            setState(() {});
+          },
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: Container(
+              height: widget.stylingConfigs.tabBarHeight,
+              decoration: BoxDecoration(
+                color: activeColor,
+                border: Border(
+                  top: isCurrent
+                      ? BorderSide(
+                          color: widget.stylingConfigs.themeBundle.editorTheme
+                              .defaultTextColor
+                              .withOpacity(0.5),
+                          width: 1,
+                        )
+                      : BorderSide.none,
+                  bottom: BorderSide(
+                    color: activeColor,
+                  ),
                 ),
-              );
-              setState(() {});
-            },
-            child: Padding(
+              ),
+              child: Padding(
                 padding: const EdgeInsets.only(
                   left: 10,
                   right: 10,
@@ -74,12 +77,9 @@ class FileTabBarState extends State<FileTabBar>
                           .getDoc(widget.documentIds[i])
                           .docName,
                       style: TextStyle(
-                        color: isCurrent
-                            ? widget.stylingConfigs.themeBundle.editorTheme
-                                .defaultTextColor
-                            : widget.stylingConfigs.themeBundle.editorTheme
-                                .defaultTextColor
-                                .withOpacity(0.5),
+                        color: widget.stylingConfigs.themeBundle.editorTheme
+                            .defaultTextColor
+                            .withOpacity(0.5),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -95,16 +95,15 @@ class FileTabBarState extends State<FileTabBar>
                       icon: Icon(
                         Icons.close,
                         size: 10,
-                        color: isCurrent
-                            ? widget.stylingConfigs.themeBundle.editorTheme
-                                .defaultTextColor
-                            : widget.stylingConfigs.themeBundle.editorTheme
-                                .defaultTextColor
-                                .withOpacity(0.5),
+                        color: widget.stylingConfigs.themeBundle.editorTheme
+                            .defaultTextColor
+                            .withOpacity(0.5),
                       ),
                     ),
                   ],
-                )),
+                ),
+              ),
+            ),
           ),
         ),
       );

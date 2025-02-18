@@ -18,6 +18,7 @@ class AffogatoStylingConfigs {
   final double windowWidth;
   final double windowHeight;
   final double tabBarHeight;
+  final double editorFontSize;
   final ThemeBundle<RenderToken, SyntaxHighlighter, Color> themeBundle;
 
   const AffogatoStylingConfigs({
@@ -25,6 +26,7 @@ class AffogatoStylingConfigs {
     required this.windowWidth,
     required this.tabBarHeight,
     required this.themeBundle,
+    required this.editorFontSize,
   });
 }
 
@@ -68,9 +70,12 @@ class AffogatoWorkspaceConfigs {
   /// corresponding document IDs.
   final Map<String, AffogatoInstanceState> statesRegistry = {};
 
+  final int tabSizeInSpaces;
+
   AffogatoWorkspaceConfigs({
     required this.initStructure,
     required this.paneDocumentData,
+    this.tabSizeInSpaces = 4,
   });
 
   void buildDirStructure() {

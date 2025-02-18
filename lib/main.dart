@@ -13,6 +13,7 @@ void main(List<String> args) {
           windowWidth: 1100,
           windowHeight: 800,
           tabBarHeight: 40,
+          editorFontSize: 14,
           themeBundle: affogato_classic_theme.themeBundle,
         ),
         performanceConfigs: const AffogatoPerformanceConfigs(
