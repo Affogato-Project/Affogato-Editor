@@ -156,7 +156,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         ),
       );
 
-      leftGutterIndicators.add(
+      /* leftGutterIndicators.add(
         Padding(
           padding: const EdgeInsets.only(
               right: utils.AffogatoConstants.lineNumbersGutterRightmostPadding),
@@ -166,7 +166,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: widget.editorTheme.defaultTextColor.withOpacity(0.2),
+                  color: widget.editorTheme.defaultTextColor.withOpacity(0.1),
                   width: 1,
                 ),
               ),
@@ -181,7 +181,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             ),
           ),
         ),
-      );
+      ); */
     }
     return SingleChildScrollView(
       child: Row(
@@ -189,14 +189,18 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Line numbers
-          Column(
-            children: lineNumbers,
+          SizedBox(
+            width: utils.AffogatoConstants.lineNumbersColWidth,
+            child: Column(
+              children: lineNumbers,
+            ),
           ),
           // Left gutter indicators, such as for Git
-          Column(
-            children: leftGutterIndicators,
+          const SizedBox(
+            width: utils.AffogatoConstants.lineNumbersGutterWidth -
+                utils.AffogatoConstants.lineNumbersGutterRightmostPadding,
+            child: Column(),
           ),
-
           Expanded(
             child: Focus(
               onKeyEvent: (_, key) {

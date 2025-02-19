@@ -22,7 +22,7 @@ class AffogatoConstants {
   static const double statusBarHeight = 24;
   static const double lineNumbersColWidth = 60;
   static const double lineNumbersGutterWidth = 20;
-  static const double lineNumbersGutterRightmostPadding = 4;
+  static const double lineNumbersGutterRightmostPadding = 2;
   static const double lineHeight = 1.2;
 }
 
