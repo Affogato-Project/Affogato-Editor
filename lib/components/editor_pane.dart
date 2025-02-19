@@ -7,6 +7,7 @@ class EditorPane extends StatefulWidget {
   final AffogatoPerformanceConfigs performanceConfigs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final GlobalKey<AffogatoWindowState> windowKey;
+
   final String paneId;
 
   const EditorPane({
@@ -27,6 +28,7 @@ class EditorPane extends StatefulWidget {
 class EditorPaneState extends State<EditorPane>
     with utils.StreamSubscriptionManager {
   String? currentDocumentId;
+  LanguageBundle? currentLB;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class EditorPaneState extends State<EditorPane>
       (event) {
         setState(() {
           currentDocumentId = event.documentId;
+          currentLB = event.languageBundle;
           AffogatoEvents.editorInstanceRequestReloadEvents
               .add(const EditorInstanceRequestReloadEvent());
         });
@@ -54,8 +57,13 @@ class EditorPaneState extends State<EditorPane>
         setState(() {
           if (widget.documentIds.isEmpty) {
             currentDocumentId = null;
+            currentLB = null;
           } else {
             currentDocumentId = widget.documentIds.last;
+            currentLB = widget.workspaceConfigs.languageBundleDetector(widget
+                .workspaceConfigs
+                .documentsRegistry[widget.documentIds.last]!
+                .extension);
           }
         });
       },
@@ -66,6 +74,22 @@ class EditorPaneState extends State<EditorPane>
 
   @override
   Widget build(BuildContext context) {
+    AffogatoInstanceState? instanceState;
+    if (widget.performanceConfigs.rendererType ==
+        InstanceRendererType.savedState) {
+      if (widget.workspaceConfigs.statesRegistry
+          .containsKey(currentDocumentId)) {
+        instanceState =
+            widget.workspaceConfigs.statesRegistry[currentDocumentId!];
+      } else {
+        widget.workspaceConfigs.statesRegistry[currentDocumentId!] =
+            instanceState = AffogatoInstanceState(
+          cursorPos: 0,
+          scrollHeight: 0,
+          languageBundle: currentLB ?? genericLB,
+        );
+      }
+    }
     return Expanded(
       child: Column(
         children: [
@@ -99,14 +123,10 @@ class EditorPaneState extends State<EditorPane>
                     workspaceConfigs: widget.workspaceConfigs,
                     width: widget.layoutConfigs.width,
                     editorTheme: widget.stylingConfigs.themeBundle.editorTheme,
-                    instanceState: widget.performanceConfigs.rendererType ==
-                            InstanceRendererType.savedState
-                        ? widget.workspaceConfigs.statesRegistry
-                                .containsKey(currentDocumentId)
-                            ? widget.workspaceConfigs
-                                .statesRegistry[currentDocumentId]
-                            : null
-                        : null,
+                    instanceState: instanceState,
+                    languageBundle:
+                        instanceState?.languageBundle ?? currentLB ?? genericLB,
+                    themeBundle: widget.workspaceConfigs.themeBundle,
                   ),
                 )
               : Center(

@@ -7,6 +7,9 @@ class AffogatoEditorInstance extends StatefulWidget {
   final double width;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoStylingConfigs stylingConfigs;
+  final LanguageBundle languageBundle;
+  final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
+      TextStyle> themeBundle;
 
   AffogatoEditorInstance({
     required this.documentId,
@@ -14,10 +17,12 @@ class AffogatoEditorInstance extends StatefulWidget {
     required this.editorTheme,
     required this.workspaceConfigs,
     required this.stylingConfigs,
+    required this.languageBundle,
+    required this.themeBundle,
     this.instanceState,
   }) : super(
             key: ValueKey(
-                '$documentId${instanceState?.hashCode}${editorTheme.hashCode}$width'));
+                '$documentId${instanceState?.hashCode}${editorTheme.hashCode}$width${languageBundle.bundleName}'));
 
   @override
   State<StatefulWidget> createState() => AffogatoEditorInstanceState();
@@ -25,9 +30,7 @@ class AffogatoEditorInstance extends StatefulWidget {
 
 class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     with utils.StreamSubscriptionManager {
-  final TextSelectionControls selectionControls =
-      AffogatoTextSelectionControls();
-  final TextEditingController textController = TextEditingController();
+  late TextEditingController textController;
   late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
   late AffogatoDocument currentDoc;
@@ -36,6 +39,11 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   void initState() {
     // All actions needed to spin up a new editor instance
     void loadUpInstance() {
+      textController = AffogatoEditorFieldController(
+        languageBundle: widget.languageBundle,
+        themeBundle: widget.themeBundle,
+        stylingConfigs: widget.stylingConfigs,
+      );
       currentDoc = widget.workspaceConfigs.getDoc(widget.documentId);
       // Assume instant autosave
       textController.text = currentDoc.content;
@@ -201,18 +209,26 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                 );
                 return KeyEventResult.ignored;
               },
-              child: TextField(
-                focusNode: textFieldFocusNode,
-                maxLines: null,
-                controller: textController,
-                decoration: null,
-                style: TextStyle(
-                  color: widget.editorTheme.defaultTextColor,
-                  fontFamily: 'IBMPlexMono',
-                  height: utils.AffogatoConstants.lineHeight,
-                  fontSize: widget.stylingConfigs.editorFontSize,
+              child: Theme(
+                data: ThemeData(
+                  textSelectionTheme: TextSelectionThemeData(
+                    cursorColor: widget.editorTheme.defaultTextColor,
+                    selectionColor:
+                        widget.editorTheme.defaultTextColor.withOpacity(0.2),
+                  ),
                 ),
-                // selectionControls: selectionControls,
+                child: TextField(
+                  focusNode: textFieldFocusNode,
+                  maxLines: null,
+                  controller: textController,
+                  decoration: null,
+                  style: TextStyle(
+                    color: widget.editorTheme.defaultTextColor,
+                    fontFamily: 'IBMPlexMono',
+                    height: utils.AffogatoConstants.lineHeight,
+                    fontSize: widget.stylingConfigs.editorFontSize,
+                  ),
+                ),
               ),
             ),
           ),

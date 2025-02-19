@@ -2,7 +2,7 @@ library affogato.editor;
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:affogato_editor/battery_themes/affogato_classic/theme_bundle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,7 +16,7 @@ part './instance_state.dart';
 part './components/editor_pane.dart';
 part './components/file_tab_bar.dart';
 part './components/editor_instance.dart';
-part './components/text_selection_controls.dart';
+part './components/editor_field_controller.dart';
 part './components/primary_bar.dart';
 part './components/file_browser_button.dart';
 part './components/status_bar.dart';
@@ -79,6 +79,9 @@ class AffogatoWindowState extends State<AffogatoWindow>
               WindowEditorInstanceSetActiveEvent(
                 paneId: entry.key,
                 documentId: event.documentId,
+                languageBundle: widget.workspaceConfigs.languageBundleDetector(
+                    widget.workspaceConfigs.documentsRegistry[event.documentId]!
+                        .extension),
               ),
             );
           }
@@ -95,6 +98,9 @@ class AffogatoWindowState extends State<AffogatoWindow>
             WindowEditorInstanceSetActiveEvent(
               paneId: firstPane.key,
               documentId: event.documentId,
+              languageBundle: widget.workspaceConfigs.languageBundleDetector(
+                  widget.workspaceConfigs.documentsRegistry[event.documentId]!
+                      .extension),
             ),
           );
         }

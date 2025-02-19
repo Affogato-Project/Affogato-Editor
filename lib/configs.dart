@@ -19,7 +19,8 @@ class AffogatoStylingConfigs {
   final double windowHeight;
   final double tabBarHeight;
   final double editorFontSize;
-  final ThemeBundle<RenderToken, SyntaxHighlighter, Color> themeBundle;
+  final ThemeBundle<RenderToken, SyntaxHighlighter, Color, TextStyle>
+      themeBundle;
 
   const AffogatoStylingConfigs({
     required this.windowHeight,
@@ -70,11 +71,18 @@ class AffogatoWorkspaceConfigs {
   /// corresponding document IDs.
   final Map<String, AffogatoInstanceState> statesRegistry = {};
 
+  final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
+      TextStyle> themeBundle;
+
   final int tabSizeInSpaces;
+
+  final LanguageBundle Function(String extension) languageBundleDetector;
 
   AffogatoWorkspaceConfigs({
     required this.initStructure,
     required this.paneDocumentData,
+    required this.languageBundleDetector,
+    required this.themeBundle,
     this.tabSizeInSpaces = 4,
   });
 

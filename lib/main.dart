@@ -1,4 +1,6 @@
 import 'package:affogato_core/affogato_core.dart';
+import 'package:affogato_editor/battery_langs/generic/language_bundle.dart';
+import 'package:affogato_editor/battery_langs/markdown/language_bundle.dart';
 import 'package:flutter/material.dart';
 import 'package:affogato_editor/affogato_editor.dart';
 import 'package:affogato_editor/battery_themes/affogato_classic/theme_bundle.dart'
@@ -20,6 +22,12 @@ void main(List<String> args) {
           rendererType: InstanceRendererType.adHoc,
         ),
         workspaceConfigs: AffogatoWorkspaceConfigs(
+          themeBundle: affogato_classic_theme.themeBundle,
+          languageBundleDetector: (extension) => switch (extension) {
+            'js' => genericLB,
+            'md' => markdownLB,
+            String() => genericLB,
+          },
           paneDocumentData: {},
           initStructure: [
             FileDirectoryItem(
@@ -27,15 +35,15 @@ void main(List<String> args) {
               entries: [
                 FileDocumentItem(
                   document: AffogatoDocument(
-                    docName: 'MyDoc1',
-                    srcContent: 'Hello',
+                    docName: 'MyDoc1.md',
+                    srcContent: '# Hello\nThis is markdown',
                     maxVersioningLimit: 5,
                   ),
                 ),
                 FileDocumentItem(
                   document: AffogatoDocument(
                     docName: 'MyDoc2',
-                    srcContent: 'ge',
+                    srcContent: 'var x = "This is JS";',
                     maxVersioningLimit: 5,
                   ),
                 ),

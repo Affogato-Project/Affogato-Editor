@@ -72,9 +72,12 @@ class WindowEditorInstanceEvent extends WindowEvent {
 class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
   final String paneId;
   final String documentId;
+  final LanguageBundle languageBundle;
+
   const WindowEditorInstanceSetActiveEvent({
     required this.paneId,
     required this.documentId,
+    required this.languageBundle,
   }) : super('setActive');
 }
 

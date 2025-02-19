@@ -69,7 +69,7 @@ class FileTabBarState extends State<FileTabBar>
                   bottom: 6,
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
@@ -94,7 +94,7 @@ class FileTabBarState extends State<FileTabBar>
                       },
                       icon: Icon(
                         Icons.close,
-                        size: 10,
+                        size: 14,
                         color: widget.stylingConfigs.themeBundle.editorTheme
                             .defaultTextColor
                             .withOpacity(0.5),
