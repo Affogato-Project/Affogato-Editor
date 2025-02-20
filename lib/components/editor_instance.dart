@@ -184,61 +184,103 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         ),
       ); */
     }
-    return SingleChildScrollView(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Line numbers
-          SizedBox(
-            width: utils.AffogatoConstants.lineNumbersColWidth,
-            child: Column(
-              children: lineNumbers,
-            ),
-          ),
-          // Left gutter indicators, such as for Git
-          const SizedBox(
-            width: utils.AffogatoConstants.lineNumbersGutterWidth -
-                utils.AffogatoConstants.lineNumbersGutterRightmostPadding,
-            child: Column(),
-          ),
-          Expanded(
-            child: Focus(
-              onKeyEvent: (_, key) {
-                AffogatoEvents.editorKeyEvent.add(
-                  EditorKeyEvent(
-                    documentId: widget.documentId,
-                    key: key.logicalKey,
-                    keyEventType: key.runtimeType,
-                  ),
-                );
-                return KeyEventResult.ignored;
-              },
-              child: Theme(
-                data: ThemeData(
-                  textSelectionTheme: TextSelectionThemeData(
-                    cursorColor: widget.editorTheme.defaultTextColor,
-                    selectionColor:
-                        widget.editorTheme.defaultTextColor.withOpacity(0.2),
+    return Stack(
+      children: [
+        Positioned(
+          top: utils.AffogatoConstants.breadcrumbHeight,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SingleChildScrollView(
+            hitTestBehavior: HitTestBehavior.translucent,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Line numbers
+                SizedBox(
+                  width: utils.AffogatoConstants.lineNumbersColWidth,
+                  child: Column(
+                    children: [
+                      ...lineNumbers,
+                      const SizedBox(
+                          height: utils.AffogatoConstants.overscrollAmount),
+                    ],
                   ),
                 ),
-                child: TextField(
-                  focusNode: textFieldFocusNode,
-                  maxLines: null,
-                  controller: textController,
-                  decoration: null,
-                  style: TextStyle(
-                    color: widget.editorTheme.defaultTextColor,
-                    fontFamily: 'IBMPlexMono',
-                    height: utils.AffogatoConstants.lineHeight,
-                    fontSize: widget.stylingConfigs.editorFontSize,
+                // Left gutter indicators, such as for Git
+                const SizedBox(
+                  width: utils.AffogatoConstants.lineNumbersGutterWidth -
+                      utils.AffogatoConstants.lineNumbersGutterRightmostPadding,
+                  child: Column(),
+                ),
+                Expanded(
+                  child: Focus(
+                    onKeyEvent: (_, key) {
+                      AffogatoEvents.editorKeyEvent.add(
+                        EditorKeyEvent(
+                          documentId: widget.documentId,
+                          key: key.logicalKey,
+                          keyEventType: key.runtimeType,
+                        ),
+                      );
+                      return KeyEventResult.ignored;
+                    },
+                    child: Theme(
+                      data: ThemeData(
+                        textSelectionTheme: TextSelectionThemeData(
+                          cursorColor: widget.editorTheme.defaultTextColor,
+                          selectionColor: widget.editorTheme.defaultTextColor
+                              .withOpacity(0.2),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            focusNode: textFieldFocusNode,
+                            maxLines: null,
+                            controller: textController,
+                            decoration: null,
+                            style: TextStyle(
+                              color: widget.editorTheme.defaultTextColor,
+                              fontFamily: 'IBMPlexMono',
+                              height: utils.AffogatoConstants.lineHeight,
+                              fontSize: widget.stylingConfigs.editorFontSize,
+                            ),
+                          ),
+                          MouseRegion(
+                            opaque: false,
+                            hitTestBehavior: HitTestBehavior.translucent,
+                            cursor: SystemMouseCursors.text,
+                            child: GestureDetector(
+                              onTapUp: (_) {
+                                textController.selection =
+                                    TextSelection.fromPosition(
+                                  TextPosition(
+                                      offset: textController.text.length),
+                                );
+                                textFieldFocusNode.requestFocus();
+                              },
+                              child: Container(
+                                color: Colors.transparent,
+                                width: double.infinity,
+                                height:
+                                    utils.AffogatoConstants.overscrollAmount,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
