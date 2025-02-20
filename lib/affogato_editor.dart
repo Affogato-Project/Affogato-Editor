@@ -55,6 +55,14 @@ class AffogatoWindowState extends State<AffogatoWindow>
           srcContent: '# Hello',
           maxVersioningLimit: 5,
         ),
+      )
+      ..createDoc(
+        path: './Dir_1/inside/',
+        AffogatoDocument(
+          docName: 'some_script.js',
+          srcContent: 'function f() => 2;',
+          maxVersioningLimit: 5,
+        ),
       );
 
     registerListener(
@@ -214,7 +222,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
                     ),
                   ),
                   SizedBox(
-                    width: widget.stylingConfigs.windowWidth - utils.AffogatoConstants.primaryBarWidth,
+                    width: widget.stylingConfigs.windowWidth -
+                        utils.AffogatoConstants.primaryBarWidth,
                     child: Row(
                       children: [
                         for (final pane
@@ -241,7 +250,10 @@ class AffogatoWindowState extends State<AffogatoWindow>
             ),
             SizedBox(
               height: utils.AffogatoConstants.statusBarHeight,
-              child: StatusBar(stylingConfigs: widget.stylingConfigs),
+              child: StatusBar(
+                stylingConfigs: widget.stylingConfigs,
+                workspaceConfigs: widget.workspaceConfigs,
+              ),
             ),
           ],
         ),

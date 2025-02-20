@@ -1,11 +1,15 @@
 part of affogato.editor;
 
 class StatusBar extends StatefulWidget {
+  final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoStylingConfigs stylingConfigs;
 
   StatusBar({
     required this.stylingConfigs,
-  }) : super(key: ValueKey('$stylingConfigs'));
+    required this.workspaceConfigs,
+  }) : super(
+            key: ValueKey(
+                '${stylingConfigs.hashCode}${workspaceConfigs.hashCode}'));
   @override
   State<StatefulWidget> createState() => StatusBarState();
 }
@@ -26,6 +30,14 @@ class StatusBarState extends State<StatusBar>
         });
       },
     );
+
+/*     registerListener(
+        AffogatoEvents.windowEditorInstanceUnsetActiveEvents.stream, (event) {
+      setState(() {
+        event.documentId;
+        currentDocumentId = null;
+      });
+    }); */
     super.initState();
   }
 
