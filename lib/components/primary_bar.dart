@@ -38,8 +38,8 @@ class PrimaryBarState extends State<PrimaryBar>
       AffogatoEvents.editorInstanceSetActiveEvents.stream,
       (event) {
         setState(() {
-          final int i = widget.items.indexWhere(
-              (i) => i is AffogatoDocumentItem && i.id == event.documentId);
+          final int i = widget.items.indexWhere((i) =>
+              i is AffogatoDocumentItem && i.documentId == event.documentId);
           buttonStates = buttonStates
               .map((s) =>
                   s == QuartetButtonState.active ? QuartetButtonState.none : s)
@@ -74,15 +74,6 @@ class PrimaryBarState extends State<PrimaryBar>
                     buttonStates[i] == QuartetButtonState.active
                 ? buttonStates[i]
                 : QuartetButtonState.none;
-            /* if (widget.items[i] is AffogatoDirectoryItem) {
-              buttonStates[i] = buttonStates[i] == QuartetButtonState.pressed
-                  ? QuartetButtonState.pressed
-                  : QuartetButtonState.none;
-            } else {
-              buttonStates[i] = buttonStates[i] == QuartetButtonState.none
-                  ? QuartetButtonState.hovered
-                  : buttonStates[i];
-            } */
           }),
           onTapUp: (_) => setState(() {
             if (widget.items[i] is AffogatoDirectoryItem) {
@@ -108,7 +99,8 @@ class PrimaryBarState extends State<PrimaryBar>
               isExpanded[i] = !isExpanded[i];
               AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
                 WindowEditorRequestDocumentSetActiveEvent(
-                  documentId: (widget.items[i] as AffogatoDocumentItem).id,
+                  documentId:
+                      (widget.items[i] as AffogatoDocumentItem).documentId,
                 ),
               );
             } else {
@@ -145,43 +137,4 @@ class PrimaryBarState extends State<PrimaryBar>
     cancelSubscriptions();
     super.dispose();
   }
-}
-
-/// Used to represent documents and directories when they are first loaded into
-/// the editor. Afterwards, the editor will work with and manipulate these entities
-/// using the [AffogatoFileItem], which passes IDs around rather than the actual entities.
-sealed class FileItem {
-  const FileItem();
-}
-
-class FileDocumentItem extends FileItem {
-  final AffogatoDocument document;
-
-  const FileDocumentItem({
-    required this.document,
-  });
-}
-
-class FileDirectoryItem extends FileItem {
-  final String dirName;
-  final List<FileItem> entries;
-
-  const FileDirectoryItem({
-    required this.dirName,
-    required this.entries,
-  });
-}
-
-sealed class AffogatoFileItem {
-  const AffogatoFileItem();
-}
-
-class AffogatoDocumentItem extends AffogatoFileItem {
-  final String id;
-  const AffogatoDocumentItem(this.id);
-}
-
-class AffogatoDirectoryItem extends AffogatoFileItem {
-  final String dirName;
-  const AffogatoDirectoryItem(this.dirName);
 }

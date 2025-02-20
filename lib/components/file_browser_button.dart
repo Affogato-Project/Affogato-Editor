@@ -74,8 +74,8 @@ class FileBrowserButton extends StatelessWidget {
                   Text(
                     entry is AffogatoDirectoryItem
                         ? (entry as AffogatoDirectoryItem).dirName
-                        : workspaceConfigs
-                            .getDoc((entry as AffogatoDocumentItem).id)
+                        : workspaceConfigs.fileManager
+                            .getDoc((entry as AffogatoDocumentItem).documentId)
                             .docName,
                     style: TextStyle(color: editorTheme.defaultTextColor),
                   )

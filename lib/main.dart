@@ -1,4 +1,3 @@
-import 'package:affogato_core/affogato_core.dart';
 import 'package:affogato_editor/battery_langs/generic/language_bundle.dart';
 import 'package:affogato_editor/battery_langs/markdown/language_bundle.dart';
 import 'package:flutter/material.dart';
@@ -29,27 +28,6 @@ void main(List<String> args) {
             String() => genericLB,
           },
           paneDocumentData: {},
-          initStructure: [
-            FileDirectoryItem(
-              dirName: 'MyDir',
-              entries: [
-                FileDocumentItem(
-                  document: AffogatoDocument(
-                    docName: 'MyDoc1.md',
-                    srcContent: '# Hello\nThis is markdown',
-                    maxVersioningLimit: 5,
-                  ),
-                ),
-                FileDocumentItem(
-                  document: AffogatoDocument(
-                    docName: 'MyDoc2',
-                    srcContent: 'var x = "This is JS";',
-                    maxVersioningLimit: 5,
-                  ),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     ),

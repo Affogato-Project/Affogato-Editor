@@ -13,6 +13,7 @@ import 'package:affogato_editor/utils/utils.dart' as utils;
 part './configs.dart';
 part './events.dart';
 part './instance_state.dart';
+part './file_manager.dart';
 part './components/editor_pane.dart';
 part './components/file_tab_bar.dart';
 part './components/editor_instance.dart';
@@ -43,7 +44,18 @@ class AffogatoWindowState extends State<AffogatoWindow>
 
   @override
   void initState() {
-    widget.workspaceConfigs.buildDirStructure();
+    widget.workspaceConfigs.fileManager
+      ..buildIndex()
+      ..createDir('Dir_1')
+      ..createDir('Dir_1/inside')
+      ..createDoc(
+        path: './Dir_1/inside/',
+        AffogatoDocument(
+          docName: 'MyDoc.md',
+          srcContent: '# Hello',
+          maxVersioningLimit: 5,
+        ),
+      );
 
     registerListener(
       AffogatoEvents.windowEditorPaneAddEvents.stream,
@@ -80,7 +92,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
                 paneId: entry.key,
                 documentId: event.documentId,
                 languageBundle: widget.workspaceConfigs.languageBundleDetector(
-                    widget.workspaceConfigs.documentsRegistry[event.documentId]!
+                    widget.workspaceConfigs.fileManager
+                        .getDoc(event.documentId)
                         .extension),
               ),
             );
@@ -99,7 +112,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
               paneId: firstPane.key,
               documentId: event.documentId,
               languageBundle: widget.workspaceConfigs.languageBundleDetector(
-                  widget.workspaceConfigs.documentsRegistry[event.documentId]!
+                  widget.workspaceConfigs.fileManager
+                      .getDoc(event.documentId)
                       .extension),
             ),
           );
@@ -110,7 +124,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
     registerListener(
       AffogatoEvents.editorDocumentChangedEvents.stream,
       (event) {
-        widget.workspaceConfigs.documentsRegistry[event.documentId]!
+        widget.workspaceConfigs.fileManager
+            .getDoc(event.documentId)
             .addVersion(event.newContent);
       },
     );
@@ -194,8 +209,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
                     child: PrimaryBar(
                       expandedWidth: 300,
                       items: [
-                        for (final key
-                            in widget.workspaceConfigs.documentsRegistry.keys)
+                        for (final key in widget.workspaceConfigs.fileManager
+                            .documentsRegistry.keys)
                           AffogatoDocumentItem(key)
                       ],
                       workspaceConfigs: widget.workspaceConfigs,

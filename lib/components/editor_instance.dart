@@ -44,7 +44,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         themeBundle: widget.themeBundle,
         stylingConfigs: widget.stylingConfigs,
       );
-      currentDoc = widget.workspaceConfigs.getDoc(widget.documentId);
+      currentDoc =
+          widget.workspaceConfigs.fileManager.getDoc(widget.documentId);
       // Assume instant autosave
       textController.text = currentDoc.content;
       // Load or create instance state

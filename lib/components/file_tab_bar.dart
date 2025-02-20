@@ -73,7 +73,7 @@ class FileTabBarState extends State<FileTabBar>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      widget.workspaceConfigs
+                      widget.workspaceConfigs.fileManager
                           .getDoc(widget.documentIds[i])
                           .docName,
                       style: TextStyle(
