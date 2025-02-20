@@ -51,6 +51,8 @@ class AffogatoPerformanceConfigs {
 }
 
 class AffogatoWorkspaceConfigs {
+  final String projectName;
+
   bool hasBuiltDirStruct = false;
 
   /// A mapping of pane IDs to the IDs of the [AffogatoDocument]s contained by that pane
@@ -70,6 +72,7 @@ class AffogatoWorkspaceConfigs {
   final LanguageBundle Function(String extension) languageBundleDetector;
 
   AffogatoWorkspaceConfigs({
+    required this.projectName,
     required this.paneDocumentData,
     required this.languageBundleDetector,
     required this.themeBundle,

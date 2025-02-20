@@ -46,8 +46,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
   void initState() {
     widget.workspaceConfigs.fileManager
       ..buildIndex()
-      ..createDir('Dir_1')
-      ..createDir('Dir_1/inside')
+      ..createDir('Dir_1/')
+      ..createDir('Dir_1/inside/')
       ..createDoc(
         path: './Dir_1/inside/',
         AffogatoDocument(
@@ -208,11 +208,6 @@ class AffogatoWindowState extends State<AffogatoWindow>
                     width: 300,
                     child: PrimaryBar(
                       expandedWidth: 300,
-                      items: [
-                        for (final key in widget.workspaceConfigs.fileManager
-                            .documentsRegistry.keys)
-                          AffogatoDocumentItem(key)
-                      ],
                       workspaceConfigs: widget.workspaceConfigs,
                       editorTheme:
                           widget.stylingConfigs.themeBundle.editorTheme,

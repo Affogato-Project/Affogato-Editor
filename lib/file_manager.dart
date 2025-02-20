@@ -25,12 +25,12 @@ class AffogatoFileManager {
     String? parentPath,
   ]) {
     return {
-      '${parentPath != null ? "$parentPath/" : ""}${dir.dirName}/':
+      '${parentPath != null ? parentPath : ""}${dir.dirPath}':
           dir.documents.map((d) => d.documentId).toList(),
       ...{
         for (final subdir in dir.directories)
-          ..._expandDir(subdir,
-              '${parentPath != null ? "$parentPath/" : ""}${dir.dirName}/'),
+          ..._expandDir(
+              subdir, '${parentPath != null ? parentPath : ""}${dir.dirPath}'),
       }
     };
   }
@@ -39,21 +39,31 @@ class AffogatoFileManager {
     if (hasBuiltIndex) return;
     directoriesRegistry
       ..clear()
-      ..addAll(_expandDir(projDir ?? const AffogatoDirectoryItem('.')));
+      ..addAll(_expandDir(projDir ?? const AffogatoDirectoryItem('./')));
     hasBuiltIndex = true;
   }
 
   bool existsDir(String path) => directoriesRegistry.containsKey(path);
+
   List<String> getSubdirectoriesInDir(String path) {
-    if (directoriesRegistry.containsKey(path)) {
-      return directoriesRegistry.keys.where((p) => p.startsWith(path)).toList();
+    if (existsDir(path)) {
+      final int nestingLevel = path.split('/').length;
+      return directoriesRegistry.keys
+          .where((p) =>
+              p.startsWith(path) &&
+              p !=
+                  path && // this prevents parent subdirectory itself from being shown
+              p.split('/').length ==
+                  nestingLevel +
+                      1) // this prevents nested subdirectories from being shown
+          .toList();
     } else {
       throw Exception("Directory with path '$path' not found");
     }
   }
 
   List<String> getDocsInDir(String path) {
-    if (directoriesRegistry.containsKey(path)) {
+    if (existsDir(path)) {
       return directoriesRegistry[path]!;
     } else {
       throw Exception("Directory with path '$path' not found");
@@ -67,7 +77,7 @@ class AffogatoFileManager {
   void createDir(String name, [String? parent]) {
     parent ??= './';
     if (existsDir(parent)) {
-      directoriesRegistry.addAll({'$parent$name/': []});
+      directoriesRegistry.addAll({'$parent$name': []});
     } else {
       throw Exception("Invalid path: '$parent' does not exist");
     }
@@ -96,12 +106,12 @@ class AffogatoDocumentItem extends AffogatoFileItem {
 }
 
 class AffogatoDirectoryItem extends AffogatoFileItem {
-  final String dirName;
+  final String dirPath;
   final List<AffogatoDocumentItem> documents;
   final List<AffogatoDirectoryItem> directories;
 
   const AffogatoDirectoryItem(
-    this.dirName, {
+    this.dirPath, {
     this.documents = const [],
     this.directories = const [],
   });

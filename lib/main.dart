@@ -21,6 +21,7 @@ void main(List<String> args) {
           rendererType: InstanceRendererType.adHoc,
         ),
         workspaceConfigs: AffogatoWorkspaceConfigs(
+          projectName: 'My First Project',
           themeBundle: affogato_classic_theme.themeBundle,
           languageBundleDetector: (extension) => switch (extension) {
             'js' => genericLB,

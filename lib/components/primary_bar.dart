@@ -3,15 +3,16 @@ part of affogato.editor;
 class PrimaryBar extends StatefulWidget {
   final double expandedWidth;
   final EditorTheme editorTheme;
-  final List<AffogatoFileItem> items;
   final AffogatoWorkspaceConfigs workspaceConfigs;
 
   PrimaryBar({
     required this.expandedWidth,
-    required this.items,
     required this.editorTheme,
     required this.workspaceConfigs,
-  }) : super(key: ValueKey(items));
+  }) : super(
+            key: ValueKey(workspaceConfigs.fileManager.documentsRegistry.keys
+                .followedBy(
+                    workspaceConfigs.fileManager.directoriesRegistry.keys)));
 
   @override
   State<StatefulWidget> createState() => PrimaryBarState();
@@ -20,31 +21,40 @@ class PrimaryBar extends StatefulWidget {
 class PrimaryBarState extends State<PrimaryBar>
     with utils.StreamSubscriptionManager {
   bool expanded = true;
-  List<QuartetButtonState> buttonStates = [];
-  final List<bool> isExpanded = [];
+  Map<String, QuartetButtonState> docButtonStates = {};
+  Map<String, QuartetButtonState> dirButtonStates = {};
+  final Map<String, bool> isExpanded = {};
 
   @override
   void initState() {
-    buttonStates = List<QuartetButtonState>.generate(
-      widget.items.length,
-      (_) => QuartetButtonState.none,
-    );
-    isExpanded.addAll(List<bool>.generate(
-      widget.items.length,
-      (_) => false,
-    ));
+    docButtonStates.addAll({
+      for (final doc
+          in widget.workspaceConfigs.fileManager.documentsRegistry.entries)
+        doc.key: QuartetButtonState.none,
+    });
+    dirButtonStates.addAll({
+      for (final dir
+          in widget.workspaceConfigs.fileManager.directoriesRegistry.entries)
+        dir.key: QuartetButtonState.none,
+    });
+
+    isExpanded.addAll({
+      for (final dir
+          in widget.workspaceConfigs.fileManager.directoriesRegistry.entries)
+        dir.key: false,
+    });
 
     registerListener(
       AffogatoEvents.editorInstanceSetActiveEvents.stream,
       (event) {
         setState(() {
-          final int i = widget.items.indexWhere((i) =>
-              i is AffogatoDocumentItem && i.documentId == event.documentId);
-          buttonStates = buttonStates
-              .map((s) =>
-                  s == QuartetButtonState.active ? QuartetButtonState.none : s)
-              .toList();
-          buttonStates[i] = QuartetButtonState.active;
+          for (final s in docButtonStates.entries) {
+            if (s.key == event.documentId) {
+              docButtonStates[s.key] = QuartetButtonState.active;
+            } else {
+              docButtonStates[s.key] = QuartetButtonState.none;
+            }
+          }
         });
       },
     );
@@ -54,62 +64,6 @@ class PrimaryBarState extends State<PrimaryBar>
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> primaryBarButtons = [];
-    for (int i = 0; i < widget.items.length; i++) {
-      primaryBarButtons.add(
-        FileBrowserButton(
-          buttonState: buttonStates[i],
-          expanded: isExpanded[i],
-          entry: widget.items[i],
-          indent: 0,
-          editorTheme: widget.editorTheme,
-          workspaceConfigs: widget.workspaceConfigs,
-          onEnter: (_) => setState(
-            () => buttonStates[i] = buttonStates[i] == QuartetButtonState.none
-                ? QuartetButtonState.hovered
-                : buttonStates[i],
-          ),
-          onExit: (_) => setState(() {
-            buttonStates[i] = buttonStates[i] == QuartetButtonState.pressed ||
-                    buttonStates[i] == QuartetButtonState.active
-                ? buttonStates[i]
-                : QuartetButtonState.none;
-          }),
-          onTapUp: (_) => setState(() {
-            if (widget.items[i] is AffogatoDirectoryItem) {
-              buttonStates = buttonStates
-                  .map((s) => s == QuartetButtonState.pressed
-                      ? QuartetButtonState.none
-                      : s)
-                  .toList();
-              buttonStates[i] = QuartetButtonState.pressed;
-              isExpanded[i] = !isExpanded[i];
-            } else {
-              return;
-            }
-          }),
-          onDoubleTap: () => setState(() {
-            if (widget.items[i] is AffogatoDocumentItem) {
-              buttonStates = buttonStates
-                  .map((s) => s == QuartetButtonState.active
-                      ? QuartetButtonState.none
-                      : s)
-                  .toList();
-              buttonStates[i] = QuartetButtonState.active;
-              isExpanded[i] = !isExpanded[i];
-              AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
-                WindowEditorRequestDocumentSetActiveEvent(
-                  documentId:
-                      (widget.items[i] as AffogatoDocumentItem).documentId,
-                ),
-              );
-            } else {
-              return;
-            }
-          }),
-        ),
-      );
-    }
     return expanded
         ? Container(
             width: widget.expandedWidth,
@@ -125,8 +79,15 @@ class PrimaryBarState extends State<PrimaryBar>
                 ),
               ),
             ),
-            child: ListView(
-              children: primaryBarButtons,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: FileBrowserButton(
+                isRoot: true,
+                entry: const AffogatoDirectoryItem('./'),
+                indent: 0,
+                editorTheme: widget.editorTheme,
+                workspaceConfigs: widget.workspaceConfigs,
+              ),
             ),
           )
         : const SizedBox(width: 0, height: 0);
