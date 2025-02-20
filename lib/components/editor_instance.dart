@@ -30,13 +30,27 @@ class AffogatoEditorInstance extends StatefulWidget {
 
 class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     with utils.StreamSubscriptionManager {
+  final ScrollController scrollController = ScrollController();
   late TextEditingController textController;
   late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
   late AffogatoDocument currentDoc;
+  bool hasScrolled = false;
 
   @override
   void initState() {
+    scrollController.addListener(() {
+      if (scrollController.offset > 0 && !hasScrolled) {
+        setState(() {
+          hasScrolled = true;
+        });
+      } else if (scrollController.offset <= 0 && hasScrolled) {
+        setState(() {
+          hasScrolled = false;
+        });
+      }
+    });
+
     // All actions needed to spin up a new editor instance
     void loadUpInstance() {
       textController = AffogatoEditorFieldController(
@@ -192,6 +206,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           right: 0,
           bottom: 0,
           child: SingleChildScrollView(
+            controller: scrollController,
             hitTestBehavior: HitTestBehavior.translucent,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -277,6 +292,37 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+        Positioned(
+          top: 0,
+          left: 5,
+          right: 0,
+          height: utils.AffogatoConstants.breadcrumbHeight,
+          child: Container(
+            width: double.infinity,
+            height: utils.AffogatoConstants.breadcrumbHeight,
+            decoration: BoxDecoration(
+              color: widget.stylingConfigs.themeBundle.editorTheme.editorColor,
+              boxShadow: hasScrolled
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 2,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.workspaceConfigs.fileManager
+                        .getDocPath(widget.documentId) ??
+                    'Unsaved',
+                style: widget.editorTheme.defaultTextStyle,
+              ),
             ),
           ),
         ),

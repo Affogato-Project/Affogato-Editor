@@ -25,7 +25,7 @@ class AffogatoConstants {
   static const double lineNumbersGutterWidth = 20;
   static const double lineNumbersGutterRightmostPadding = 2;
   static const double overscrollAmount = 200;
-  static const double breadcrumbHeight = 20;
+  static const double breadcrumbHeight = 26;
   static const double lineHeight = 1.2;
 }
 

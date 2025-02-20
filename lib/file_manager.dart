@@ -83,6 +83,14 @@ class AffogatoFileManager {
     }
   }
 
+  String? getDocPath(String documentId) {
+    final entry = directoriesRegistry.entries.firstWhere(
+      (entry) => entry.value.contains(documentId),
+      orElse: () => const MapEntry('', []),
+    );
+    return entry.key == '' ? null : entry.key;
+  }
+
   void createDoc(AffogatoDocument document, {String? path}) {
     path ??= './';
     if (existsDir(path)) {
