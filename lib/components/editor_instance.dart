@@ -35,6 +35,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
   late AffogatoDocument currentDoc;
+  late TextStyle codeTextStyle;
   bool hasScrolled = false;
 
   @override
@@ -53,6 +54,12 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
     // All actions needed to spin up a new editor instance
     void loadUpInstance() {
+      codeTextStyle = TextStyle(
+        color: widget.editorTheme.defaultTextColor,
+        fontFamily: 'IBMPlexMono',
+        height: utils.AffogatoConstants.lineHeight,
+        fontSize: widget.stylingConfigs.editorFontSize,
+      );
       textController = AffogatoEditorFieldController(
         languageBundle: widget.languageBundle,
         themeBundle: widget.themeBundle,
@@ -148,11 +155,62 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> leftGutterIndicators = [];
+  List<Row> generateIndentationRulers() {
+    final List<Row> rows = [];
+    // this flag allows a single indentation ruler to be added to the
+    // start of lines inside a nested code snippet, such as a function body, even
+    // if they are empty lines
+    bool isNested = false;
+    for (final line in textController.text.split('\n')) {
+      // create an initial Row
+      final List<Widget> rowItems = [Text('', style: codeTextStyle)];
+      // only trigger the loop if there is a possbility of indentation
+      if (line.startsWith(' ')) {
+        isNested = true;
+        for (int i = 0; i < line.length; i++) {
+          if (line[i] == ' ') {
+            // add an indentation ruler at every tab
+            if (i % widget.workspaceConfigs.tabSizeInSpaces == 0) {
+              rowItems.add(
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(
+                        color: widget.editorTheme.borderColor,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    ' ' * widget.workspaceConfigs.tabSizeInSpaces,
+                    style: codeTextStyle,
+                  ),
+                ),
+              );
+            }
+          } else {
+            break;
+          }
+        }
+      } else {
+        isNested = false;
+      }
+      rows.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: line.trim() == '' && !isNested
+              ? [Text('', style: codeTextStyle)]
+              : rowItems,
+        ),
+      );
+    }
+
+    return rows;
+  }
+
+  List<Widget> generateLineNumbers() {
     final List<Widget> lineNumbers = [];
-    for (int i = 1; i <= currentDoc.content.split('\n').length; i++) {
+    for (int i = 1; i <= textController.text.split('\n').length; i++) {
       lineNumbers.add(
         SizedBox(
           width: utils.AffogatoConstants.lineNumbersColWidth,
@@ -161,10 +219,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             child: Text(
               i.toString(),
               textAlign: TextAlign.right,
-              style: TextStyle(
+              style: codeTextStyle.copyWith(
                 color: widget.editorTheme.defaultTextColor.withOpacity(0.4),
-                height: utils.AffogatoConstants.lineHeight,
-                fontSize: widget.stylingConfigs.editorFontSize,
               ),
             ),
           ),
@@ -198,6 +254,12 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         ),
       ); */
     }
+    return lineNumbers;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> leftGutterIndicators = [];
     return Stack(
       children: [
         Positioned(
@@ -208,88 +270,101 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           child: SingleChildScrollView(
             controller: scrollController,
             hitTestBehavior: HitTestBehavior.translucent,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                // Line numbers
-                SizedBox(
-                  width: utils.AffogatoConstants.lineNumbersColWidth,
+                Positioned(
+                  left: utils.AffogatoConstants.lineNumbersColWidth +
+                      utils.AffogatoConstants.lineNumbersGutterWidth,
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
                   child: Column(
-                    children: [
-                      ...lineNumbers,
-                      const SizedBox(
-                          height: utils.AffogatoConstants.overscrollAmount),
-                    ],
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: generateIndentationRulers(),
                   ),
                 ),
-                // Left gutter indicators, such as for Git
-                const SizedBox(
-                  width: utils.AffogatoConstants.lineNumbersGutterWidth -
-                      utils.AffogatoConstants.lineNumbersGutterRightmostPadding,
-                  child: Column(),
-                ),
-                Expanded(
-                  child: Focus(
-                    onKeyEvent: (_, key) {
-                      AffogatoEvents.editorKeyEvent.add(
-                        EditorKeyEvent(
-                          documentId: widget.documentId,
-                          key: key.logicalKey,
-                          keyEventType: key.runtimeType,
-                        ),
-                      );
-                      return KeyEventResult.ignored;
-                    },
-                    child: Theme(
-                      data: ThemeData(
-                        textSelectionTheme: TextSelectionThemeData(
-                          cursorColor: widget.editorTheme.defaultTextColor,
-                          selectionColor: widget.editorTheme.defaultTextColor
-                              .withOpacity(0.2),
-                        ),
-                      ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Line numbers
+                    SizedBox(
+                      width: utils.AffogatoConstants.lineNumbersColWidth,
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextField(
-                            focusNode: textFieldFocusNode,
-                            maxLines: null,
-                            controller: textController,
-                            decoration: null,
-                            style: TextStyle(
-                              color: widget.editorTheme.defaultTextColor,
-                              fontFamily: 'IBMPlexMono',
-                              height: utils.AffogatoConstants.lineHeight,
-                              fontSize: widget.stylingConfigs.editorFontSize,
-                            ),
-                          ),
-                          MouseRegion(
-                            opaque: false,
-                            hitTestBehavior: HitTestBehavior.translucent,
-                            cursor: SystemMouseCursors.text,
-                            child: GestureDetector(
-                              onTapUp: (_) {
-                                textController.selection =
-                                    TextSelection.fromPosition(
-                                  TextPosition(
-                                      offset: textController.text.length),
-                                );
-                                textFieldFocusNode.requestFocus();
-                              },
-                              child: Container(
-                                color: Colors.transparent,
-                                width: double.infinity,
-                                height:
-                                    utils.AffogatoConstants.overscrollAmount,
-                              ),
-                            ),
-                          ),
+                          ...generateLineNumbers(),
+                          const SizedBox(
+                              height: utils.AffogatoConstants.overscrollAmount),
                         ],
                       ),
                     ),
-                  ),
+                    // Left gutter indicators, such as for Git
+                    const SizedBox(
+                      width: utils.AffogatoConstants.lineNumbersGutterWidth -
+                          utils.AffogatoConstants
+                              .lineNumbersGutterRightmostPadding,
+                      child: Column(),
+                    ),
+                    Expanded(
+                      child: Focus(
+                        onKeyEvent: (_, key) {
+                          AffogatoEvents.editorKeyEvent.add(
+                            EditorKeyEvent(
+                              documentId: widget.documentId,
+                              key: key.logicalKey,
+                              keyEventType: key.runtimeType,
+                            ),
+                          );
+                          return KeyEventResult.ignored;
+                        },
+                        child: Theme(
+                          data: ThemeData(
+                            textSelectionTheme: TextSelectionThemeData(
+                              cursorColor: widget.editorTheme.defaultTextColor,
+                              selectionColor: widget
+                                  .editorTheme.defaultTextColor
+                                  .withOpacity(0.2),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                focusNode: textFieldFocusNode,
+                                maxLines: null,
+                                controller: textController,
+                                decoration: null,
+                                style: codeTextStyle,
+                              ),
+                              MouseRegion(
+                                opaque: false,
+                                hitTestBehavior: HitTestBehavior.translucent,
+                                cursor: SystemMouseCursors.text,
+                                child: GestureDetector(
+                                  onTapUp: (_) {
+                                    textController.selection =
+                                        TextSelection.fromPosition(
+                                      TextPosition(
+                                          offset: textController.text.length),
+                                    );
+                                    textFieldFocusNode.requestFocus();
+                                  },
+                                  child: Container(
+                                    color: Colors.transparent,
+                                    width: double.infinity,
+                                    height: utils
+                                        .AffogatoConstants.overscrollAmount,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -297,7 +372,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         ),
         Positioned(
           top: 0,
-          left: 5,
+          left: 0,
           right: 0,
           height: utils.AffogatoConstants.breadcrumbHeight,
           child: Container(
