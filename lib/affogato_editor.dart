@@ -205,16 +205,16 @@ class AffogatoWindowState extends State<AffogatoWindow>
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 300,
+                    width: utils.AffogatoConstants.primaryBarWidth,
                     child: PrimaryBar(
-                      expandedWidth: 300,
+                      expandedWidth: utils.AffogatoConstants.primaryBarWidth,
                       workspaceConfigs: widget.workspaceConfigs,
                       editorTheme:
                           widget.stylingConfigs.themeBundle.editorTheme,
                     ),
                   ),
                   SizedBox(
-                    width: widget.stylingConfigs.windowWidth - 300,
+                    width: widget.stylingConfigs.windowWidth - utils.AffogatoConstants.primaryBarWidth,
                     child: Row(
                       children: [
                         for (final pane

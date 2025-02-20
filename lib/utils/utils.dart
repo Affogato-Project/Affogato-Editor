@@ -18,6 +18,7 @@ String generateId() => String.fromCharCodes(
     );
 
 class AffogatoConstants {
+  static const double primaryBarWidth = 350;
   static const double tabBarPadding = 6;
   static const double statusBarHeight = 24;
   static const double lineNumbersColWidth = 60;

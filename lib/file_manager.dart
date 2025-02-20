@@ -98,11 +98,16 @@ class AffogatoFileManager {
 
 sealed class AffogatoFileItem {
   const AffogatoFileItem();
+
+  String get hash;
 }
 
 class AffogatoDocumentItem extends AffogatoFileItem {
   final String documentId;
   const AffogatoDocumentItem(this.documentId);
+
+  @override
+  String get hash => documentId;
 }
 
 class AffogatoDirectoryItem extends AffogatoFileItem {
@@ -115,4 +120,7 @@ class AffogatoDirectoryItem extends AffogatoFileItem {
     this.documents = const [],
     this.directories = const [],
   });
+
+  @override
+  String get hash => dirPath;
 }

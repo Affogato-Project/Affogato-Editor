@@ -21,41 +21,20 @@ class PrimaryBar extends StatefulWidget {
 class PrimaryBarState extends State<PrimaryBar>
     with utils.StreamSubscriptionManager {
   bool expanded = true;
-  Map<String, QuartetButtonState> docButtonStates = {};
-  Map<String, QuartetButtonState> dirButtonStates = {};
-  final Map<String, bool> isExpanded = {};
 
   @override
   void initState() {
-    docButtonStates.addAll({
-      for (final doc
-          in widget.workspaceConfigs.fileManager.documentsRegistry.entries)
-        doc.key: QuartetButtonState.none,
-    });
-    dirButtonStates.addAll({
-      for (final dir
-          in widget.workspaceConfigs.fileManager.directoriesRegistry.entries)
-        dir.key: QuartetButtonState.none,
-    });
-
-    isExpanded.addAll({
-      for (final dir
-          in widget.workspaceConfigs.fileManager.directoriesRegistry.entries)
-        dir.key: false,
-    });
-
     registerListener(
       AffogatoEvents.editorInstanceSetActiveEvents.stream,
       (event) {
-        setState(() {
-          for (final s in docButtonStates.entries) {
-            if (s.key == event.documentId) {
-              docButtonStates[s.key] = QuartetButtonState.active;
-            } else {
-              docButtonStates[s.key] = QuartetButtonState.none;
-            }
-          }
-        });
+        setState(() {});
+      },
+    );
+
+    registerListener(
+      AffogatoEvents.editorDocumentClosedEvents.stream,
+      (event) {
+        setState(() {});
       },
     );
 

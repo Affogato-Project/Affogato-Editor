@@ -78,4 +78,11 @@ class AffogatoWorkspaceConfigs {
     required this.themeBundle,
     this.tabSizeInSpaces = 4,
   });
+
+  bool isDocumentShown(String documentId) => paneDocumentData.values
+      .firstWhere(
+        (pane) => pane.contains(documentId),
+        orElse: () => const [],
+      )
+      .isNotEmpty;
 }
