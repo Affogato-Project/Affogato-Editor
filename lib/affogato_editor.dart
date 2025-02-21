@@ -202,7 +202,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
   Widget build(BuildContext context) {
     return Material(
       key: windowKey,
-      color: widget.stylingConfigs.themeBundle.editorTheme.windowColor,
+      color: widget.stylingConfigs.themeBundle.editorTheme.panelBackground,
       child: SizedBox(
         width: widget.stylingConfigs.windowWidth,
         height: widget.stylingConfigs.windowHeight,

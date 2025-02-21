@@ -3,7 +3,7 @@ part of affogato.editor;
 class AffogatoEditorInstance extends StatefulWidget {
   final String documentId;
   final AffogatoInstanceState? instanceState;
-  final EditorTheme editorTheme;
+  final EditorTheme<Color, TextStyle> editorTheme;
   final double width;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoStylingConfigs stylingConfigs;
@@ -55,7 +55,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     // All actions needed to spin up a new editor instance
     void loadUpInstance() {
       codeTextStyle = TextStyle(
-        color: widget.editorTheme.defaultTextColor,
+        color: widget.editorTheme.editorForeground,
         fontFamily: 'IBMPlexMono',
         height: utils.AffogatoConstants.lineHeight,
         fontSize: widget.stylingConfigs.editorFontSize,
@@ -176,7 +176,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                   decoration: BoxDecoration(
                     border: Border(
                       left: BorderSide(
-                        color: widget.editorTheme.borderColor,
+                        color: widget.editorTheme.panelBorder ?? Colors.red,
                       ),
                     ),
                   ),
@@ -220,7 +220,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
               i.toString(),
               textAlign: TextAlign.right,
               style: codeTextStyle.copyWith(
-                color: widget.editorTheme.defaultTextColor.withOpacity(0.4),
+                color: widget.editorTheme.editorForeground?.withOpacity(0.4),
               ),
             ),
           ),
@@ -321,10 +321,11 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                         child: Theme(
                           data: ThemeData(
                             textSelectionTheme: TextSelectionThemeData(
-                              cursorColor: widget.editorTheme.defaultTextColor,
+                              cursorColor: widget.editorTheme.editorForeground,
                               selectionColor: widget
-                                  .editorTheme.defaultTextColor
-                                  .withOpacity(0.2),
+                                      .editorTheme.editorForeground
+                                      ?.withOpacity(0.2) ??
+                                  Colors.red,
                             ),
                           ),
                           child: Column(
@@ -380,7 +381,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             width: double.infinity,
             height: utils.AffogatoConstants.breadcrumbHeight,
             decoration: BoxDecoration(
-              color: widget.stylingConfigs.themeBundle.editorTheme.editorColor,
+              color: widget
+                  .stylingConfigs.themeBundle.editorTheme.editorBackground,
               boxShadow: hasScrolled
                   ? [
                       BoxShadow(

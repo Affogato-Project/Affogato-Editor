@@ -3,7 +3,7 @@ part of affogato.editor;
 enum QuartetButtonState { none, hovered, pressed, active }
 
 class FileBrowserButton extends StatefulWidget {
-  final EditorTheme editorTheme;
+  final EditorTheme<Color, TextStyle> editorTheme;
   final double indent;
   final AffogatoFileItem entry;
   final AffogatoWorkspaceConfigs workspaceConfigs;
@@ -39,12 +39,12 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
         color: widget.entry is AffogatoDocumentItem
             ? widget.workspaceConfigs.isDocumentShown(
                     (widget.entry as AffogatoDocumentItem).documentId)
-                ? widget.editorTheme.borderColor
+                ? widget.editorTheme.panelBorder
                 : buttonState == QuartetButtonState.hovered
-                    ? widget.editorTheme.borderColor.withOpacity(0.3)
+                    ? widget.editorTheme.panelBorder?.withOpacity(0.3)
                     : Colors.transparent
             : buttonState == QuartetButtonState.hovered
-                ? widget.editorTheme.borderColor.withOpacity(0.3)
+                ? widget.editorTheme.panelBorder?.withOpacity(0.3)
                 : Colors.transparent,
       ),
       child: Column(
@@ -108,7 +108,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                               child: Icon(
                                 Icons.description,
                                 size: 24,
-                                color: widget.editorTheme.defaultTextColor,
+                                color: widget.editorTheme.editorForeground,
                               ),
                             ),
                           ),
@@ -125,7 +125,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                                 .documentId)
                             .docName,
                     style:
-                        TextStyle(color: widget.editorTheme.defaultTextColor),
+                        TextStyle(color: widget.editorTheme.editorForeground),
                   ),
                 ],
               ),

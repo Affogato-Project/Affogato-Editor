@@ -108,12 +108,13 @@ class EditorPaneState extends State<EditorPane>
                       widget.stylingConfigs.tabBarHeight -
                       utils.AffogatoConstants.tabBarPadding * 2,
                   decoration: BoxDecoration(
-                    color: widget
-                        .stylingConfigs.themeBundle.editorTheme.editorColor,
+                    color: widget.stylingConfigs.themeBundle.editorTheme
+                        .editorBackground,
                     border: Border(
                       right: BorderSide(
-                        color: widget
-                            .stylingConfigs.themeBundle.editorTheme.borderColor,
+                        color: widget.stylingConfigs.themeBundle.editorTheme
+                                .panelBorder ??
+                            Colors.red,
                       ),
                     ),
                   ),
@@ -137,7 +138,7 @@ class EditorPaneState extends State<EditorPane>
                       'Affogato',
                       style: TextStyle(
                         color: widget.stylingConfigs.themeBundle.editorTheme
-                            .defaultTextColor,
+                            .editorForeground,
                       ),
                     ),
                   ),

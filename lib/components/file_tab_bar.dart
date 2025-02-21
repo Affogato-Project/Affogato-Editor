@@ -29,7 +29,8 @@ class FileTabBarState extends State<FileTabBar>
     for (int i = 0; i < widget.documentIds.length; i++) {
       final bool isCurrent = widget.documentIds[i] == widget.currentDocId;
       final Color activeColor = isCurrent
-          ? widget.stylingConfigs.themeBundle.editorTheme.editorColor
+          ? widget.stylingConfigs.themeBundle.editorTheme.editorBackground ??
+              Colors.red
           : Colors.transparent;
       tabs.add(
         GestureDetector(
@@ -51,8 +52,9 @@ class FileTabBarState extends State<FileTabBar>
                   top: isCurrent
                       ? BorderSide(
                           color: widget.stylingConfigs.themeBundle.editorTheme
-                              .defaultTextColor
-                              .withOpacity(0.5),
+                                  .editorForeground
+                                  ?.withOpacity(0.5) ??
+                              Colors.red,
                           width: 1,
                         )
                       : BorderSide.none,
@@ -78,8 +80,8 @@ class FileTabBarState extends State<FileTabBar>
                           .docName,
                       style: TextStyle(
                         color: widget.stylingConfigs.themeBundle.editorTheme
-                            .defaultTextColor
-                            .withOpacity(0.5),
+                            .editorForeground
+                            ?.withOpacity(0.5),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -96,8 +98,8 @@ class FileTabBarState extends State<FileTabBar>
                         Icons.close,
                         size: 14,
                         color: widget.stylingConfigs.themeBundle.editorTheme
-                            .defaultTextColor
-                            .withOpacity(0.5),
+                            .editorForeground
+                            ?.withOpacity(0.5),
                       ),
                     ),
                   ],

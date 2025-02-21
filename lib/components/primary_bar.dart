@@ -2,7 +2,7 @@ part of affogato.editor;
 
 class PrimaryBar extends StatefulWidget {
   final double expandedWidth;
-  final EditorTheme editorTheme;
+  final EditorTheme<Color, TextStyle> editorTheme;
   final AffogatoWorkspaceConfigs workspaceConfigs;
 
   PrimaryBar({
@@ -48,13 +48,13 @@ class PrimaryBarState extends State<PrimaryBar>
             width: widget.expandedWidth,
             height: double.infinity,
             decoration: BoxDecoration(
-              color: widget.editorTheme.primaryBarColor,
+              color: widget.editorTheme.panelBackground,
               border: Border(
                 left: BorderSide(
-                  color: widget.editorTheme.borderColor,
+                  color: widget.editorTheme.panelBorder ?? Colors.red,
                 ),
                 right: BorderSide(
-                  color: widget.editorTheme.borderColor,
+                  color: widget.editorTheme.panelBorder ?? Colors.red,
                 ),
               ),
             ),
