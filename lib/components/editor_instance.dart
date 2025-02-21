@@ -332,6 +332,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               TextField(
+                                readOnly: currentDoc.readOnly,
                                 focusNode: textFieldFocusNode,
                                 maxLines: null,
                                 controller: textController,
