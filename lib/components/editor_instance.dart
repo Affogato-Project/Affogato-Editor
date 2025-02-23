@@ -6,7 +6,6 @@ class AffogatoEditorInstance extends StatefulWidget {
   final EditorTheme<Color, TextStyle> editorTheme;
   final double width;
   final AffogatoWorkspaceConfigs workspaceConfigs;
-  final AffogatoStylingConfigs stylingConfigs;
   final LanguageBundle languageBundle;
   final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
       TextStyle> themeBundle;
@@ -16,7 +15,6 @@ class AffogatoEditorInstance extends StatefulWidget {
     required this.width,
     required this.editorTheme,
     required this.workspaceConfigs,
-    required this.stylingConfigs,
     required this.languageBundle,
     required this.themeBundle,
     this.instanceState,
@@ -58,12 +56,12 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         color: widget.editorTheme.editorForeground,
         fontFamily: 'IBMPlexMono',
         height: utils.AffogatoConstants.lineHeight,
-        fontSize: widget.stylingConfigs.editorFontSize,
+        fontSize: widget.workspaceConfigs.stylingConfigs.editorFontSize,
       );
       textController = AffogatoEditorFieldController(
         languageBundle: widget.languageBundle,
         themeBundle: widget.themeBundle,
-        stylingConfigs: widget.stylingConfigs,
+        workspaceConfigs: widget.workspaceConfigs,
       );
       currentDoc =
           widget.workspaceConfigs.fileManager.getDoc(widget.documentId);
@@ -124,7 +122,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           if (event.key == LogicalKeyboardKey.tab) {
             setState(() {
               insertTextAtCursorPos(
-                  ' ' * widget.workspaceConfigs.tabSizeInSpaces);
+                  ' ' * widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces);
             });
           }
         }
@@ -170,18 +168,23 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         for (int i = 0; i < line.length; i++) {
           if (line[i] == ' ') {
             // add an indentation ruler at every tab
-            if (i % widget.workspaceConfigs.tabSizeInSpaces == 0) {
+            if (i % widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces ==
+                0) {
               rowItems.add(
                 Container(
                   decoration: BoxDecoration(
                     border: Border(
                       left: BorderSide(
-                        color: widget.editorTheme.panelBorder ?? Colors.red,
+                        width: 0.5,
+                        color:
+                            widget.editorTheme.editorIndentGuideBackground1 ??
+                                Colors.red,
                       ),
                     ),
                   ),
                   child: Text(
-                    ' ' * widget.workspaceConfigs.tabSizeInSpaces,
+                    ' ' *
+                        widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces,
                     style: codeTextStyle,
                   ),
                 ),
@@ -210,6 +213,10 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
   List<Widget> generateLineNumbers() {
     final List<Widget> lineNumbers = [];
+    final int activeLineNum = textController.text
+        .substring(0, textController.selection.end)
+        .split('\n')
+        .length;
     for (int i = 1; i <= textController.text.split('\n').length; i++) {
       lineNumbers.add(
         SizedBox(
@@ -220,7 +227,9 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
               i.toString(),
               textAlign: TextAlign.right,
               style: codeTextStyle.copyWith(
-                color: widget.editorTheme.editorForeground?.withOpacity(0.4),
+                color: i == activeLineNum
+                    ? widget.editorTheme.editorLineNumberActiveForeground
+                    : widget.editorTheme.editorLineNumberForeground,
               ),
             ),
           ),
@@ -322,9 +331,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                           data: ThemeData(
                             textSelectionTheme: TextSelectionThemeData(
                               cursorColor: widget.editorTheme.editorForeground,
-                              selectionColor: widget
-                                      .editorTheme.editorForeground
-                                      ?.withOpacity(0.2) ??
+                              selectionColor: widget.editorTheme
+                                      .editorSelectionHighlightBackground ??
                                   Colors.red,
                             ),
                           ),
@@ -338,7 +346,9 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                                 maxLines: null,
                                 controller: textController,
                                 decoration: null,
-                                style: codeTextStyle,
+                                style: codeTextStyle.copyWith(
+                                    color: widget
+                                        .editorTheme.textPreformatForeground),
                               ),
                               MouseRegion(
                                 opaque: false,
@@ -382,7 +392,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             height: utils.AffogatoConstants.breadcrumbHeight,
             decoration: BoxDecoration(
               color: widget
-                  .stylingConfigs.themeBundle.editorTheme.editorBackground,
+                  .workspaceConfigs.themeBundle.editorTheme.editorBackground,
               boxShadow: hasScrolled
                   ? [
                       BoxShadow(
@@ -393,13 +403,19 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                     ]
                   : const [],
             ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                widget.workspaceConfigs.fileManager
-                        .getDocPath(widget.documentId) ??
-                    'Unsaved',
-                style: widget.editorTheme.defaultTextStyle,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  widget.workspaceConfigs.fileManager
+                          .getDocPath(widget.documentId) ??
+                      'Unsaved',
+                  style: widget.editorTheme.defaultTextStyle.copyWith(
+                      fontSize: widget
+                              .workspaceConfigs.stylingConfigs.editorFontSize -
+                          3),
+                ),
               ),
             ),
           ),

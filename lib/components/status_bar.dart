@@ -47,10 +47,12 @@ class StatusBarState extends State<StatusBar>
       width: double.infinity,
       height: utils.AffogatoConstants.statusBarHeight,
       decoration: BoxDecoration(
-        color: widget.stylingConfigs.themeBundle.editorTheme.panelBackground,
+        color:
+            widget.workspaceConfigs.themeBundle.editorTheme.statusBarBackground,
         border: Border.all(
-          color: widget.stylingConfigs.themeBundle.editorTheme.panelBorder ??
-              Colors.red,
+          color:
+              widget.workspaceConfigs.themeBundle.editorTheme.statusBarBorder ??
+                  Colors.red,
         ),
       ),
       child: Row(
@@ -63,8 +65,8 @@ class StatusBarState extends State<StatusBar>
             child: Text(
               'Add Pane',
               style: TextStyle(
-                color: widget
-                    .stylingConfigs.themeBundle.editorTheme.editorForeground,
+                color: widget.workspaceConfigs.themeBundle.editorTheme
+                    .statusBarForeground,
               ),
             ),
           ),
@@ -77,8 +79,8 @@ class StatusBarState extends State<StatusBar>
             child: Text(
               'Remove Pane',
               style: TextStyle(
-                color: widget
-                    .stylingConfigs.themeBundle.editorTheme.editorForeground,
+                color: widget.workspaceConfigs.themeBundle.editorTheme
+                    .statusBarForeground,
               ),
             ),
           ),
@@ -92,8 +94,8 @@ class StatusBarState extends State<StatusBar>
               child: Text(
                 currentLB!.bundleName,
                 style: TextStyle(
-                  color: widget
-                      .stylingConfigs.themeBundle.editorTheme.editorForeground,
+                  color: widget.workspaceConfigs.themeBundle.editorTheme
+                      .editorForeground,
                 ),
               ),
             ),

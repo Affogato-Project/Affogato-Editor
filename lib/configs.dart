@@ -19,15 +19,14 @@ class AffogatoStylingConfigs {
   final double windowHeight;
   final double tabBarHeight;
   final double editorFontSize;
-  final ThemeBundle<RenderToken, SyntaxHighlighter, Color, TextStyle>
-      themeBundle;
+  final int tabSizeInSpaces;
 
   const AffogatoStylingConfigs({
     required this.windowHeight,
     required this.windowWidth,
     required this.tabBarHeight,
-    required this.themeBundle,
     required this.editorFontSize,
+    this.tabSizeInSpaces = 4,
   });
 }
 
@@ -67,7 +66,7 @@ class AffogatoWorkspaceConfigs {
   final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
       TextStyle> themeBundle;
 
-  final int tabSizeInSpaces;
+  final AffogatoStylingConfigs stylingConfigs;
 
   final LanguageBundle Function(String extension) languageBundleDetector;
 
@@ -76,7 +75,7 @@ class AffogatoWorkspaceConfigs {
     required this.paneDocumentData,
     required this.languageBundleDetector,
     required this.themeBundle,
-    this.tabSizeInSpaces = 4,
+    required this.stylingConfigs,
   });
 
   bool isDocumentShown(String documentId) => paneDocumentData.values

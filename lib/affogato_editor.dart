@@ -23,12 +23,10 @@ part './components/file_browser_button.dart';
 part './components/status_bar.dart';
 
 class AffogatoWindow extends StatefulWidget {
-  final AffogatoStylingConfigs stylingConfigs;
   final AffogatoPerformanceConfigs performanceConfigs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
 
   const AffogatoWindow({
-    required this.stylingConfigs,
     required this.performanceConfigs,
     required this.workspaceConfigs,
     super.key,
@@ -202,10 +200,18 @@ class AffogatoWindowState extends State<AffogatoWindow>
   Widget build(BuildContext context) {
     return Material(
       key: windowKey,
-      color: widget.stylingConfigs.themeBundle.editorTheme.panelBackground,
-      child: SizedBox(
-        width: widget.stylingConfigs.windowWidth,
-        height: widget.stylingConfigs.windowHeight,
+      child: Container(
+        width: widget.workspaceConfigs.stylingConfigs.windowWidth,
+        height: widget.workspaceConfigs.stylingConfigs.windowHeight,
+        decoration: BoxDecoration(
+          color:
+              widget.workspaceConfigs.themeBundle.editorTheme.panelBackground,
+          border: Border.all(
+            color:
+                widget.workspaceConfigs.themeBundle.editorTheme.panelBorder ??
+                    Colors.red,
+          ),
+        ),
         child: Column(
           children: [
             Expanded(
@@ -218,12 +224,13 @@ class AffogatoWindowState extends State<AffogatoWindow>
                       expandedWidth: utils.AffogatoConstants.primaryBarWidth,
                       workspaceConfigs: widget.workspaceConfigs,
                       editorTheme:
-                          widget.stylingConfigs.themeBundle.editorTheme,
+                          widget.workspaceConfigs.themeBundle.editorTheme,
                     ),
                   ),
                   SizedBox(
-                    width: widget.stylingConfigs.windowWidth -
-                        utils.AffogatoConstants.primaryBarWidth,
+                    width: widget.workspaceConfigs.stylingConfigs.windowWidth -
+                        utils.AffogatoConstants.primaryBarWidth -
+                        1,
                     child: Row(
                       children: [
                         for (final pane
@@ -231,11 +238,14 @@ class AffogatoWindowState extends State<AffogatoWindow>
                           EditorPane(
                             key: ValueKey('${pane.key}${pane.value}'),
                             paneId: pane.key,
-                            stylingConfigs: widget.stylingConfigs,
+                            stylingConfigs:
+                                widget.workspaceConfigs.stylingConfigs,
                             layoutConfigs: LayoutConfigs(
                               width: double.infinity,
-                              height: widget.stylingConfigs.windowHeight -
-                                  utils.AffogatoConstants.statusBarHeight,
+                              height: widget.workspaceConfigs.stylingConfigs
+                                      .windowHeight -
+                                  utils.AffogatoConstants.statusBarHeight -
+                                  2,
                             ),
                             performanceConfigs: widget.performanceConfigs,
                             workspaceConfigs: widget.workspaceConfigs,
@@ -251,7 +261,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
             SizedBox(
               height: utils.AffogatoConstants.statusBarHeight,
               child: StatusBar(
-                stylingConfigs: widget.stylingConfigs,
+                stylingConfigs: widget.workspaceConfigs.stylingConfigs,
                 workspaceConfigs: widget.workspaceConfigs,
               ),
             ),

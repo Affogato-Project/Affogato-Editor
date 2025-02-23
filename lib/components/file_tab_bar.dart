@@ -29,9 +29,12 @@ class FileTabBarState extends State<FileTabBar>
     for (int i = 0; i < widget.documentIds.length; i++) {
       final bool isCurrent = widget.documentIds[i] == widget.currentDocId;
       final Color activeColor = isCurrent
-          ? widget.stylingConfigs.themeBundle.editorTheme.editorBackground ??
+          ? widget.workspaceConfigs.themeBundle.editorTheme
+                  .tabActiveBackground ??
               Colors.red
-          : Colors.transparent;
+          : widget.workspaceConfigs.themeBundle.editorTheme
+                  .tabInactiveBackground ??
+              Colors.red;
       tabs.add(
         GestureDetector(
           onTap: () {
@@ -49,18 +52,25 @@ class FileTabBarState extends State<FileTabBar>
               decoration: BoxDecoration(
                 color: activeColor,
                 border: Border(
-                  top: isCurrent
-                      ? BorderSide(
-                          color: widget.stylingConfigs.themeBundle.editorTheme
-                                  .editorForeground
-                                  ?.withOpacity(0.5) ??
-                              Colors.red,
-                          width: 1,
-                        )
-                      : BorderSide.none,
-                  bottom: BorderSide(
-                    color: activeColor,
+                  right: BorderSide(
+                    color: widget.workspaceConfigs.themeBundle.editorTheme
+                            .tabBorder ??
+                        Colors.red,
                   ),
+                  top: BorderSide(
+                    color: (isCurrent
+                            ? widget.workspaceConfigs.themeBundle.editorTheme
+                                .tabActiveBorderTop
+                            : widget.workspaceConfigs.themeBundle.editorTheme
+                                .tabBorder) ??
+                        Colors.red,
+                  ),
+                  bottom: BorderSide(
+                      color: isCurrent
+                          ? activeColor
+                          : widget.workspaceConfigs.themeBundle.editorTheme
+                                  .editorGroupHeaderTabsBorder ??
+                              Colors.red),
                 ),
               ),
               child: Padding(
@@ -79,9 +89,11 @@ class FileTabBarState extends State<FileTabBar>
                           .getDoc(widget.documentIds[i])
                           .docName,
                       style: TextStyle(
-                        color: widget.stylingConfigs.themeBundle.editorTheme
-                            .editorForeground
-                            ?.withOpacity(0.5),
+                        color: isCurrent
+                            ? widget.workspaceConfigs.themeBundle.editorTheme
+                                .tabActiveForeground
+                            : widget.workspaceConfigs.themeBundle.editorTheme
+                                .tabInactiveForeground,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -97,9 +109,11 @@ class FileTabBarState extends State<FileTabBar>
                       icon: Icon(
                         Icons.close,
                         size: 14,
-                        color: widget.stylingConfigs.themeBundle.editorTheme
-                            .editorForeground
-                            ?.withOpacity(0.5),
+                        color: isCurrent
+                            ? widget.workspaceConfigs.themeBundle.editorTheme
+                                .tabActiveForeground
+                            : widget.workspaceConfigs.themeBundle.editorTheme
+                                .tabInactiveForeground,
                       ),
                     ),
                   ],
@@ -114,8 +128,25 @@ class FileTabBarState extends State<FileTabBar>
     return SizedBox(
       width: double.infinity,
       height: widget.stylingConfigs.tabBarHeight,
-      child: Row(
-        children: tabs,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: widget.workspaceConfigs.themeBundle.editorTheme
+                    .editorGroupHeaderTabsBackground,
+                border: Border.all(
+                  color: widget.workspaceConfigs.themeBundle.editorTheme
+                          .editorGroupHeaderTabsBorder ??
+                      Colors.red,
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: tabs,
+          ),
+        ],
       ),
     );
   }

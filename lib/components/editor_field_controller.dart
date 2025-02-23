@@ -4,13 +4,13 @@ class AffogatoEditorFieldController<T extends AffogatoRenderToken,
     H extends SyntaxHighlighter<T>> extends TextEditingController {
   final LanguageBundle languageBundle;
   final ThemeBundle<T, H, Color, TextStyle> themeBundle;
-  final AffogatoStylingConfigs stylingConfigs;
+  final AffogatoWorkspaceConfigs workspaceConfigs;
   final String? initialText;
 
   AffogatoEditorFieldController({
     required this.languageBundle,
     required this.themeBundle,
-    required this.stylingConfigs,
+    required this.workspaceConfigs,
     this.initialText,
   }) : super(text: initialText);
 
@@ -34,7 +34,7 @@ class AffogatoEditorFieldController<T extends AffogatoRenderToken,
         text: text,
         style: themeBundle.editorTheme.defaultTextStyle.copyWith(
           height: utils.AffogatoConstants.lineHeight,
-          fontSize: stylingConfigs.editorFontSize,
+          fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
         ),
       );
     }
@@ -47,17 +47,18 @@ class AffogatoEditorFieldController<T extends AffogatoRenderToken,
       return TextSpan(
         style: themeBundle.editorTheme.defaultTextStyle.copyWith(
           height: utils.AffogatoConstants.lineHeight,
-          fontSize: stylingConfigs.editorFontSize,
+          fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
         ),
         children: [
           for (final rt in renderTokens)
             TextSpan(
               text: (rt.node as TerminalASTNode).lexeme,
-              style:
-                  rt.render(themeBundle.editorTheme.defaultTextStyle).copyWith(
-                        height: utils.AffogatoConstants.lineHeight,
-                        fontSize: stylingConfigs.editorFontSize,
-                      ),
+              style: rt
+                  .render(themeBundle.editorTheme.defaultTextStyle)
+                  .copyWith(
+                    height: utils.AffogatoConstants.lineHeight,
+                    fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
+                  ),
             ),
         ],
       );
@@ -68,7 +69,7 @@ class AffogatoEditorFieldController<T extends AffogatoRenderToken,
         text: text,
         style: themeBundle.editorTheme.defaultTextStyle.copyWith(
           height: utils.AffogatoConstants.lineHeight,
-          fontSize: stylingConfigs.editorFontSize,
+          fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
         ),
       );
     }

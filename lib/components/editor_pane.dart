@@ -93,14 +93,15 @@ class EditorPaneState extends State<EditorPane>
     return Expanded(
       child: Column(
         children: [
-          FileTabBar(
-            stylingConfigs: widget.stylingConfigs,
-            documentIds:
-                widget.workspaceConfigs.paneDocumentData[widget.paneId]!,
-            workspaceConfigs: widget.workspaceConfigs,
-            currentDocId: currentDocumentId,
-            paneId: widget.paneId,
-          ),
+          if (widget.documentIds.isNotEmpty)
+            FileTabBar(
+              stylingConfigs: widget.stylingConfigs,
+              documentIds:
+                  widget.workspaceConfigs.paneDocumentData[widget.paneId]!,
+              workspaceConfigs: widget.workspaceConfigs,
+              currentDocId: currentDocumentId,
+              paneId: widget.paneId,
+            ),
           currentDocumentId != null
               ? Container(
                   width: double.infinity,
@@ -108,11 +109,21 @@ class EditorPaneState extends State<EditorPane>
                       widget.stylingConfigs.tabBarHeight -
                       utils.AffogatoConstants.tabBarPadding * 2,
                   decoration: BoxDecoration(
-                    color: widget.stylingConfigs.themeBundle.editorTheme
+                    color: widget.workspaceConfigs.themeBundle.editorTheme
                         .editorBackground,
                     border: Border(
+                      left: BorderSide(
+                        color: widget.workspaceConfigs.themeBundle.editorTheme
+                                .panelBorder ??
+                            Colors.red,
+                      ),
                       right: BorderSide(
-                        color: widget.stylingConfigs.themeBundle.editorTheme
+                        color: widget.workspaceConfigs.themeBundle.editorTheme
+                                .panelBorder ??
+                            Colors.red,
+                      ),
+                      bottom: BorderSide(
+                        color: widget.workspaceConfigs.themeBundle.editorTheme
                                 .panelBorder ??
                             Colors.red,
                       ),
@@ -120,10 +131,10 @@ class EditorPaneState extends State<EditorPane>
                   ),
                   child: AffogatoEditorInstance(
                     documentId: currentDocumentId!,
-                    stylingConfigs: widget.stylingConfigs,
                     workspaceConfigs: widget.workspaceConfigs,
                     width: widget.layoutConfigs.width,
-                    editorTheme: widget.stylingConfigs.themeBundle.editorTheme,
+                    editorTheme:
+                        widget.workspaceConfigs.themeBundle.editorTheme,
                     instanceState: instanceState,
                     languageBundle:
                         instanceState?.languageBundle ?? currentLB ?? genericLB,
@@ -137,7 +148,7 @@ class EditorPaneState extends State<EditorPane>
                     child: Text(
                       'Affogato',
                       style: TextStyle(
-                        color: widget.stylingConfigs.themeBundle.editorTheme
+                        color: widget.workspaceConfigs.themeBundle.editorTheme
                             .editorForeground,
                       ),
                     ),

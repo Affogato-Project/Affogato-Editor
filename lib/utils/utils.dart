@@ -27,6 +27,7 @@ class AffogatoConstants {
   static const double overscrollAmount = 200;
   static const double breadcrumbHeight = 26;
   static const double lineHeight = 1.5;
+  static const double primaryBarFileTreeIndentSize = 10;
 }
 
 mixin StreamSubscriptionManager<T extends StatefulWidget> on State<T> {
