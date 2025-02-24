@@ -54,6 +54,8 @@ class AffogatoWorkspaceConfigs {
 
   bool hasBuiltDirStruct = false;
 
+  final List<AffogatoExtension> extensions;
+
   /// A mapping of pane IDs to the IDs of the [AffogatoDocument]s contained by that pane
   final Map<String, List<String>> paneDocumentData;
 
@@ -76,6 +78,7 @@ class AffogatoWorkspaceConfigs {
     required this.languageBundleDetector,
     required this.themeBundle,
     required this.stylingConfigs,
+    required this.extensions,
   });
 
   bool isDocumentShown(String documentId) => paneDocumentData.values

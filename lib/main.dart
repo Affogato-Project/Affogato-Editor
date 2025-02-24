@@ -36,6 +36,9 @@ void main(List<String> args) {
             tabBarHeight: 40,
             editorFontSize: 14,
           ),
+          extensions: [
+            ...affogatoCoreExtensions,
+          ],
         ),
       ),
     ),

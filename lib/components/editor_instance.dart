@@ -91,10 +91,52 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           EditorDocumentChangedEvent(
             newContent: textController.text,
             documentId: widget.documentId,
+            selection: textController.selection,
           ),
         );
         setState(() {});
       });
+
+      // the actual document parsing and interceptors
+      registerListener(
+        AffogatoEvents.editorKeyEvent.stream
+            .where((e) => e.documentId == widget.documentId),
+        (event) {
+          if (event.keyEvent is KeyDownEvent) {
+            textFieldFocusNode.requestFocus();
+
+            if (event.keyEvent.logicalKey == LogicalKeyboardKey.tab) {
+              setState(() {
+                insertTextAtCursorPos(' ' *
+                    widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces);
+              });
+            }
+          }
+        },
+      );
+
+      registerListener(
+        AffogatoEvents.editorDocumentRequestChangeEvents.stream,
+        (event) {
+          if (event.editorAction.newContent == null &&
+              event.editorAction.newSelection == null) return;
+          if (event.editorAction.newContent != null) {
+            textController.text = event.editorAction.newContent!;
+          }
+          if (event.editorAction.newSelection != null) {
+            textController.selection = event.editorAction.newSelection!;
+          }
+          setState(() {});
+
+          AffogatoEvents.editorDocumentChangedEvents.add(
+            EditorDocumentChangedEvent(
+              newContent: textController.text,
+              documentId: widget.documentId,
+              selection: textController.selection,
+            ),
+          );
+        },
+      );
     }
 
     // Call once during initState
@@ -108,24 +150,6 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           // `saveInstance()`
           loadUpInstance();
         });
-      },
-    );
-
-    // the actual document parsing and interceptors
-    registerListener(
-      AffogatoEvents.editorKeyEvent.stream
-          .where((e) => e.documentId == widget.documentId),
-      (event) {
-        if (event.keyEventType == KeyDownEvent) {
-          textFieldFocusNode.requestFocus();
-
-          if (event.key == LogicalKeyboardKey.tab) {
-            setState(() {
-              insertTextAtCursorPos(
-                  ' ' * widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces);
-            });
-          }
-        }
       },
     );
 
@@ -321,8 +345,13 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                           AffogatoEvents.editorKeyEvent.add(
                             EditorKeyEvent(
                               documentId: widget.documentId,
-                              key: key.logicalKey,
-                              keyEventType: key.runtimeType,
+                              keyEvent: key,
+                              editingContext: EditingContext(
+                                content: widget.workspaceConfigs.fileManager
+                                    .getDoc(widget.documentId)
+                                    .content,
+                                selection: textController.selection,
+                              ),
                             ),
                           );
                           return KeyEventResult.ignored;

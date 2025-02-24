@@ -26,6 +26,9 @@ class AffogatoEvents {
   static final StreamController<EditorDocumentChangedEvent>
       editorDocumentChangedEvents = StreamController.broadcast();
 
+  static final StreamController<EditorDocumentRequestChangeEvent>
+      editorDocumentRequestChangeEvents = StreamController.broadcast();
+
   static final StreamController<EditorDocumentClosedEvent>
       editorDocumentClosedEvents = StreamController.broadcast();
 
@@ -121,15 +124,25 @@ class EditorInstanceRequestReloadEvent extends EditorInstanceEvent {
   const EditorInstanceRequestReloadEvent() : super('reload');
 }
 
+class EditingContext {
+  final String content;
+  final TextSelection selection;
+
+  const EditingContext({
+    required this.content,
+    required this.selection,
+  });
+}
+
 class EditorKeyEvent extends EditorEvent {
-  final Type keyEventType;
-  final LogicalKeyboardKey key;
+  final KeyEvent keyEvent;
   final String documentId;
+  final EditingContext editingContext;
 
   const EditorKeyEvent({
-    required this.key,
-    required this.keyEventType,
+    required this.keyEvent,
     required this.documentId,
+    required this.editingContext,
   }) : super('key');
 }
 
@@ -137,14 +150,26 @@ class EditorDocumentEvent extends EditorEvent {
   const EditorDocumentEvent(String id) : super('document.$id');
 }
 
+enum DocumentChangeType { addition, deletion, overwrite }
+
 class EditorDocumentChangedEvent extends EditorDocumentEvent {
   final String newContent;
   final String documentId;
+  final TextSelection selection;
 
   const EditorDocumentChangedEvent({
     required this.newContent,
     required this.documentId,
+    required this.selection,
   }) : super('change');
+}
+
+class EditorDocumentRequestChangeEvent extends EditorDocumentEvent {
+  final EditorAction editorAction;
+
+  const EditorDocumentRequestChangeEvent({
+    required this.editorAction,
+  }) : super('changeRequest');
 }
 
 class EditorDocumentClosedEvent extends EditorDocumentEvent {

@@ -2,6 +2,7 @@ library affogato.editor;
 
 import 'dart:async';
 
+import 'package:affogato_editor/apis/affogato_apis.dart';
 import 'package:affogato_editor/battery_themes/affogato_classic/theme_bundle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,10 +11,13 @@ import 'package:affogato_core/affogato_core.dart';
 import 'package:affogato_editor/battery_langs/generic/language_bundle.dart';
 import 'package:affogato_editor/utils/utils.dart' as utils;
 
-part './configs.dart';
-part './events.dart';
-part './instance_state.dart';
-part './file_manager.dart';
+part './editor_core/configs.dart';
+part './editor_core/events.dart';
+part './editor_core/editor_actions.dart';
+part './editor_core/instance_state.dart';
+part './editor_core/file_manager.dart';
+part 'editor_core/core_extensions.dart';
+
 part './components/editor_pane.dart';
 part './components/file_tab_bar.dart';
 part './components/editor_instance.dart';
@@ -39,6 +43,12 @@ class AffogatoWindow extends StatefulWidget {
 class AffogatoWindowState extends State<AffogatoWindow>
     with utils.StreamSubscriptionManager {
   final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
+
+  final Map<String, List<StreamSubscription>> extensionListeners = {};
+  final AffogatoExtensionsAPI _extensionsApi = AffogatoExtensionsAPI();
+  late final AffogatoAPI api = AffogatoAPI(
+    extensions: _extensionsApi,
+  );
 
   @override
   void initState() {
@@ -193,6 +203,15 @@ class AffogatoWindowState extends State<AffogatoWindow>
       },
     );
 
+    // finally, register the extensions bound to the onStartupFinished trigger
+    for (final ext in widget.workspaceConfigs.extensions.where(
+      (e) => e.bindTriggers
+          .contains(const AffogatoBindTriggers.onStartupFinished().id),
+    )) {
+      api.extensions.register(ext);
+      ext.loadExtension(fileManager: widget.workspaceConfigs.fileManager);
+    }
+
     super.initState();
   }
 
@@ -275,6 +294,11 @@ class AffogatoWindowState extends State<AffogatoWindow>
   void dispose() async {
     cancelSubscriptions();
     AffogatoEvents.windowCloseEvents.add(const WindowCloseEvent());
+    for (final listeners in extensionListeners.values) {
+      for (final hook in listeners) {
+        await hook.cancel();
+      }
+    }
     await AffogatoEvents.windowEditorPaneAddEvents.close();
     await AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.close();
     // ... //
@@ -282,3 +306,5 @@ class AffogatoWindowState extends State<AffogatoWindow>
     super.dispose();
   }
 }
+
+final List<AffogatoExtension> affogatoCoreExtensions = [PairMatcherExtension()];
