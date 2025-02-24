@@ -60,7 +60,7 @@ class EditorPaneState extends State<EditorPane>
             currentLB = null;
           } else {
             currentDocumentId = widget.documentIds.last;
-            currentLB = widget.workspaceConfigs.languageBundleDetector(widget
+            currentLB = widget.workspaceConfigs.detectLanguage(widget
                 .workspaceConfigs.fileManager
                 .getDoc(widget.documentIds.last)
                 .extension);

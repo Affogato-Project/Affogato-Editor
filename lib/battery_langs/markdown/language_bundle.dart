@@ -11,4 +11,5 @@ final LanguageBundle markdownLB = LanguageBundle(
   tokeniser: MarkdownTokeniser(),
   parser: MarkdownParser(),
   interpreter: MarkdownInterpreter(),
+  fileAssociationContributions: ['md', 'markdown'],
 );

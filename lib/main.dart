@@ -24,10 +24,8 @@ void main(List<String> args) {
                 affogato_classic_theme.themeBundle.synaxHighlighter,
             editorTheme: vscodeModernDarkEditorTheme,
           ),
-          languageBundleDetector: (extension) => switch (extension) {
-            'js' => genericLB,
-            'md' => markdownLB,
-            String() => genericLB,
+          languageBundles: {
+            markdownLB: const [],
           },
           paneDocumentData: {},
           stylingConfigs: const AffogatoStylingConfigs(

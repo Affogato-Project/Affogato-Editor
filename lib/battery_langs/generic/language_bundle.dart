@@ -8,10 +8,12 @@ part './tokeniser.dart';
 part './parser.dart';
 
 final LanguageBundle genericLB = LanguageBundle(
-    bundleName: 'Generic',
-    tokeniser: GenericTokeniser(),
-    parser: GenericParser(),
-    interpreter: GenericInterpreter());
+  bundleName: 'Generic',
+  tokeniser: GenericTokeniser(),
+  parser: GenericParser(),
+  interpreter: GenericInterpreter(),
+  fileAssociationContributions: const [],
+);
 
 class GenericInterpreter extends Interpreter {
   @override

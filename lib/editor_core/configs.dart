@@ -52,8 +52,6 @@ class AffogatoPerformanceConfigs {
 class AffogatoWorkspaceConfigs {
   final String projectName;
 
-  bool hasBuiltDirStruct = false;
-
   final List<AffogatoExtension> extensions;
 
   /// A mapping of pane IDs to the IDs of the [AffogatoDocument]s contained by that pane
@@ -68,15 +66,19 @@ class AffogatoWorkspaceConfigs {
   final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
       TextStyle> themeBundle;
 
-  final AffogatoStylingConfigs stylingConfigs;
+  /// A mapping of [LanguageBundle]s to possible file extensions for each language
+  /// Each entry will be checked first to find a suitable user-defined [LanguageBundle] for a given
+  /// file extension, before the [LanguageBundle.fileAssociationContributions] that is provided by the
+  /// creator of the language bundle is traversed.
+  final Map<LanguageBundle, List<String>> languageBundles;
 
-  final LanguageBundle Function(String extension) languageBundleDetector;
+  final AffogatoStylingConfigs stylingConfigs;
 
   AffogatoWorkspaceConfigs({
     required this.projectName,
     required this.paneDocumentData,
-    required this.languageBundleDetector,
     required this.themeBundle,
+    required this.languageBundles,
     required this.stylingConfigs,
     required this.extensions,
   });
@@ -87,4 +89,14 @@ class AffogatoWorkspaceConfigs {
         orElse: () => const [],
       )
       .isNotEmpty;
+
+  LanguageBundle detectLanguage(String extension) {
+    for (final entry in languageBundles.entries) {
+      if (entry.value.contains(extension) ||
+          entry.key.fileAssociationContributions.contains(extension)) {
+        return entry.key;
+      }
+    }
+    return genericLB;
+  }
 }

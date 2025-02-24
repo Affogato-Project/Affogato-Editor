@@ -97,6 +97,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
     registerListener(
       AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.stream,
       (event) {
+        final LanguageBundle languageBundle;
         bool hasBeenSetActive = false;
         for (final entry in widget.workspaceConfigs.paneDocumentData.entries) {
           if (entry.value.contains(event.documentId)) {
@@ -107,10 +108,10 @@ class AffogatoWindowState extends State<AffogatoWindow>
               WindowEditorInstanceSetActiveEvent(
                 paneId: entry.key,
                 documentId: event.documentId,
-                languageBundle: widget.workspaceConfigs.languageBundleDetector(
-                    widget.workspaceConfigs.fileManager
-                        .getDoc(event.documentId)
-                        .extension),
+                languageBundle: widget.workspaceConfigs.detectLanguage(widget
+                    .workspaceConfigs.fileManager
+                    .getDoc(event.documentId)
+                    .extension),
               ),
             );
           }
@@ -127,10 +128,10 @@ class AffogatoWindowState extends State<AffogatoWindow>
             WindowEditorInstanceSetActiveEvent(
               paneId: firstPane.key,
               documentId: event.documentId,
-              languageBundle: widget.workspaceConfigs.languageBundleDetector(
-                  widget.workspaceConfigs.fileManager
-                      .getDoc(event.documentId)
-                      .extension),
+              languageBundle: widget.workspaceConfigs.detectLanguage(widget
+                  .workspaceConfigs.fileManager
+                  .getDoc(event.documentId)
+                  .extension),
             ),
           );
         }
