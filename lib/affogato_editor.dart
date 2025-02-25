@@ -16,7 +16,7 @@ part './editor_core/events.dart';
 part './editor_core/editor_actions.dart';
 part './editor_core/instance_state.dart';
 part './editor_core/file_manager.dart';
-part 'editor_core/core_extensions.dart';
+part './editor_core/core_extensions.dart';
 
 part './components/editor_pane.dart';
 part './components/file_tab_bar.dart';
@@ -25,6 +25,8 @@ part './components/editor_field_controller.dart';
 part './components/primary_bar.dart';
 part './components/file_browser_button.dart';
 part './components/status_bar.dart';
+
+part './components/shared/context_menu_region.dart';
 
 class AffogatoWindow extends StatefulWidget {
   final AffogatoPerformanceConfigs performanceConfigs;
@@ -52,6 +54,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
 
   @override
   void initState() {
+    BrowserContextMenu.disableContextMenu();
     widget.workspaceConfigs.fileManager
       ..buildIndex()
       ..createDir('Dir_1/')
@@ -220,72 +223,76 @@ class AffogatoWindowState extends State<AffogatoWindow>
   Widget build(BuildContext context) {
     return Material(
       key: windowKey,
-      child: Container(
-        width: widget.workspaceConfigs.stylingConfigs.windowWidth,
-        height: widget.workspaceConfigs.stylingConfigs.windowHeight,
-        decoration: BoxDecoration(
-          color:
-              widget.workspaceConfigs.themeBundle.editorTheme.panelBackground,
-          border: Border.all(
+      child: GestureDetector(
+        onTap: () => ContextMenuController.removeAny(),
+        child: Container(
+          width: widget.workspaceConfigs.stylingConfigs.windowWidth,
+          height: widget.workspaceConfigs.stylingConfigs.windowHeight,
+          decoration: BoxDecoration(
             color:
-                widget.workspaceConfigs.themeBundle.editorTheme.panelBorder ??
-                    Colors.red,
+                widget.workspaceConfigs.themeBundle.editorTheme.panelBackground,
+            border: Border.all(
+              color:
+                  widget.workspaceConfigs.themeBundle.editorTheme.panelBorder ??
+                      Colors.red,
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: utils.AffogatoConstants.primaryBarWidth,
-                    child: PrimaryBar(
-                      expandedWidth: utils.AffogatoConstants.primaryBarWidth,
-                      workspaceConfigs: widget.workspaceConfigs,
-                      editorTheme:
-                          widget.workspaceConfigs.themeBundle.editorTheme,
+          child: Column(
+            children: [
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: utils.AffogatoConstants.primaryBarWidth,
+                      child: PrimaryBar(
+                        expandedWidth: utils.AffogatoConstants.primaryBarWidth,
+                        workspaceConfigs: widget.workspaceConfigs,
+                        editorTheme:
+                            widget.workspaceConfigs.themeBundle.editorTheme,
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    width: widget.workspaceConfigs.stylingConfigs.windowWidth -
-                        utils.AffogatoConstants.primaryBarWidth -
-                        1,
-                    child: Row(
-                      children: [
-                        for (final pane
-                            in widget.workspaceConfigs.paneDocumentData.entries)
-                          EditorPane(
-                            key: ValueKey('${pane.key}${pane.value}'),
-                            paneId: pane.key,
-                            stylingConfigs:
-                                widget.workspaceConfigs.stylingConfigs,
-                            layoutConfigs: LayoutConfigs(
-                              width: double.infinity,
-                              height: widget.workspaceConfigs.stylingConfigs
-                                      .windowHeight -
-                                  utils.AffogatoConstants.statusBarHeight -
-                                  2,
+                    SizedBox(
+                      width:
+                          widget.workspaceConfigs.stylingConfigs.windowWidth -
+                              utils.AffogatoConstants.primaryBarWidth -
+                              1,
+                      child: Row(
+                        children: [
+                          for (final pane in widget
+                              .workspaceConfigs.paneDocumentData.entries)
+                            EditorPane(
+                              key: ValueKey('${pane.key}${pane.value}'),
+                              paneId: pane.key,
+                              stylingConfigs:
+                                  widget.workspaceConfigs.stylingConfigs,
+                              layoutConfigs: LayoutConfigs(
+                                width: double.infinity,
+                                height: widget.workspaceConfigs.stylingConfigs
+                                        .windowHeight -
+                                    utils.AffogatoConstants.statusBarHeight -
+                                    2,
+                              ),
+                              performanceConfigs: widget.performanceConfigs,
+                              workspaceConfigs: widget.workspaceConfigs,
+                              documentIds: pane.value,
+                              windowKey: windowKey,
                             ),
-                            performanceConfigs: widget.performanceConfigs,
-                            workspaceConfigs: widget.workspaceConfigs,
-                            documentIds: pane.value,
-                            windowKey: windowKey,
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            SizedBox(
-              height: utils.AffogatoConstants.statusBarHeight,
-              child: StatusBar(
-                stylingConfigs: widget.workspaceConfigs.stylingConfigs,
-                workspaceConfigs: widget.workspaceConfigs,
+              SizedBox(
+                height: utils.AffogatoConstants.statusBarHeight,
+                child: StatusBar(
+                  stylingConfigs: widget.workspaceConfigs.stylingConfigs,
+                  workspaceConfigs: widget.workspaceConfigs,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -293,6 +300,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
 
   @override
   void dispose() async {
+    BrowserContextMenu.enableContextMenu();
     cancelSubscriptions();
     AffogatoEvents.windowCloseEvents.add(const WindowCloseEvent());
     for (final listeners in extensionListeners.values) {

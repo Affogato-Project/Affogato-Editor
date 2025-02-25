@@ -290,9 +290,15 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     return lineNumbers;
   }
 
+  /// Generates the Git diff indicators and code folding buttons.
+  List<Widget> generateLeftGutterWidgets() {
+    const List<Widget> results = [];
+
+    return results;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final List<Widget> leftGutterIndicators = [];
     return Stack(
       children: [
         Positioned(
@@ -333,11 +339,13 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                       ),
                     ),
                     // Left gutter indicators, such as for Git
-                    const SizedBox(
+                    SizedBox(
                       width: utils.AffogatoConstants.lineNumbersGutterWidth -
                           utils.AffogatoConstants
                               .lineNumbersGutterRightmostPadding,
-                      child: Column(),
+                      child: Column(
+                        children: generateLeftGutterWidgets(),
+                      ),
                     ),
                     Expanded(
                       child: Focus(

@@ -91,12 +91,13 @@ class AffogatoFileManager {
     return entry.key == '' ? null : entry.key;
   }
 
-  void createDoc(AffogatoDocument document, {String? path}) {
+  String createDoc(AffogatoDocument document, {String? path}) {
     path ??= './';
     if (existsDir(path)) {
       final String docId = utils.generateId();
       directoriesRegistry[path]!.add(docId);
       documentsRegistry[docId] = document;
+      return docId;
     } else {
       throw Exception(
           "Invalid path: '$path' does not exist, or is not a directory.");
