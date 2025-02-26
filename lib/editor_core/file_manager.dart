@@ -103,6 +103,33 @@ class AffogatoFileManager {
           "Invalid path: '$path' does not exist, or is not a directory.");
     }
   }
+
+  bool moveDoc(String documentId, String newLocation) {
+    if (existsDir(newLocation) && documentsRegistry.containsKey(documentId)) {
+      for (final entry in directoriesRegistry.entries) {
+        if (entry.value.contains(documentId)) {
+          entry.value.remove(documentId);
+          directoriesRegistry[newLocation]!.add(documentId);
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return false;
+    }
+  }
+
+  bool moveDir(String dirPath, String newLocation) {
+    if (existsDir(dirPath) && existsDir(newLocation)) {
+      directoriesRegistry[newLocation]!.addAll(directoriesRegistry[dirPath]!);
+      directoriesRegistry.remove(dirPath);
+      // this doesnt update the subdirectories though
+      // might need a better solution (maybe use the Orca FS)
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
 
 sealed class AffogatoFileItem {

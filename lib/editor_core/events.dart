@@ -37,6 +37,9 @@ class AffogatoEvents {
 
   static final StreamController<EditorInstanceRequestReloadEvent>
       editorInstanceRequestReloadEvents = StreamController.broadcast();
+
+  static final StreamController<FileManagerStructureChangedEvent>
+      fileManagerStructureChangedEvents = StreamController.broadcast();
 }
 
 sealed class Event {
@@ -194,4 +197,14 @@ class EditorPaneAddDocumentEvent extends EditorPaneEvent {
     required this.paneId,
     required this.documentId,
   }) : super('addDoc');
+}
+
+/// FILE MANAGER EVENTS ///
+
+class FileManagerEvent extends Event {
+  const FileManagerEvent(String id) : super('fileManager.$id');
+}
+
+class FileManagerStructureChangedEvent extends FileManagerEvent {
+  const FileManagerStructureChangedEvent() : super('structureChanged');
 }

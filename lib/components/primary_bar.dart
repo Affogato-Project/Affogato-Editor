@@ -38,6 +38,13 @@ class PrimaryBarState extends State<PrimaryBar>
       },
     );
 
+    registerListener(
+      AffogatoEvents.fileManagerStructureChangedEvents.stream,
+      (_) {
+        setState(() {});
+      },
+    );
+
     super.initState();
   }
 
