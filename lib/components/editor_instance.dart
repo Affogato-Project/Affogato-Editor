@@ -379,7 +379,9 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                                 maxLines: null,
                                 controller: textController,
                                 decoration: null,
-                                style: null,
+                                style: codeTextStyle.copyWith(
+                                    color: widget
+                                        .editorTheme.textPreformatForeground),
                               ),
                               MouseRegion(
                                 opaque: false,

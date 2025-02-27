@@ -35,6 +35,7 @@ final EditorTheme<Color, TextStyle> vscodeModernDarkEditorTheme =
   },
 );
 
+// Thanking my lucky stars for AI tools
 const Map<String, String> vscodeModernDarkJSON = {
   "checkbox.border": "#6B6B6B",
   "editor.background": "#1E1E1E",
