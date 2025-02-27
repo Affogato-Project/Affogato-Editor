@@ -63,8 +63,7 @@ class AffogatoWorkspaceConfigs {
 
   final AffogatoFileManager fileManager = AffogatoFileManager();
 
-  final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
-      TextStyle> themeBundle;
+  final ThemeBundle<dynamic, Color, TextStyle, TextSpan> themeBundle;
 
   /// A mapping of [LanguageBundle]s to possible file extensions for each language
   /// Each entry will be checked first to find a suitable user-defined [LanguageBundle] for a given
@@ -90,13 +89,13 @@ class AffogatoWorkspaceConfigs {
       )
       .isNotEmpty;
 
-  LanguageBundle detectLanguage(String extension) {
+  LanguageBundle? detectLanguage(String extension) {
     for (final entry in languageBundles.entries) {
       if (entry.value.contains(extension) ||
           entry.key.fileAssociationContributions.contains(extension)) {
         return entry.key;
       }
     }
-    return genericLB;
+    return null;
   }
 }

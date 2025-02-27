@@ -85,14 +85,14 @@ class StatusBarState extends State<StatusBar>
             ),
           ),
           const Spacer(),
-          if (currentDocumentId != null && currentLB != null)
+          if (currentDocumentId != null)
             TextButton(
               onPressed: () {
                 AffogatoEvents.windowEditorPaneRemoveEvents
                     .add(const WindowEditorPaneRemoveEvent());
               },
               child: Text(
-                currentLB!.bundleName,
+                currentLB?.bundleName ?? 'Generic',
                 style: TextStyle(
                   color: widget.workspaceConfigs.themeBundle.editorTheme
                       .editorForeground,

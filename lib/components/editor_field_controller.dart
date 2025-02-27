@@ -1,18 +1,21 @@
 part of affogato.editor;
 
-class AffogatoEditorFieldController<T extends AffogatoRenderToken,
-    H extends SyntaxHighlighter<T>> extends TextEditingController {
-  final LanguageBundle languageBundle;
-  final ThemeBundle<T, H, Color, TextStyle> themeBundle;
+class AffogatoEditorFieldController<S, SyntaxHighlighter>
+    extends TextEditingController {
+  final LanguageBundle? languageBundle;
+  final ThemeBundle<S, Color, TextStyle, TextSpan> themeBundle;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final String? initialText;
+  final AffogatoDefaultSyntaxHighlighter syntaxHighlighter;
 
   AffogatoEditorFieldController({
     required this.languageBundle,
     required this.themeBundle,
     required this.workspaceConfigs,
     this.initialText,
-  }) : super(text: initialText);
+  })  : syntaxHighlighter =
+            AffogatoDefaultSyntaxHighlighter(languageBundle?.bundleName),
+        super(text: initialText);
 
   @override
   set text(String newText) {
@@ -29,49 +32,13 @@ class AffogatoEditorFieldController<T extends AffogatoRenderToken,
     TextStyle? style,
     required bool withComposing,
   }) {
-    if (text.isEmpty) {
-      return TextSpan(
-        text: text,
-        style: themeBundle.editorTheme.defaultTextStyle.copyWith(
-          height: utils.AffogatoConstants.lineHeight,
-          fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
-        ),
-      );
-    }
-
-    try {
-      final List<Token> tokens = languageBundle.tokeniser.tokenise(text);
-      final ParseResult res = languageBundle.parser.parse(tokens);
-      final List<AffogatoRenderToken> renderTokens =
-          themeBundle.synaxHighlighter.createRenderTokens(res);
-      return TextSpan(
-        style: themeBundle.editorTheme.defaultTextStyle.copyWith(
-          height: utils.AffogatoConstants.lineHeight,
-          fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
-        ),
-        children: [
-          for (final rt in renderTokens)
-            TextSpan(
-              text: (rt.node as TerminalASTNode).lexeme,
-              style: rt
-                  .render(themeBundle.editorTheme.defaultTextStyle)
-                  .copyWith(
-                    height: utils.AffogatoConstants.lineHeight,
-                    fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
-                  ),
-            ),
-        ],
-      );
-    } catch (e, _) {
-      print(e);
-      //print(st);
-      return TextSpan(
-        text: text,
-        style: themeBundle.editorTheme.defaultTextStyle.copyWith(
-          height: utils.AffogatoConstants.lineHeight,
-          fontSize: workspaceConfigs.stylingConfigs.editorFontSize,
-        ),
-      );
-    }
+    return AffogatoDefaultRenderer(
+          defaultStyle: themeBundle.editorTheme.defaultTextStyle,
+          mapping: themeBundle.tokenMapping,
+        ).render(syntaxHighlighter.createRenderTokens(text)) ??
+        super.buildTextSpan(
+          context: context,
+          withComposing: withComposing,
+        );
   }
 }

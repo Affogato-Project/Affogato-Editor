@@ -3,7 +3,7 @@ part of affogato.editor;
 class AffogatoInstanceState {
   final int cursorPos;
   final double scrollHeight;
-  final LanguageBundle languageBundle;
+  final LanguageBundle? languageBundle;
 
   const AffogatoInstanceState({
     required this.cursorPos,

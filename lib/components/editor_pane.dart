@@ -88,7 +88,7 @@ class EditorPaneState extends State<EditorPane>
             instanceState = AffogatoInstanceState(
           cursorPos: 0,
           scrollHeight: 0,
-          languageBundle: currentLB ?? genericLB,
+          languageBundle: currentLB,
         );
       }
     }
@@ -139,8 +139,7 @@ class EditorPaneState extends State<EditorPane>
                         widget.workspaceConfigs.themeBundle.editorTheme,
                     instanceState: instanceState,
                     extensionsEngine: widget.extensionsEngine,
-                    languageBundle:
-                        instanceState?.languageBundle ?? currentLB ?? genericLB,
+                    languageBundle: instanceState?.languageBundle ?? currentLB,
                     themeBundle: widget.workspaceConfigs.themeBundle,
                   ),
                 )

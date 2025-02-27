@@ -13,7 +13,7 @@ dependencies:
   affogato_core:
     path: ../AffogatoCore
   xml: ^6.5.0
-  highlight: ^0.7.0
+  re_highlight: ^0.0.3
 
 dev_dependencies:
   flutter_test:

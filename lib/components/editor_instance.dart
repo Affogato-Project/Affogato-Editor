@@ -6,10 +6,9 @@ class AffogatoEditorInstance extends StatefulWidget {
   final EditorTheme<Color, TextStyle> editorTheme;
   final double width;
   final AffogatoWorkspaceConfigs workspaceConfigs;
-  final LanguageBundle languageBundle;
+  final LanguageBundle? languageBundle;
   final AffogatoExtensionsEngine extensionsEngine;
-  final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
-      TextStyle> themeBundle;
+  final ThemeBundle<dynamic, Color, TextStyle, TextSpan> themeBundle;
 
   AffogatoEditorInstance({
     required this.documentId,
@@ -22,7 +21,7 @@ class AffogatoEditorInstance extends StatefulWidget {
     this.instanceState,
   }) : super(
             key: ValueKey(
-                '$documentId${instanceState?.hashCode}${editorTheme.hashCode}$width${languageBundle.bundleName}'));
+                '$documentId${instanceState?.hashCode}${editorTheme.hashCode}$width${languageBundle?.bundleName}'));
 
   @override
   State<StatefulWidget> createState() => AffogatoEditorInstanceState();
@@ -31,7 +30,7 @@ class AffogatoEditorInstance extends StatefulWidget {
 class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     with utils.StreamSubscriptionManager {
   final ScrollController scrollController = ScrollController();
-  late TextEditingController textController;
+  late AffogatoEditorFieldController textController;
   late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
   late AffogatoDocument currentDoc;
@@ -72,10 +71,10 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
       // Load or create instance state
       AffogatoInstanceState? newState;
       instanceState = widget.instanceState ??
-          (newState = AffogatoInstanceState(
+          (newState = const AffogatoInstanceState(
             cursorPos: 0,
             scrollHeight: 0,
-            languageBundle: genericLB,
+            languageBundle: null,
           ));
       if (newState != null) {
         AffogatoEvents.editorInstanceCreateEvents
@@ -380,9 +379,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                                 maxLines: null,
                                 controller: textController,
                                 decoration: null,
-                                style: codeTextStyle.copyWith(
-                                    color: widget
-                                        .editorTheme.textPreformatForeground),
+                                style: null,
                               ),
                               MouseRegion(
                                 opaque: false,

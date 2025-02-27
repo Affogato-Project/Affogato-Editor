@@ -3,13 +3,13 @@ library affogato.editor;
 import 'dart:async';
 
 import 'package:affogato_editor/apis/affogato_apis.dart';
-import 'package:affogato_editor/battery_themes/affogato_classic/theme_bundle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:affogato_core/affogato_core.dart';
-import 'package:affogato_editor/battery_langs/generic/language_bundle.dart';
 import 'package:affogato_editor/utils/utils.dart' as utils;
+import 'package:re_highlight/languages/all.dart';
+import 'package:re_highlight/re_highlight.dart';
 
 part './editor_core/configs.dart';
 part './editor_core/events.dart';
@@ -25,8 +25,9 @@ part './components/editor_field_controller.dart';
 part './components/primary_bar.dart';
 part './components/file_browser_button.dart';
 part './components/status_bar.dart';
-
 part './components/shared/context_menu_region.dart';
+
+part './syntax_highlighter/syntax_highlighter.dart';
 
 class AffogatoWindow extends StatefulWidget {
   final AffogatoPerformanceConfigs performanceConfigs;
@@ -65,6 +66,14 @@ class AffogatoWindowState extends State<AffogatoWindow>
     widget.workspaceConfigs.fileManager
       ..buildIndex()
       ..createDir('Dir_1/')
+      ..createDoc(
+        path: './Dir_1/',
+        AffogatoDocument(
+          docName: 'main.dart',
+          srcContent: '// this is a comment',
+          maxVersioningLimit: 5,
+        ),
+      )
       ..createDir('Dir_1/inside/')
       ..createDoc(
         path: './Dir_1/inside/',

@@ -1,7 +1,9 @@
-library affogato.editor.battery.themes.affogato;
+library affogato.editor.battery.themes.vscode_modern_dark;
 
 import 'package:affogato_core/affogato_core.dart';
 import 'package:flutter/material.dart';
+
+part './token_mapping.dart';
 
 final EditorTheme<Color, TextStyle> vscodeModernDarkEditorTheme =
     VSCodeEditorTheme.fromJson(

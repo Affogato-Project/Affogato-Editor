@@ -3,10 +3,8 @@ library affogato.editor.battery.themes.affogato;
 import 'package:affogato_core/affogato_core.dart';
 import 'package:flutter/material.dart';
 
-part 'syntax_highlighter.dart';
-part './render_token.dart';
 
-final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
+/* final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
     TextStyle> themeBundle = ThemeBundle(
   synaxHighlighter: AffogatoSyntaxHighlighter(),
   editorTheme: EditorTheme<Color, TextStyle>(
@@ -20,4 +18,4 @@ final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
       color: Color(0xFFFDCC9B),
     ),
   ),
-);
+); */
