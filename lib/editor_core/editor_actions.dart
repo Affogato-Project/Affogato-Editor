@@ -1,14 +1,9 @@
 part of affogato.editor;
 
 class EditorAction {
-  final TextSelection? newSelection;
-  final String? newContent;
+  final TextEditingValue editingValue;
 
   const EditorAction({
-    required this.newContent,
-    required this.newSelection,
+    required this.editingValue,
   });
-  const EditorAction.none()
-      : newSelection = null,
-        newContent = null;
 }

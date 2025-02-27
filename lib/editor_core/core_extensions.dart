@@ -19,6 +19,7 @@ class PairMatcherExtension extends AffogatoExtension {
   @override
   void loadExtension({
     required AffogatoFileManager fileManager,
+    required AffogatoWorkspaceConfigs workspaceConfigs,
   }) {
     // Need to
     /**
@@ -38,8 +39,10 @@ class PairMatcherExtension extends AffogatoExtension {
           AffogatoEvents.editorDocumentRequestChangeEvents.add(
             EditorDocumentRequestChangeEvent(
               editorAction: EditorAction(
-                newContent: newText,
-                newSelection: event.editingContext.selection,
+                editingValue: TextEditingValue(
+                  text: newText,
+                  selection: event.editingContext.selection,
+                ),
               ),
             ),
           );
@@ -57,8 +60,10 @@ class PairMatcherExtension extends AffogatoExtension {
             AffogatoEvents.editorDocumentRequestChangeEvents.add(
               EditorDocumentRequestChangeEvent(
                 editorAction: EditorAction(
-                  newContent: newText,
-                  newSelection: event.editingContext.selection,
+                  editingValue: TextEditingValue(
+                    text: newText,
+                    selection: event.editingContext.selection,
+                  ),
                 ),
               ),
             );
@@ -67,4 +72,86 @@ class PairMatcherExtension extends AffogatoExtension {
       }
     });
   }
+}
+
+final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
+  static const triggerChars = {
+    '(': ')',
+    '[': ']',
+    '{': '}',
+    '"': '"',
+    "'": "'",
+    '`': '`',
+  };
+  AutoIndenterExtension()
+      : super(
+          keys: [LogicalKeyboardKey.enter],
+          name: 'affogato_auto_indenter',
+          displayName: 'Auto Indenter',
+          bindTriggers: const [AffogatoBindTriggers.onStartupFinished()],
+        );
+
+  @override
+  KeyEventResult handle({
+    required EditorKeyEvent editorKeyEvent,
+    required AffogatoFileManager fileManager,
+    required AffogatoWorkspaceConfigs workspaceConfigs,
+  }) {
+    if (!editorKeyEvent.editingContext.selection.isCollapsed ||
+        editorKeyEvent.editingContext.selection.start - 1 < 0) {
+      return KeyEventResult.ignored;
+    }
+    if (editorKeyEvent.keyEvent is KeyDownEvent) {
+      final String prevChar = editorKeyEvent.editingContext
+          .content[editorKeyEvent.editingContext.selection.start - 1];
+      if (triggerChars.containsKey(prevChar)) {
+        final String precedentText = editorKeyEvent.editingContext.selection
+            .textBefore(editorKeyEvent.editingContext.content);
+        final int numSpaces =
+            numSpacesBeforeFirstChar(precedentText.split('\n').last);
+
+        final int tabSizeInSpaces =
+            workspaceConfigs.stylingConfigs.tabSizeInSpaces;
+
+        final String insertText =
+            "\n${' ' * (numSpaces + tabSizeInSpaces)}\n${' ' * numSpaces}";
+
+        final String succeedingText = editorKeyEvent.editingContext.selection
+            .textAfter(editorKeyEvent.editingContext.content);
+
+        final String newText = precedentText + insertText + succeedingText;
+
+        AffogatoEvents.editorDocumentRequestChangeEvents.add(
+          EditorDocumentRequestChangeEvent(
+            editorAction: EditorAction(
+              editingValue: TextEditingValue(
+                text: newText,
+                selection: TextSelection.collapsed(
+                  offset: precedentText.length +
+                      1 +
+                      numSpaces +
+                      workspaceConfigs.stylingConfigs.tabSizeInSpaces,
+                ),
+              ),
+            ),
+          ),
+        );
+        return KeyEventResult.handled;
+      }
+    } else if (editorKeyEvent.keyEvent is KeyRepeatEvent) {}
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  void loadExtension({
+    required AffogatoFileManager fileManager,
+    required AffogatoWorkspaceConfigs workspaceConfigs,
+  }) {
+    AffogatoEvents.editorKeyEvent.stream
+        .where((event) => event.keyEvent.logicalKey == LogicalKeyboardKey.enter)
+        .listen((event) {});
+  }
+
+  int numSpacesBeforeFirstChar(String line) =>
+      line.length - line.trimLeft().length;
 }
