@@ -7,6 +7,7 @@ class AffogatoEditorInstance extends StatefulWidget {
   final double width;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final LanguageBundle languageBundle;
+  final AffogatoExtensionsEngine extensionsEngine;
   final ThemeBundle<AffogatoRenderToken, AffogatoSyntaxHighlighter, Color,
       TextStyle> themeBundle;
 
@@ -16,6 +17,7 @@ class AffogatoEditorInstance extends StatefulWidget {
     required this.editorTheme,
     required this.workspaceConfigs,
     required this.languageBundle,
+    required this.extensionsEngine,
     required this.themeBundle,
     this.instanceState,
   }) : super(
@@ -118,14 +120,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
       registerListener(
         AffogatoEvents.editorDocumentRequestChangeEvents.stream,
         (event) {
-          if (event.editorAction.newContent == null &&
-              event.editorAction.newSelection == null) return;
-          if (event.editorAction.newContent != null) {
-            textController.text = event.editorAction.newContent!;
-          }
-          if (event.editorAction.newSelection != null) {
-            textController.selection = event.editorAction.newSelection!;
-          }
+          textController.value = event.editorAction.editingValue;
           setState(() {});
 
           AffogatoEvents.editorDocumentChangedEvents.add(
@@ -350,19 +345,21 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                     Expanded(
                       child: Focus(
                         onKeyEvent: (_, key) {
-                          AffogatoEvents.editorKeyEvent.add(
-                            EditorKeyEvent(
-                              documentId: widget.documentId,
-                              keyEvent: key,
-                              editingContext: EditingContext(
-                                content: widget.workspaceConfigs.fileManager
-                                    .getDoc(widget.documentId)
-                                    .content,
-                                selection: textController.selection,
-                              ),
+                          final EditorKeyEvent keyEvent = EditorKeyEvent(
+                            documentId: widget.documentId,
+                            keyEvent: key,
+                            editingContext: EditingContext(
+                              content: widget.workspaceConfigs.fileManager
+                                  .getDoc(widget.documentId)
+                                  .content,
+                              selection: textController.selection,
                             ),
                           );
-                          return KeyEventResult.ignored;
+
+                          AffogatoEvents.editorKeyEvent.add(keyEvent);
+
+                          return widget.extensionsEngine
+                              .triggerEditorKeybindings(keyEvent);
                         },
                         child: Theme(
                           data: ThemeData(

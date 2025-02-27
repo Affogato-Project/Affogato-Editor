@@ -6,6 +6,7 @@ class EditorPane extends StatefulWidget {
   final AffogatoStylingConfigs stylingConfigs;
   final AffogatoPerformanceConfigs performanceConfigs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
+  final AffogatoExtensionsEngine extensionsEngine;
   final GlobalKey<AffogatoWindowState> windowKey;
 
   final String paneId;
@@ -15,6 +16,7 @@ class EditorPane extends StatefulWidget {
     required this.layoutConfigs,
     required this.performanceConfigs,
     required this.workspaceConfigs,
+    required this.extensionsEngine,
     required this.documentIds,
     required this.windowKey,
     required this.paneId,
@@ -136,6 +138,7 @@ class EditorPaneState extends State<EditorPane>
                     editorTheme:
                         widget.workspaceConfigs.themeBundle.editorTheme,
                     instanceState: instanceState,
+                    extensionsEngine: widget.extensionsEngine,
                     languageBundle:
                         instanceState?.languageBundle ?? currentLB ?? genericLB,
                     themeBundle: widget.workspaceConfigs.themeBundle,

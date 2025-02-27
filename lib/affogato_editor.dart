@@ -46,14 +46,21 @@ class AffogatoWindowState extends State<AffogatoWindow>
     with utils.StreamSubscriptionManager {
   final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
 
-  final Map<String, List<StreamSubscription>> extensionListeners = {};
-  final AffogatoExtensionsAPI _extensionsApi = AffogatoExtensionsAPI();
-  late final AffogatoAPI api = AffogatoAPI(
-    extensions: _extensionsApi,
-  );
+  late final AffogatoExtensionsEngine extensionsEngine;
+  late final AffogatoExtensionsAPI extensionsApi;
+  late final AffogatoAPI api;
 
   @override
   void initState() {
+    extensionsEngine = AffogatoExtensionsEngine(
+      fileManager: widget.workspaceConfigs.fileManager,
+      workspaceConfigs: widget.workspaceConfigs,
+    );
+    extensionsApi = AffogatoExtensionsAPI(extensionsEngine: extensionsEngine);
+    api = AffogatoAPI(
+      extensions: extensionsApi,
+    );
+
     BrowserContextMenu.disableContextMenu();
     widget.workspaceConfigs.fileManager
       ..buildIndex()
@@ -213,7 +220,10 @@ class AffogatoWindowState extends State<AffogatoWindow>
           .contains(const AffogatoBindTriggers.onStartupFinished().id),
     )) {
       api.extensions.register(ext);
-      ext.loadExtension(fileManager: widget.workspaceConfigs.fileManager);
+      ext.loadExtension(
+        fileManager: widget.workspaceConfigs.fileManager,
+        workspaceConfigs: widget.workspaceConfigs,
+      );
     }
 
     super.initState();
@@ -273,6 +283,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
                                     utils.AffogatoConstants.statusBarHeight -
                                     2,
                               ),
+                              extensionsEngine: extensionsEngine,
                               performanceConfigs: widget.performanceConfigs,
                               workspaceConfigs: widget.workspaceConfigs,
                               documentIds: pane.value,
@@ -303,11 +314,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
     BrowserContextMenu.enableContextMenu();
     cancelSubscriptions();
     AffogatoEvents.windowCloseEvents.add(const WindowCloseEvent());
-    for (final listeners in extensionListeners.values) {
-      for (final hook in listeners) {
-        await hook.cancel();
-      }
-    }
+    extensionsEngine.deinit();
     await AffogatoEvents.windowEditorPaneAddEvents.close();
     await AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.close();
     // ... //
@@ -316,4 +323,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
   }
 }
 
-final List<AffogatoExtension> affogatoCoreExtensions = [PairMatcherExtension()];
+final List<AffogatoExtension> affogatoCoreExtensions = [
+  PairMatcherExtension(),
+  AutoIndenterExtension(),
+];
