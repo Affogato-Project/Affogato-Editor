@@ -24,7 +24,7 @@ abstract class AffogatoExtension {
         bindTriggers = (json['activationEvents'] as List).cast<String>();
 
   void loadExtension({
-    required AffogatoFileManager fileManager,
+    required AffogatoVFS vfs,
     required AffogatoWorkspaceConfigs workspaceConfigs,
   });
 }
@@ -50,14 +50,14 @@ abstract base class AffogatoEditorKeybindingExtension
   });
 
   KeyEventResult handle({
-    required AffogatoFileManager fileManager,
+    required AffogatoVFS vfs,
     required AffogatoWorkspaceConfigs workspaceConfigs,
     required EditorKeyEvent editorKeyEvent,
   });
 
   @override
   void loadExtension({
-    required AffogatoFileManager fileManager,
+    required AffogatoVFS vfs,
     required AffogatoWorkspaceConfigs workspaceConfigs,
   }) {}
 }

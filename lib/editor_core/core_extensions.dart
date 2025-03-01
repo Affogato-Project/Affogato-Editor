@@ -18,7 +18,7 @@ class PairMatcherExtension extends AffogatoExtension {
 
   @override
   void loadExtension({
-    required AffogatoFileManager fileManager,
+    required AffogatoVFS vfs,
     required AffogatoWorkspaceConfigs workspaceConfigs,
   }) {
     // Need to
@@ -94,7 +94,7 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
   @override
   KeyEventResult handle({
     required EditorKeyEvent editorKeyEvent,
-    required AffogatoFileManager fileManager,
+    required AffogatoVFS vfs,
     required AffogatoWorkspaceConfigs workspaceConfigs,
   }) {
     if (!editorKeyEvent.editingContext.selection.isCollapsed ||
@@ -144,7 +144,7 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
 
   @override
   void loadExtension({
-    required AffogatoFileManager fileManager,
+    required AffogatoVFS vfs,
     required AffogatoWorkspaceConfigs workspaceConfigs,
   }) {
     AffogatoEvents.editorKeyEvent.stream

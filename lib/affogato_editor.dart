@@ -1,11 +1,14 @@
 library affogato.editor;
 
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:affogato_editor/apis/affogato_apis.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:web_socket_channel/html.dart';
+import 'package:web_socket_channel/status.dart' as WSStatus;
 
+import 'package:affogato_editor/apis/affogato_apis.dart';
 import 'package:affogato_core/affogato_core.dart';
 import 'package:affogato_editor/utils/utils.dart' as utils;
 import 'package:re_highlight/languages/all.dart';
@@ -15,7 +18,7 @@ part './editor_core/configs.dart';
 part './editor_core/events.dart';
 part './editor_core/editor_actions.dart';
 part './editor_core/instance_state.dart';
-part './editor_core/file_manager.dart';
+part './editor_core/virtual_file_system.dart';
 part './editor_core/core_extensions.dart';
 
 part './components/editor_pane.dart';
@@ -28,6 +31,8 @@ part './components/status_bar.dart';
 part './components/shared/context_menu_region.dart';
 
 part './syntax_highlighter/syntax_highlighter.dart';
+
+part './lsp/lsp.dart';
 
 class AffogatoWindow extends StatefulWidget {
   final AffogatoPerformanceConfigs performanceConfigs;
@@ -54,7 +59,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
   @override
   void initState() {
     extensionsEngine = AffogatoExtensionsEngine(
-      fileManager: widget.workspaceConfigs.fileManager,
+      vfs: widget.workspaceConfigs.vfs,
       workspaceConfigs: widget.workspaceConfigs,
     );
     extensionsApi = AffogatoExtensionsAPI(extensionsEngine: extensionsEngine);
@@ -63,34 +68,47 @@ class AffogatoWindowState extends State<AffogatoWindow>
     );
 
     BrowserContextMenu.disableContextMenu();
-    widget.workspaceConfigs.fileManager
-      ..buildIndex()
-      ..createDir('Dir_1/')
-      ..createDoc(
-        path: './Dir_1/',
-        AffogatoDocument(
-          docName: 'main.dart',
-          srcContent: '// this is a comment',
-          maxVersioningLimit: 5,
-        ),
-      )
-      ..createDir('Dir_1/inside/')
-      ..createDoc(
-        path: './Dir_1/inside/',
-        AffogatoDocument(
-          docName: 'MyDoc.md',
-          srcContent: '# Hello',
-          maxVersioningLimit: 5,
-        ),
-      )
-      ..createDoc(
-        path: './Dir_1/inside/',
-        AffogatoDocument(
-          docName: 'some_script.js',
-          srcContent: 'function f() => 2;',
-          maxVersioningLimit: 5,
-        ),
-      );
+    widget.workspaceConfigs.vfs.createEntity(
+      AffogatoVFSEntity.dir(
+        entityId: utils.generateId(),
+        name: 'Dir_1',
+        files: [
+          AffogatoVFSEntity.file(
+            entityId: utils.generateId(),
+            doc: AffogatoDocument(
+              docName: 'main.dart',
+              srcContent: '// this is a comment',
+              maxVersioningLimit: 5,
+            ),
+          ),
+        ],
+        subdirs: [
+          AffogatoVFSEntity.dir(
+            entityId: utils.generateId(),
+            name: 'inside',
+            files: [
+              AffogatoVFSEntity.file(
+                entityId: utils.generateId(),
+                doc: AffogatoDocument(
+                  docName: 'MyDoc.md',
+                  srcContent: '# Hello',
+                  maxVersioningLimit: 5,
+                ),
+              ),
+              AffogatoVFSEntity.file(
+                entityId: utils.generateId(),
+                doc: AffogatoDocument(
+                  docName: 'some_script.js',
+                  srcContent: 'function f() => 2;',
+                  maxVersioningLimit: 5,
+                ),
+              ),
+            ],
+            subdirs: [],
+          ),
+        ],
+      ),
+    );
 
     registerListener(
       AffogatoEvents.windowEditorPaneAddEvents.stream,
@@ -128,8 +146,9 @@ class AffogatoWindowState extends State<AffogatoWindow>
                 paneId: entry.key,
                 documentId: event.documentId,
                 languageBundle: widget.workspaceConfigs.detectLanguage(widget
-                    .workspaceConfigs.fileManager
-                    .getDoc(event.documentId)
+                    .workspaceConfigs.vfs
+                    .accessEntity(event.documentId)!
+                    .document!
                     .extension),
               ),
             );
@@ -148,8 +167,9 @@ class AffogatoWindowState extends State<AffogatoWindow>
               paneId: firstPane.key,
               documentId: event.documentId,
               languageBundle: widget.workspaceConfigs.detectLanguage(widget
-                  .workspaceConfigs.fileManager
-                  .getDoc(event.documentId)
+                  .workspaceConfigs.vfs
+                  .accessEntity(event.documentId)!
+                  .document!
                   .extension),
             ),
           );
@@ -160,8 +180,9 @@ class AffogatoWindowState extends State<AffogatoWindow>
     registerListener(
       AffogatoEvents.editorDocumentChangedEvents.stream,
       (event) {
-        widget.workspaceConfigs.fileManager
-            .getDoc(event.documentId)
+        widget.workspaceConfigs.vfs
+            .accessEntity(event.documentId)!
+            .document!
             .addVersion(event.newContent);
       },
     );
@@ -230,7 +251,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
     )) {
       api.extensions.register(ext);
       ext.loadExtension(
-        fileManager: widget.workspaceConfigs.fileManager,
+        vfs: widget.workspaceConfigs.vfs,
         workspaceConfigs: widget.workspaceConfigs,
       );
     }

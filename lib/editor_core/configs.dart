@@ -61,7 +61,7 @@ class AffogatoWorkspaceConfigs {
   /// corresponding document IDs.
   final Map<String, AffogatoInstanceState> statesRegistry = {};
 
-  final AffogatoFileManager fileManager = AffogatoFileManager();
+  final AffogatoVFS vfs;
 
   final ThemeBundle<dynamic, Color, TextStyle, TextSpan> themeBundle;
 
@@ -80,7 +80,14 @@ class AffogatoWorkspaceConfigs {
     required this.languageBundles,
     required this.stylingConfigs,
     required this.extensions,
-  });
+  }) : vfs = AffogatoVFS(
+          root: AffogatoVFSEntity.dir(
+            entityId: utils.generateId(),
+            name: projectName,
+            files: [],
+            subdirs: [],
+          ),
+        );
 
   bool isDocumentShown(String documentId) => paneDocumentData.values
       .firstWhere(

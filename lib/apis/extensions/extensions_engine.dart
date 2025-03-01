@@ -10,11 +10,11 @@ class AffogatoExtensionsEngine {
       editorKeybindingExtensions = {};
   final List<AffogatoExtension> extensions = [];
 
-  final AffogatoFileManager fileManager;
+  final AffogatoVFS vfs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
 
   AffogatoExtensionsEngine({
-    required this.fileManager,
+    required this.vfs,
     required this.workspaceConfigs,
   });
 
@@ -33,7 +33,7 @@ class AffogatoExtensionsEngine {
     if (editorKeybindingExtensions.containsKey(event.keyEvent.logicalKey)) {
       return editorKeybindingExtensions[event.keyEvent.logicalKey]!.handle(
         editorKeyEvent: event,
-        fileManager: fileManager,
+        vfs: vfs,
         workspaceConfigs: workspaceConfigs,
       );
     } else {

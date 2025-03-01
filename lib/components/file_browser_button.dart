@@ -5,7 +5,7 @@ enum QuartetButtonState { none, hovered, pressed, active }
 class FileBrowserButton extends StatefulWidget {
   final EditorTheme<Color, TextStyle> editorTheme;
   final double indent;
-  final AffogatoFileItem entry;
+  final AffogatoVFSEntity entry;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final bool isRoot;
 
@@ -15,7 +15,7 @@ class FileBrowserButton extends StatefulWidget {
     required this.editorTheme,
     required this.workspaceConfigs,
     this.isRoot = false,
-  }) : super(key: ValueKey(entry.hash));
+  }) : super(key: ValueKey(entry.entityId));
 
   @override
   State<StatefulWidget> createState() => FileBrowserButtonState();
@@ -30,16 +30,15 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
 
   @override
   void initState() {
-    if (widget.entry is AffogatoDirectoryItem) expanded = widget.isRoot;
+    if (widget.entry.isDirectory) expanded = widget.isRoot;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     final Color buttonColor;
-    if (widget.entry is AffogatoDocumentItem) {
-      if (widget.workspaceConfigs
-          .isDocumentShown((widget.entry as AffogatoDocumentItem).documentId)) {
+    if (widget.entry.isDirectory) {
+      if (widget.workspaceConfigs.isDocumentShown(widget.entry.entityId)) {
         buttonColor = hasFocus
             ? widget.editorTheme.buttonBackground ?? Colors.red
             : widget.editorTheme.buttonSecondaryBackground ?? Colors.red;
@@ -77,264 +76,231 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                 bottom: 2,
               ),
               child: Text(
-                widget.entry is AffogatoDirectoryItem
-                    ? "${widget.workspaceConfigs.fileManager.getDocsInDir((widget.entry as AffogatoDirectoryItem).dirPath).length} items"
-                    : widget.workspaceConfigs.fileManager
-                        .getDoc(
-                            (widget.entry as AffogatoDocumentItem).documentId)
-                        .docName,
+                widget.entry.isDirectory
+                    ? "${widget.entry.files.length + widget.entry.subdirs.length} items"
+                    : widget.entry.name,
                 style: TextStyle(color: widget.editorTheme.buttonForeground),
               ),
             ),
           ),
         ),
-        child: DragTarget<List<AffogatoFileItem>>(
-          onWillAcceptWithDetails: (details) {
-            isDragTarget = true;
-            // assign a value to a variable and return that value, without even creating a separate named function. brilliant.
-            return isValidDragTarget = () {
-              if (widget.entry is! AffogatoDirectoryItem) return false;
-              final List<String> docsInDir = widget.workspaceConfigs.fileManager
-                  .getDocsInDir(
-                      (widget.entry as AffogatoDirectoryItem).dirPath);
-              final List<String> subdirs = widget.workspaceConfigs.fileManager
-                  .getSubdirectoriesInDir(
-                      (widget.entry as AffogatoDirectoryItem).dirPath);
-              return details.data.every((item) {
-                // make sure the dragged folder isn't already in the folder it is being dragged into
-                if (item is AffogatoDirectoryItem) {
-                  return item.dirPath !=
-                          (widget.entry as AffogatoDirectoryItem).dirPath &&
-                      !subdirs.contains(item.dirPath);
-                } else {
-                  // make sure the dragged document isn't already in the folder either
-                  return !docsInDir
-                      .contains((item as AffogatoDocumentItem).documentId);
-                }
-              });
-            }();
-          },
-          onLeave: (_) => isValidDragTarget = isDragTarget = false,
-          onAcceptWithDetails: (details) {
-            for (final item in details.data) {
-              if (item is AffogatoDirectoryItem) {
-                widget.workspaceConfigs.fileManager.moveDir(item.dirPath,
-                    (widget.entry as AffogatoDirectoryItem).dirPath);
-              } else {
-                widget.workspaceConfigs.fileManager.moveDoc(
-                    (item as AffogatoDocumentItem).documentId,
-                    (widget.entry as AffogatoDirectoryItem).dirPath);
-              }
-              AffogatoEvents.fileManagerStructureChangedEvents
-                  .add(const FileManagerStructureChangedEvent());
-            }
-          },
-          builder: (ctx, candidates, rejected) {
-            return Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: isDragTarget
-                    ? widget.entry is AffogatoDocumentItem || !isValidDragTarget
-                        ? Colors.transparent
-                        : buttonColor
-                    : buttonColor,
-              ),
-              child: ContextMenuRegion<(Type, String)>(
-                contextMenuBuilder: (ctx, pos) =>
-                    AdaptiveTextSelectionToolbar.buttonItems(
-                  anchors: TextSelectionToolbarAnchors(primaryAnchor: pos),
-                  buttonItems: widget.entry is AffogatoDirectoryItem
-                      ? [
-                          ContextMenuButtonItem(
-                            label: 'New File',
-                            onPressed: () {
-                              final String docId =
-                                  widget.workspaceConfigs.fileManager.createDoc(
-                                AffogatoDocument(
-                                  docName: 'Untitled',
-                                  srcContent: '',
-                                  maxVersioningLimit: 5,
-                                ),
-                                path: (widget.entry as AffogatoDirectoryItem)
-                                    .dirPath,
-                              );
-                              ContextMenuController.removeAny();
-                              setState(() {
-                                expanded = true;
-                              });
-                              AffogatoEvents
-                                  .windowEditorRequestDocumentSetActiveEvents
-                                  .add(
-                                WindowEditorRequestDocumentSetActiveEvent(
-                                    documentId: docId),
-                              );
-                            },
-                          ),
-                          ContextMenuButtonItem(
-                            label: 'New Folder',
-                            onPressed: () {
-                              widget.workspaceConfigs.fileManager.createDir(
-                                'untitled',
-                                (widget.entry as AffogatoDirectoryItem).dirPath,
-                              );
-                              ContextMenuController.removeAny();
-                              setState(() {
-                                expanded = true;
-                              });
-                            },
-                          ),
-                        ]
-                      : const [],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTapUp: (_) => setState(() {
-                        if (widget.entry is AffogatoDirectoryItem) {
-                          expanded = !expanded!;
-                        }
-                      }),
-                      onDoubleTap: () => setState(() {
-                        if (widget.entry is AffogatoDocumentItem) {
-                          buttonState = QuartetButtonState.active;
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDragTarget
+                ? !widget.entry.isDirectory || !isValidDragTarget
+                    ? Colors.transparent
+                    : buttonColor
+                : buttonColor,
+          ),
+          child: ContextMenuRegion<(Type, String)>(
+            contextMenuBuilder: (ctx, pos) =>
+                AdaptiveTextSelectionToolbar.buttonItems(
+              anchors: TextSelectionToolbarAnchors(primaryAnchor: pos),
+              buttonItems: widget.entry.isDirectory
+                  ? [
+                      ContextMenuButtonItem(
+                        label: 'New File',
+                        onPressed: () {
+                          final String docId = utils.generateId();
+                          widget.workspaceConfigs.vfs.createEntity(
+                            dirId: widget.entry.entityId,
+                            AffogatoVFSEntity.file(
+                              entityId: docId,
+                              doc: AffogatoDocument(
+                                docName: 'Untitled',
+                                srcContent: '',
+                                maxVersioningLimit: 5,
+                              ),
+                            ),
+                          );
+                          ContextMenuController.removeAny();
+                          setState(() {
+                            expanded = true;
+                          });
                           AffogatoEvents
                               .windowEditorRequestDocumentSetActiveEvents
                               .add(
                             WindowEditorRequestDocumentSetActiveEvent(
-                              documentId: (widget.entry as AffogatoDocumentItem)
-                                  .documentId,
+                                documentId: docId),
+                          );
+                        },
+                      ),
+                      ContextMenuButtonItem(
+                        label: 'New Folder',
+                        onPressed: () {
+                          widget.workspaceConfigs.vfs.createEntity(
+                            dirId: widget.entry.entityId,
+                            AffogatoVFSEntity.dir(
+                              entityId: utils.generateId(),
+                              name: 'untitled',
+                              files: [],
+                              subdirs: [],
                             ),
                           );
+                          ContextMenuController.removeAny();
+                          setState(() {
+                            expanded = true;
+                          });
+                        },
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTapUp: (_) => setState(() {
+                    if (widget.entry.isDirectory) expanded = !expanded!;
+                  }),
+                  onDoubleTap: () => setState(() {
+                    if (!widget.entry.isDirectory) {
+                      buttonState = QuartetButtonState.active;
+                      AffogatoEvents.windowEditorRequestDocumentSetActiveEvents
+                          .add(
+                        WindowEditorRequestDocumentSetActiveEvent(
+                          documentId: (widget.entry).entityId,
+                        ),
+                      );
+                    }
+                  }),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    onEnter: (_) => setState(
+                      () => buttonState = buttonState == QuartetButtonState.none
+                          ? QuartetButtonState.hovered
+                          : buttonState,
+                    ),
+                    onExit: (_) => setState(
+                      () => buttonState =
+                          buttonState == QuartetButtonState.pressed ||
+                                  buttonState == QuartetButtonState.active
+                              ? buttonState
+                              : QuartetButtonState.none,
+                    ),
+                    child: DragTarget<List<AffogatoVFSEntity>>(
+                      // a valid drag target must:
+                      // - be a directory
+                      // - not be the item being dragged onto it (i.e, you can't drag a folder onto itself)
+                      // - not already contain any of the items being dragged onto it
+                      onWillAcceptWithDetails: (details) {
+                        setState(() {
+                          buttonState = buttonState == QuartetButtonState.none
+                              ? QuartetButtonState.hovered
+                              : buttonState;
+                          isDragTarget = true;
+                        });
+                        // assign a value to a variable and return that value, without even creating a separate named function. brilliant.
+                        var isValidDragTarget = (() =>
+                            widget.entry.isDirectory &&
+                            details.data.every((item) =>
+                                item.entityId != widget.entry.entityId &&
+                                !widget.entry.files.contains(item) &&
+                                !widget.entry.subdirs.contains(item)))();
+                        return isValidDragTarget;
+                      },
+                      onLeave: (_) {
+                        setState(() {
+                          isValidDragTarget = isDragTarget = false;
+                        });
+                      },
+
+                      onAcceptWithDetails: (details) {
+                        for (final item in details.data) {
+                          widget.workspaceConfigs.vfs.moveEntity(
+                            entityId: item.entityId,
+                            newDirId: widget.entry.entityId,
+                          );
+
+                          AffogatoEvents.vfsStructureChangedEvents
+                              .add(const FileManagerStructureChangedEvent());
+
+                          print(widget.workspaceConfigs.vfs.dumpTree());
+                          isDragTarget = false;
                         }
-                      }),
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        onEnter: (_) => setState(
-                          () => buttonState =
-                              buttonState == QuartetButtonState.none
-                                  ? QuartetButtonState.hovered
-                                  : buttonState,
-                        ),
-                        onExit: (_) => setState(
-                          () => buttonState =
-                              buttonState == QuartetButtonState.pressed ||
-                                      buttonState == QuartetButtonState.active
-                                  ? buttonState
-                                  : QuartetButtonState.none,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 4, right: 4),
-                              child: widget.entry is AffogatoDirectoryItem
-                                  ? SizedBox(
-                                      width: 36,
-                                      height: 36,
-                                      child: Center(
-                                        child: Icon(
-                                          (expanded!
-                                              ? Icons.keyboard_arrow_down
-                                              : Icons.chevron_right),
-                                          size: 24,
-                                          color: widget.editorTheme
-                                              .buttonSecondaryForeground,
-                                        ),
-                                      ),
-                                    )
-                                  : SizedBox(
-                                      width: 36,
-                                      height: 36,
-                                      child: Center(
-                                        child: Icon(
-                                          Icons.description,
-                                          size: 24,
-                                          color: widget.editorTheme
-                                              .buttonSecondaryForeground,
-                                        ),
+                      },
+                      builder: (ctx, candidates, rejected) => Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, right: 4),
+                            child: widget.entry.isDirectory
+                                ? SizedBox(
+                                    width: 36,
+                                    height: 36,
+                                    child: Center(
+                                      child: Icon(
+                                        (expanded!
+                                            ? Icons.keyboard_arrow_down
+                                            : Icons.chevron_right),
+                                        size: 24,
+                                        color: widget.editorTheme
+                                            .buttonSecondaryForeground,
                                       ),
                                     ),
+                                  )
+                                : SizedBox(
+                                    width: 36,
+                                    height: 36,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.description,
+                                        size: 24,
+                                        color: widget.editorTheme
+                                            .buttonSecondaryForeground,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                          Text(
+                            widget.entry.name,
+                            style: TextStyle(
+                              color: !widget.entry.isDirectory && hasFocus
+                                  ? widget.editorTheme.buttonForeground
+                                  : widget
+                                      .editorTheme.buttonSecondaryForeground,
                             ),
-                            Text(
-                              widget.entry is AffogatoDirectoryItem
-                                  ? widget.isRoot
-                                      ? widget.workspaceConfigs.projectName
-                                      : (widget.entry as AffogatoDirectoryItem)
-                                          .dirPath
-                                          .dirNameFromPath()
-                                  : widget.workspaceConfigs.fileManager
-                                      .getDoc(
-                                          (widget.entry as AffogatoDocumentItem)
-                                              .documentId)
-                                      .docName,
-                              style: TextStyle(
-                                color: widget.entry is AffogatoDocumentItem &&
-                                        hasFocus
-                                    ? widget.editorTheme.buttonForeground
-                                    : widget
-                                        .editorTheme.buttonSecondaryForeground,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    if (widget.entry is AffogatoDirectoryItem && expanded!) ...[
-                      for (final subentry in (widget
-                          .workspaceConfigs.fileManager
-                          .getSubdirectoriesInDir(
-                              (widget.entry as AffogatoDirectoryItem).dirPath)))
-                        Padding(
-                          padding: EdgeInsets.only(
-                              left: (widget.indent + 1) *
-                                  utils.AffogatoConstants
-                                      .primaryBarFileTreeIndentSize),
-                          child: FileBrowserButton(
-                            entry: AffogatoDirectoryItem(
-                              subentry,
-                              documents: [
-                                for (final docId in widget
-                                    .workspaceConfigs.fileManager
-                                    .getDocsInDir(subentry))
-                                  AffogatoDocumentItem(docId)
-                              ],
-                              directories: [
-                                for (final dirPath in widget
-                                    .workspaceConfigs.fileManager
-                                    .getSubdirectoriesInDir(subentry))
-                                  AffogatoDirectoryItem(dirPath)
-                              ],
-                            ),
-                            indent: widget.indent + 1,
-                            editorTheme: widget.editorTheme,
-                            workspaceConfigs: widget.workspaceConfigs,
-                          ),
-                        ),
-                      for (final subentry
-                          in (widget.workspaceConfigs.fileManager.getDocsInDir(
-                              (widget.entry as AffogatoDirectoryItem).dirPath)))
-                        Padding(
-                          padding: EdgeInsets.only(
-                              left: (widget.indent + 1) *
-                                  utils.AffogatoConstants
-                                      .primaryBarFileTreeIndentSize),
-                          child: FileBrowserButton(
-                            entry: AffogatoDocumentItem(subentry),
-                            indent: widget.indent + 1,
-                            editorTheme: widget.editorTheme,
-                            workspaceConfigs: widget.workspaceConfigs,
-                          ),
-                        ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
-            );
-          },
+                if (widget.entry.isDirectory && expanded!) ...[
+                  for (final subentry in widget.entry.subdirs)
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: (widget.indent + 1) *
+                              utils.AffogatoConstants
+                                  .primaryBarFileTreeIndentSize),
+                      child: FileBrowserButton(
+                        entry: subentry,
+                        indent: widget.indent + 1,
+                        editorTheme: widget.editorTheme,
+                        workspaceConfigs: widget.workspaceConfigs,
+                      ),
+                    ),
+                  for (final subentry in widget.entry.files)
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: (widget.indent + 1) *
+                              utils.AffogatoConstants
+                                  .primaryBarFileTreeIndentSize),
+                      child: FileBrowserButton(
+                        entry: subentry,
+                        indent: widget.indent + 1,
+                        editorTheme: widget.editorTheme,
+                        workspaceConfigs: widget.workspaceConfigs,
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

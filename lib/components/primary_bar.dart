@@ -9,10 +9,8 @@ class PrimaryBar extends StatefulWidget {
     required this.expandedWidth,
     required this.editorTheme,
     required this.workspaceConfigs,
-  }) : super(
-            key: ValueKey(workspaceConfigs.fileManager.documentsRegistry.keys
-                .followedBy(
-                    workspaceConfigs.fileManager.directoriesRegistry.keys)));
+  }) : super(key: UniqueKey());
+  /**TODO: use a better state representation */
 
   @override
   State<StatefulWidget> createState() => PrimaryBarState();
@@ -39,7 +37,7 @@ class PrimaryBarState extends State<PrimaryBar>
     );
 
     registerListener(
-      AffogatoEvents.fileManagerStructureChangedEvents.stream,
+      AffogatoEvents.vfsStructureChangedEvents.stream,
       (_) {
         setState(() {});
       },
@@ -69,7 +67,7 @@ class PrimaryBarState extends State<PrimaryBar>
               alignment: Alignment.topLeft,
               child: FileBrowserButton(
                 isRoot: true,
-                entry: const AffogatoDirectoryItem('./'),
+                entry: widget.workspaceConfigs.vfs.root,
                 indent: 0,
                 editorTheme: widget.editorTheme,
                 workspaceConfigs: widget.workspaceConfigs,

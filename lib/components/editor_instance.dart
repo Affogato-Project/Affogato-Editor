@@ -33,6 +33,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   late AffogatoEditorFieldController textController;
   late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
+  final LSPClient lspClient = LSPClient();
   late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
   bool hasScrolled = false;
@@ -64,8 +65,9 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         themeBundle: widget.themeBundle,
         workspaceConfigs: widget.workspaceConfigs,
       );
-      currentDoc =
-          widget.workspaceConfigs.fileManager.getDoc(widget.documentId);
+      currentDoc = widget.workspaceConfigs.vfs
+          .accessEntity(widget.documentId)!
+          .document!;
       // Assume instant autosave
       textController.text = currentDoc.content;
       // Load or create instance state
@@ -348,8 +350,10 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                             documentId: widget.documentId,
                             keyEvent: key,
                             editingContext: EditingContext(
-                              content: widget.workspaceConfigs.fileManager
-                                  .getDoc(widget.documentId)
+                              content: widget.workspaceConfigs.vfs
+                                  .accessEntity(widget.documentId,
+                                      isDir: false)!
+                                  .document!
                                   .content,
                               selection: textController.selection,
                             ),
@@ -441,8 +445,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  widget.workspaceConfigs.fileManager
-                          .getDocPath(widget.documentId) ??
+                  widget.workspaceConfigs.vfs.pathToEntity(widget.documentId) ??
                       'Unsaved',
                   style: widget.editorTheme.defaultTextStyle.copyWith(
                       fontSize: widget
@@ -459,6 +462,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
   @override
   void dispose() async {
+    lspClient.closeServer();
     textController.dispose();
     cancelSubscriptions();
     super.dispose();

@@ -85,9 +85,9 @@ class FileTabBarState extends State<FileTabBar>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      widget.workspaceConfigs.fileManager
-                          .getDoc(widget.documentIds[i])
-                          .docName,
+                      widget.workspaceConfigs.vfs
+                          .accessEntity(widget.documentIds[i])!
+                          .name,
                       style: TextStyle(
                         color: isCurrent
                             ? widget.workspaceConfigs.themeBundle.editorTheme

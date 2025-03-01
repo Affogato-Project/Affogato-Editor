@@ -63,8 +63,9 @@ class EditorPaneState extends State<EditorPane>
           } else {
             currentDocumentId = widget.documentIds.last;
             currentLB = widget.workspaceConfigs.detectLanguage(widget
-                .workspaceConfigs.fileManager
-                .getDoc(widget.documentIds.last)
+                .workspaceConfigs.vfs
+                .accessEntity(widget.documentIds.last)!
+                .document!
                 .extension);
           }
         });

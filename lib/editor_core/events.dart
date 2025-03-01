@@ -39,7 +39,7 @@ class AffogatoEvents {
       editorInstanceRequestReloadEvents = StreamController.broadcast();
 
   static final StreamController<FileManagerStructureChangedEvent>
-      fileManagerStructureChangedEvents = StreamController.broadcast();
+      vfsStructureChangedEvents = StreamController.broadcast();
 }
 
 sealed class Event {
@@ -202,7 +202,7 @@ class EditorPaneAddDocumentEvent extends EditorPaneEvent {
 /// FILE MANAGER EVENTS ///
 
 class FileManagerEvent extends Event {
-  const FileManagerEvent(String id) : super('fileManager.$id');
+  const FileManagerEvent(String id) : super('vfs.$id');
 }
 
 class FileManagerStructureChangedEvent extends FileManagerEvent {
