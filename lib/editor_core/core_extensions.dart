@@ -79,9 +79,6 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
     '(': ')',
     '[': ']',
     '{': '}',
-    '"': '"',
-    "'": "'",
-    '`': '`',
   };
   AutoIndenterExtension()
       : super(

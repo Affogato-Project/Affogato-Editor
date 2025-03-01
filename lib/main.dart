@@ -28,6 +28,10 @@ void main(List<String> args) {
               bundleName: 'javascript',
               fileAssociationContributions: [],
             ): ['js'],
+            LanguageBundle(
+              bundleName: 'markdown',
+              fileAssociationContributions: [],
+            ): ['md'],
           },
           paneDocumentData: {},
           stylingConfigs: const AffogatoStylingConfigs(
