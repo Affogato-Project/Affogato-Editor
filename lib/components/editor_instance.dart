@@ -36,10 +36,23 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   final LSPClient lspClient = LSPClient();
   late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
+  late final double cellWidth;
+  late final double cellHeight;
   bool hasScrolled = false;
+  int currentLineNum = 0;
+  int currentCharNum = 0;
+  int completionItem = 0;
+  bool showingCompletions = false;
+  final List<String> completions = ['Hello', 'World', 'ABC', '123'];
 
   @override
   void initState() {
+    Future.delayed(const Duration(seconds: 10), () {
+      setState(() {
+        showingCompletions = true;
+      });
+    });
+
     scrollController.addListener(() {
       if (scrollController.offset > 0 && !hasScrolled) {
         setState(() {
@@ -60,11 +73,41 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         height: utils.AffogatoConstants.lineHeight,
         fontSize: widget.workspaceConfigs.stylingConfigs.editorFontSize,
       );
+      // Create a single Text character using the editor's font style and paint it on an imaginary canvas
+      // to observe its width and height. This massively increases performance as font-dependent spacing operations
+      // such as generating indentation rulers or calculating cursor position no longer need to build and render multiple
+      // Text() objects but rather, can use a predefined SizedBox() and even the calculated cellWidth and cellHeight for computations.
+      final tp = TextPainter(
+        textDirection: TextDirection.ltr,
+        text: TextSpan(text: ' ', style: codeTextStyle),
+      )
+        ..layout()
+        ..paint(
+          Canvas(PictureRecorder()),
+          Offset.zero,
+        );
+      cellWidth = (tp.size.width);
+      cellHeight = (tp.size.height);
+      tp.dispose();
+
       textController = AffogatoEditorFieldController(
         languageBundle: widget.languageBundle,
         themeBundle: widget.themeBundle,
         workspaceConfigs: widget.workspaceConfigs,
-      );
+      )..addListener(() {
+          if (textController.text.isNotEmpty) {
+            for (int i = textController.selection.baseOffset; i >= 1; i--) {
+              if (textController.text[i - 1] == '\n') {
+                currentCharNum = textController.selection.baseOffset - i;
+                return;
+              } else if (i == 1) {
+                currentCharNum = textController.selection.baseOffset - i + 1;
+                return;
+              }
+            }
+          }
+        });
+
       currentDoc = widget.workspaceConfigs.vfs
           .accessEntity(widget.documentId)!
           .document!;
@@ -202,11 +245,11 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                       ),
                     ),
                   ),
-                  child: Text(
-                    ' ' *
-                        widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces,
-                    style: codeTextStyle,
-                  ),
+                  child: SizedBox(
+                      width: cellWidth *
+                          widget
+                              .workspaceConfigs.stylingConfigs.tabSizeInSpaces,
+                      height: cellHeight),
                 ),
               );
             }
@@ -222,7 +265,12 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: line.trim() == '' && !isNested
-              ? [Text('', style: codeTextStyle)]
+              ? [
+                  SizedBox(
+                    width: 0,
+                    height: cellHeight,
+                  )
+                ]
               : rowItems,
         ),
       );
@@ -237,6 +285,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         .substring(0, textController.selection.end)
         .split('\n')
         .length;
+    currentLineNum = activeLineNum;
     for (int i = 1; i <= textController.text.split('\n').length; i++) {
       lineNumbers.add(
         SizedBox(
@@ -293,10 +342,34 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     return results;
   }
 
+  void acceptAndDismissCompletionsWidget() {
+    final String textBefore =
+        textController.selection.textBefore(textController.text);
+    textController.value = TextEditingValue(
+      text: textBefore +
+          completions[completionItem] +
+          textController.selection.textAfter(textController.text),
+      selection: TextSelection.collapsed(
+        offset: (textBefore + completions[completionItem]).length,
+      ),
+    );
+    AffogatoEvents.editorDocumentChangedEvents.add(
+      EditorDocumentChangedEvent(
+        newContent: textController.text,
+        documentId: widget.documentId,
+        selection: textController.selection,
+      ),
+    );
+    setState(() {
+      showingCompletions = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // Editing Area
         Positioned(
           top: utils.AffogatoConstants.breadcrumbHeight,
           left: 0,
@@ -346,6 +419,32 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                     Expanded(
                       child: Focus(
                         onKeyEvent: (_, key) {
+                          if (showingCompletions && key is KeyDownEvent) {
+                            if (key.logicalKey == LogicalKeyboardKey.arrowUp) {
+                              if (completionItem != 0) {
+                                completionItem -= 1;
+                              }
+                              setState(() {});
+                              return KeyEventResult.handled;
+                            } else if (key.logicalKey ==
+                                LogicalKeyboardKey.arrowDown) {
+                              if (completionItem != completions.length - 1) {
+                                completionItem += 1;
+                              }
+                              setState(() {});
+                              return KeyEventResult.handled;
+                            } else if (key.logicalKey ==
+                                LogicalKeyboardKey.escape) {
+                              setState(() {
+                                showingCompletions = false;
+                              });
+                              return KeyEventResult.handled;
+                            } else if (key.logicalKey ==
+                                LogicalKeyboardKey.enter) {
+                              acceptAndDismissCompletionsWidget();
+                              return KeyEventResult.handled;
+                            }
+                          }
                           final EditorKeyEvent keyEvent = EditorKeyEvent(
                             documentId: widget.documentId,
                             keyEvent: key,
@@ -378,6 +477,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               TextField(
+                                selectionControls: EmptyTextSelectionControls(),
                                 readOnly: currentDoc.readOnly,
                                 focusNode: textFieldFocusNode,
                                 maxLines: null,
@@ -419,6 +519,33 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             ),
           ),
         ),
+        // Overlays Area (hover suggestions, completions UI)
+        if (scrollController.hasClients && showingCompletions)
+          Positioned(
+            top: utils.AffogatoConstants.breadcrumbHeight +
+                textController.text
+                        .substring(0, textController.selection.baseOffset)
+                        .split('\n')
+                        .length *
+                    cellHeight -
+                scrollController.offset,
+            left: utils.AffogatoConstants.lineNumbersColWidth +
+                utils.AffogatoConstants.lineNumbersGutterWidth +
+                currentCharNum * cellWidth,
+            width: utils.AffogatoConstants.completionsMenuWidth,
+            child: AffogatoCompletionsWidget(
+              completions: completions,
+              editorTheme: widget.editorTheme,
+              currentSelection: completionItem,
+              onSelectionIndexChange: (newIndex) =>
+                  setState(() => completionItem = newIndex),
+              onSelectionAccept: () => setState(() {
+                acceptAndDismissCompletionsWidget();
+                textFieldFocusNode.requestFocus();
+              }),
+            ),
+          ),
+        // Breadcrumb Widget
         Positioned(
           top: 0,
           left: 0,

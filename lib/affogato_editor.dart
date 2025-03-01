@@ -2,6 +2,7 @@ library affogato.editor;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +30,7 @@ part './components/primary_bar.dart';
 part './components/file_browser_button.dart';
 part './components/status_bar.dart';
 part './components/shared/context_menu_region.dart';
+part './components/completions.dart';
 
 part './syntax_highlighter/syntax_highlighter.dart';
 

@@ -28,6 +28,8 @@ class AffogatoConstants {
   static const double breadcrumbHeight = 26;
   static const double lineHeight = 1.5;
   static const double primaryBarFileTreeIndentSize = 10;
+  static const double completionsMenuItemHeight = 24;
+  static const double completionsMenuWidth = 440;
 }
 
 mixin StreamSubscriptionManager<T extends StatefulWidget> on State<T> {
