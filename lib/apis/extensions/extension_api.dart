@@ -31,7 +31,7 @@ abstract class AffogatoExtension {
 
 /// This class is for extensions that override the default behaviour of keys when typing
 /// into the editor. It is not to be confused with:
-/// - [AffogatoKeybindingExtension], which registers keyboard sequences for keyboard shortcuts, triggered when editor text fields are not in focus
+/// - [AffogatoKeybindingExtension], which registers keyboard sequences for keyboard shortcuts, triggered when editor text fields are not in focus or when initated with Command/Option keys
 /// - [AffogatoExtension], the base class from which a standard extension is built. To override default key behaviour, the [AffogatoExtension] class is insufficient since
 /// listening to the [AffogatoEvents] stream allows only for async processing, rather than the sync processing needed by the dispatcher to determine whether each key should be
 /// sent to the TextField or not

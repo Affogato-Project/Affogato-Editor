@@ -28,6 +28,7 @@ part './components/file_browser_button.dart';
 part './components/status_bar.dart';
 part './components/shared/context_menu_region.dart';
 part './components/completions.dart';
+part './editor_core/keyboard_shortcuts.dart';
 
 part './syntax_highlighter/syntax_highlighter.dart';
 
@@ -48,17 +49,22 @@ class AffogatoWindow extends StatefulWidget {
 class AffogatoWindowState extends State<AffogatoWindow>
     with utils.StreamSubscriptionManager {
   final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
-
+  final FocusNode keyboardListenerFocusNode = FocusNode();
   late final AffogatoExtensionsEngine extensionsEngine;
   late final AffogatoExtensionsAPI extensionsApi;
   late final AffogatoAPI api;
 
   @override
   void initState() {
+    keyboardListenerFocusNode.requestFocus();
+
     extensionsEngine = AffogatoExtensionsEngine(
       vfs: widget.workspaceConfigs.vfs,
       workspaceConfigs: widget.workspaceConfigs,
     );
+    // Register built-in keyboard shortcuts
+    registerBuiltInKeyboardShortcuts();
+
     extensionsApi = AffogatoExtensionsAPI(extensionsEngine: extensionsEngine);
     api = AffogatoAPI(
       extensions: extensionsApi,
@@ -260,76 +266,82 @@ class AffogatoWindowState extends State<AffogatoWindow>
   Widget build(BuildContext context) {
     return Material(
       key: windowKey,
-      child: GestureDetector(
-        onTap: () => ContextMenuController.removeAny(),
-        child: Container(
-          width: widget.workspaceConfigs.stylingConfigs.windowWidth,
-          height: widget.workspaceConfigs.stylingConfigs.windowHeight,
-          decoration: BoxDecoration(
-            color:
-                widget.workspaceConfigs.themeBundle.editorTheme.panelBackground,
-            border: Border.all(
-              color:
-                  widget.workspaceConfigs.themeBundle.editorTheme.panelBorder ??
-                      Colors.red,
+      child: KeyboardListener(
+        focusNode: keyboardListenerFocusNode,
+        onKeyEvent: (event) =>
+            AffogatoEvents.windowKeyboardEvents.add(WindowKeyboardEvent(event)),
+        child: GestureDetector(
+          onTap: () => ContextMenuController.removeAny(),
+          child: Container(
+            width: widget.workspaceConfigs.stylingConfigs.windowWidth,
+            height: widget.workspaceConfigs.stylingConfigs.windowHeight,
+            decoration: BoxDecoration(
+              color: widget
+                  .workspaceConfigs.themeBundle.editorTheme.panelBackground,
+              border: Border.all(
+                color: widget
+                        .workspaceConfigs.themeBundle.editorTheme.panelBorder ??
+                    Colors.red,
+              ),
             ),
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: utils.AffogatoConstants.primaryBarWidth,
-                      child: PrimaryBar(
-                        expandedWidth: utils.AffogatoConstants.primaryBarWidth,
-                        workspaceConfigs: widget.workspaceConfigs,
-                        editorTheme:
-                            widget.workspaceConfigs.themeBundle.editorTheme,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: utils.AffogatoConstants.primaryBarWidth,
+                        child: PrimaryBar(
+                          expandedWidth:
+                              utils.AffogatoConstants.primaryBarWidth,
+                          workspaceConfigs: widget.workspaceConfigs,
+                          editorTheme:
+                              widget.workspaceConfigs.themeBundle.editorTheme,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width:
-                          widget.workspaceConfigs.stylingConfigs.windowWidth -
-                              utils.AffogatoConstants.primaryBarWidth -
-                              1,
-                      child: Row(
-                        children: [
-                          for (final pane in widget
-                              .workspaceConfigs.paneDocumentData.entries)
-                            EditorPane(
-                              key: ValueKey('${pane.key}${pane.value}'),
-                              paneId: pane.key,
-                              stylingConfigs:
-                                  widget.workspaceConfigs.stylingConfigs,
-                              layoutConfigs: LayoutConfigs(
-                                width: double.infinity,
-                                height: widget.workspaceConfigs.stylingConfigs
-                                        .windowHeight -
-                                    utils.AffogatoConstants.statusBarHeight -
-                                    2,
+                      SizedBox(
+                        width:
+                            widget.workspaceConfigs.stylingConfigs.windowWidth -
+                                utils.AffogatoConstants.primaryBarWidth -
+                                1,
+                        child: Row(
+                          children: [
+                            for (final pane in widget
+                                .workspaceConfigs.paneDocumentData.entries)
+                              EditorPane(
+                                key: ValueKey('${pane.key}${pane.value}'),
+                                paneId: pane.key,
+                                stylingConfigs:
+                                    widget.workspaceConfigs.stylingConfigs,
+                                layoutConfigs: LayoutConfigs(
+                                  width: double.infinity,
+                                  height: widget.workspaceConfigs.stylingConfigs
+                                          .windowHeight -
+                                      utils.AffogatoConstants.statusBarHeight -
+                                      2,
+                                ),
+                                extensionsEngine: extensionsEngine,
+                                performanceConfigs: widget.performanceConfigs,
+                                workspaceConfigs: widget.workspaceConfigs,
+                                documentIds: pane.value,
+                                windowKey: windowKey,
                               ),
-                              extensionsEngine: extensionsEngine,
-                              performanceConfigs: widget.performanceConfigs,
-                              workspaceConfigs: widget.workspaceConfigs,
-                              documentIds: pane.value,
-                              windowKey: windowKey,
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(
-                height: utils.AffogatoConstants.statusBarHeight,
-                child: StatusBar(
-                  stylingConfigs: widget.workspaceConfigs.stylingConfigs,
-                  workspaceConfigs: widget.workspaceConfigs,
+                SizedBox(
+                  height: utils.AffogatoConstants.statusBarHeight,
+                  child: StatusBar(
+                    stylingConfigs: widget.workspaceConfigs.stylingConfigs,
+                    workspaceConfigs: widget.workspaceConfigs,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -339,14 +351,51 @@ class AffogatoWindowState extends State<AffogatoWindow>
   @override
   void dispose() async {
     BrowserContextMenu.enableContextMenu();
-    cancelSubscriptions();
     AffogatoEvents.windowCloseEvents.add(const WindowCloseEvent());
+    cancelSubscriptions();
     extensionsEngine.deinit();
     await AffogatoEvents.windowEditorPaneAddEvents.close();
     await AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.close();
-    // ... //
+    await AffogatoEvents.windowEditorPaneRemoveEvents.close();
+    await AffogatoEvents.editorInstanceSetActiveEvents.close();
+    await AffogatoEvents.windowEditorInstanceUnsetActiveEvents.close();
+    await AffogatoEvents.windowKeyboardEvents.close();
+    await AffogatoEvents.editorInstanceCreateEvents.close();
+    await AffogatoEvents.editorInstanceLoadedEvents.close();
+    await AffogatoEvents.editorKeyEvent.close();
+    await AffogatoEvents.editorDocumentChangedEvents.close();
+    await AffogatoEvents.editorDocumentRequestChangeEvents.close();
+    await AffogatoEvents.editorDocumentClosedEvents.close();
+    await AffogatoEvents.editorPaneAddDocumentEvents.close();
+    await AffogatoEvents.editorInstanceRequestReloadEvents.close();
+    await AffogatoEvents.editorInstanceRequestShowFindOverlayEvents.close();
+    await AffogatoEvents.vfsStructureChangedEvents.close();
     await AffogatoEvents.windowCloseEvents.close();
     super.dispose();
+  }
+
+  void registerBuiltInKeyboardShortcuts() {
+    extensionsEngine.shortcutsDispatcher
+      ..overrideShortcut(
+        [LogicalKeyboardKey.metaLeft, LogicalKeyboardKey.keyB],
+        requestEditorInstanceShowFindOverlay,
+      )
+      ..overrideShortcut(
+        [LogicalKeyboardKey.metaRight, LogicalKeyboardKey.keyB],
+        requestEditorInstanceShowFindOverlay,
+      );
+  }
+
+  void requestEditorInstanceShowFindOverlay() async {
+    if (widget.workspaceConfigs.activeDocument == null) {
+      return;
+    } else {
+      AffogatoEvents.editorInstanceRequestShowFindOverlayEvents.add(
+        EditorInstanceRequestShowFindOverlayEvent(
+          widget.workspaceConfigs.activeDocument!,
+        ),
+      );
+    }
   }
 }
 

@@ -73,6 +73,8 @@ class AffogatoWorkspaceConfigs {
 
   final AffogatoStylingConfigs stylingConfigs;
 
+  String? activeDocument;
+
   AffogatoWorkspaceConfigs({
     required this.projectName,
     required this.paneDocumentData,

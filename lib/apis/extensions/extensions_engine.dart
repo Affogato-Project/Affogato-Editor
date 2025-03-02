@@ -12,13 +12,16 @@ class AffogatoExtensionsEngine {
 
   final AffogatoVFS vfs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
+  final KeyboardShortcutsDispatcher shortcutsDispatcher =
+      KeyboardShortcutsDispatcher();
 
   AffogatoExtensionsEngine({
     required this.vfs,
     required this.workspaceConfigs,
   });
 
-  registerEditorKeybindingExtension(AffogatoEditorKeybindingExtension ext) {
+  void registerEditorKeybindingExtension(
+      AffogatoEditorKeybindingExtension ext) {
     for (final key in (ext.keys ?? allKeys)) {
       if (editorKeybindingExtensions.containsKey(key)) {
         print(

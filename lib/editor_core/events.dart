@@ -1,8 +1,6 @@
 part of affogato.editor;
 
 class AffogatoEvents {
-  static final StreamController<WindowEvent> windowEvents =
-      StreamController.broadcast();
   static final StreamController<WindowCloseEvent> windowCloseEvents =
       StreamController.broadcast();
   static final StreamController<WindowEditorPaneAddEvent>
@@ -15,6 +13,9 @@ class AffogatoEvents {
       windowEditorInstanceUnsetActiveEvents = StreamController.broadcast();
   static final StreamController<WindowEditorRequestDocumentSetActiveEvent>
       windowEditorRequestDocumentSetActiveEvents = StreamController.broadcast();
+
+  static final StreamController<WindowKeyboardEvent> windowKeyboardEvents =
+      StreamController.broadcast();
 
   static final StreamController<EditorInstanceCreateEvent>
       editorInstanceCreateEvents = StreamController.broadcast();
@@ -37,6 +38,9 @@ class AffogatoEvents {
 
   static final StreamController<EditorInstanceRequestReloadEvent>
       editorInstanceRequestReloadEvents = StreamController.broadcast();
+
+  static final StreamController<EditorInstanceRequestShowFindOverlayEvent>
+      editorInstanceRequestShowFindOverlayEvents = StreamController.broadcast();
 
   static final StreamController<FileManagerStructureChangedEvent>
       vfsStructureChangedEvents = StreamController.broadcast();
@@ -105,6 +109,11 @@ class WindowEditorRequestDocumentSetActiveEvent
   }) : super('requestSetActive');
 }
 
+class WindowKeyboardEvent extends WindowEvent {
+  final KeyEvent keyEvent;
+  const WindowKeyboardEvent(this.keyEvent) : super('keyboard');
+}
+
 /// EDITOR AND DOCUMENT EVENTS ///
 
 class EditorEvent extends Event {
@@ -120,11 +129,18 @@ class EditorInstanceCreateEvent extends EditorInstanceEvent {
 }
 
 class EditorInstanceLoadedEvent extends EditorInstanceEvent {
-  const EditorInstanceLoadedEvent() : super('loaded');
+  final String documentId;
+  const EditorInstanceLoadedEvent(this.documentId) : super('loaded');
 }
 
 class EditorInstanceRequestReloadEvent extends EditorInstanceEvent {
   const EditorInstanceRequestReloadEvent() : super('reload');
+}
+
+class EditorInstanceRequestShowFindOverlayEvent extends EditorInstanceEvent {
+  final String documentId;
+  const EditorInstanceRequestShowFindOverlayEvent(this.documentId)
+      : super('requestShowFindOverlay');
 }
 
 class EditingContext {
