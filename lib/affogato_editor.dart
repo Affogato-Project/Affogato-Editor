@@ -1,13 +1,10 @@
 library affogato.editor;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:web_socket_channel/html.dart';
-import 'package:web_socket_channel/status.dart' as WSStatus;
 
 import 'package:affogato_editor/apis/affogato_apis.dart';
 import 'package:affogato_core/affogato_core.dart';
@@ -33,8 +30,6 @@ part './components/shared/context_menu_region.dart';
 part './components/completions.dart';
 
 part './syntax_highlighter/syntax_highlighter.dart';
-
-part './lsp/lsp.dart';
 
 class AffogatoWindow extends StatefulWidget {
   final AffogatoPerformanceConfigs performanceConfigs;

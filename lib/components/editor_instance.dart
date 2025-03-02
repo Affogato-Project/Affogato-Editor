@@ -33,7 +33,6 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   late AffogatoEditorFieldController textController;
   late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
-  final LSPClient lspClient = LSPClient();
   late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
   late final double cellWidth;
@@ -589,7 +588,6 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
   @override
   void dispose() async {
-    lspClient.closeServer();
     textController.dispose();
     cancelSubscriptions();
     super.dispose();
