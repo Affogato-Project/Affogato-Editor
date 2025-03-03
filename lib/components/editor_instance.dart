@@ -47,7 +47,10 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   late final LocalSearchAndReplaceController searchAndReplaceController =
       LocalSearchAndReplaceController(
     tickerProvider: this,
-    onDismiss: () => textFieldFocusNode.requestFocus(),
+    onDismiss: () {
+      textFieldFocusNode.requestFocus();
+      searchAndReplaceController.replaceText = null;
+    },
     cellHeight: cellHeight,
     cellWidth: cellWidth,
     textController: textController,
@@ -378,313 +381,377 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Editing Area
-        Positioned(
-          top: utils.AffogatoConstants.breadcrumbHeight,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: SingleChildScrollView(
-            controller: scrollController,
-            hitTestBehavior: HitTestBehavior.translucent,
-            child: Stack(
-              children: [
-                // Decorations Area — for decorations below the editing layer
-                ...searchAndReplaceController.searchAndReplaceMatchHighlights,
-                Positioned(
-                  left: utils.AffogatoConstants.lineNumbersColWidth +
-                      utils.AffogatoConstants.lineNumbersGutterWidth,
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) => Stack(
+        children: [
+          // Editing Area
+          Positioned(
+            top: utils.AffogatoConstants.breadcrumbHeight,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              hitTestBehavior: HitTestBehavior.translucent,
+              child: Stack(
+                children: [
+                  // Decorations Area — for decorations below the editing layer
+                  ...searchAndReplaceController.searchAndReplaceMatchHighlights,
+                  Positioned(
+                    left: utils.AffogatoConstants.lineNumbersColWidth +
+                        utils.AffogatoConstants.lineNumbersGutterWidth,
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: generateIndentationRulers(),
+                    ),
+                  ),
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: generateIndentationRulers(),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Line numbers
-                    SizedBox(
-                      width: utils.AffogatoConstants.lineNumbersColWidth,
-                      child: Column(
-                        children: [
-                          ...generateLineNumbers(),
-                          const SizedBox(
-                              height: utils.AffogatoConstants.overscrollAmount),
-                        ],
+                    children: [
+                      // Line numbers
+                      SizedBox(
+                        width: utils.AffogatoConstants.lineNumbersColWidth,
+                        child: Column(
+                          children: [
+                            ...generateLineNumbers(),
+                            const SizedBox(
+                                height:
+                                    utils.AffogatoConstants.overscrollAmount),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Left gutter indicators, such as for Git
-                    SizedBox(
-                      width: utils.AffogatoConstants.lineNumbersGutterWidth -
-                          utils.AffogatoConstants
-                              .lineNumbersGutterRightmostPadding,
-                      child: Column(
-                        children: generateLeftGutterWidgets(),
+                      // Left gutter indicators, such as for Git
+                      SizedBox(
+                        width: utils.AffogatoConstants.lineNumbersGutterWidth -
+                            utils.AffogatoConstants
+                                .lineNumbersGutterRightmostPadding,
+                        child: Column(
+                          children: generateLeftGutterWidgets(),
+                        ),
                       ),
-                    ),
-                    // Editing Field
-                    Expanded(
-                      child: Focus(
-                        onKeyEvent: (_, key) {
-                          if (searchAndReplaceController.isShown) {
-                            searchAndReplaceController.dismiss();
-                          }
-                          if (showingCompletions && key is KeyDownEvent) {
-                            if (key.logicalKey == LogicalKeyboardKey.arrowUp) {
-                              if (completionItem != 0) {
-                                completionItem -= 1;
-                              }
-                              setState(() {});
-                              return KeyEventResult.handled;
-                            } else if (key.logicalKey ==
-                                LogicalKeyboardKey.arrowDown) {
-                              if (completionItem != completions.length - 1) {
-                                completionItem += 1;
-                              }
-                              setState(() {});
-                              return KeyEventResult.handled;
-                            } else if (key.logicalKey ==
-                                LogicalKeyboardKey.escape) {
-                              setState(() {
-                                showingCompletions = false;
-                              });
-
-                              return KeyEventResult.handled;
-                            } else if (key.logicalKey ==
-                                LogicalKeyboardKey.enter) {
-                              acceptAndDismissCompletionsWidget();
-                              return KeyEventResult.handled;
+                      // Editing Field
+                      Expanded(
+                        child: Focus(
+                          onKeyEvent: (_, key) {
+                            if (searchAndReplaceController.isShown) {
+                              searchAndReplaceController.dismiss();
                             }
-                          }
-                          final EditorKeyEvent keyEvent = EditorKeyEvent(
-                            documentId: widget.documentId,
-                            keyEvent: key,
-                            editingContext: EditingContext(
-                              content: widget.workspaceConfigs.vfs
-                                  .accessEntity(widget.documentId,
-                                      isDir: false)!
-                                  .document!
-                                  .content,
-                              selection: textController.selection,
-                            ),
-                          );
+                            if (showingCompletions && key is KeyDownEvent) {
+                              if (key.logicalKey ==
+                                  LogicalKeyboardKey.arrowUp) {
+                                if (completionItem != 0) {
+                                  completionItem -= 1;
+                                }
+                                setState(() {});
+                                return KeyEventResult.handled;
+                              } else if (key.logicalKey ==
+                                  LogicalKeyboardKey.arrowDown) {
+                                if (completionItem != completions.length - 1) {
+                                  completionItem += 1;
+                                }
+                                setState(() {});
+                                return KeyEventResult.handled;
+                              } else if (key.logicalKey ==
+                                  LogicalKeyboardKey.escape) {
+                                setState(() {
+                                  showingCompletions = false;
+                                });
 
-                          AffogatoEvents.editorKeyEvents.add(keyEvent);
-
-                          return widget.extensionsEngine
-                              .triggerEditorKeybindings(keyEvent);
-                        },
-                        child: Theme(
-                          data: ThemeData(
-                            textSelectionTheme: TextSelectionThemeData(
-                              cursorColor: widget.editorTheme.editorForeground,
-                              selectionColor: widget.editorTheme
-                                      .editorSelectionHighlightBackground ??
-                                  Colors.red,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextField(
-                                selectionControls: EmptyTextSelectionControls(),
-                                readOnly: currentDoc.readOnly,
-                                focusNode: textFieldFocusNode,
-                                maxLines: null,
-                                controller: textController,
-                                decoration: null,
-                                style: codeTextStyle.copyWith(
-                                    color: widget
-                                        .editorTheme.textPreformatForeground),
+                                return KeyEventResult.handled;
+                              } else if (key.logicalKey ==
+                                  LogicalKeyboardKey.enter) {
+                                acceptAndDismissCompletionsWidget();
+                                return KeyEventResult.handled;
+                              }
+                            }
+                            final EditorKeyEvent keyEvent = EditorKeyEvent(
+                              documentId: widget.documentId,
+                              keyEvent: key,
+                              editingContext: EditingContext(
+                                content: widget.workspaceConfigs.vfs
+                                    .accessEntity(widget.documentId,
+                                        isDir: false)!
+                                    .document!
+                                    .content,
+                                selection: textController.selection,
                               ),
-                              MouseRegion(
-                                opaque: false,
-                                hitTestBehavior: HitTestBehavior.translucent,
-                                cursor: SystemMouseCursors.text,
-                                child: GestureDetector(
-                                  onTapUp: (_) {
-                                    textController.selection =
-                                        TextSelection.fromPosition(
-                                      TextPosition(
-                                          offset: textController.text.length),
-                                    );
-                                    textFieldFocusNode.requestFocus();
-                                  },
-                                  child: Container(
-                                    color: Colors.transparent,
-                                    width: double.infinity,
-                                    height: utils
-                                        .AffogatoConstants.overscrollAmount,
+                            );
+
+                            AffogatoEvents.editorKeyEvents.add(keyEvent);
+
+                            return widget.extensionsEngine
+                                .triggerEditorKeybindings(keyEvent);
+                          },
+                          child: Theme(
+                            data: ThemeData(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor:
+                                    widget.editorTheme.editorForeground,
+                                selectionColor: widget.editorTheme
+                                        .editorSelectionHighlightBackground ??
+                                    Colors.red,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextField(
+                                  selectionControls:
+                                      EmptyTextSelectionControls(),
+                                  readOnly: currentDoc.readOnly,
+                                  focusNode: textFieldFocusNode,
+                                  maxLines: null,
+                                  controller: textController,
+                                  decoration: null,
+                                  style: codeTextStyle.copyWith(
+                                      color: widget
+                                          .editorTheme.textPreformatForeground),
+                                ),
+                                MouseRegion(
+                                  opaque: false,
+                                  hitTestBehavior: HitTestBehavior.translucent,
+                                  cursor: SystemMouseCursors.text,
+                                  child: GestureDetector(
+                                    onTapUp: (_) {
+                                      textController.selection =
+                                          TextSelection.fromPosition(
+                                        TextPosition(
+                                            offset: textController.text.length),
+                                      );
+                                      textFieldFocusNode.requestFocus();
+                                    },
+                                    child: Container(
+                                      color: Colors.transparent,
+                                      width: double.infinity,
+                                      height: utils
+                                          .AffogatoConstants.overscrollAmount,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        // Overlays Area (hover suggestions, completions UI)
-        if (scrollController.hasClients && showingCompletions)
+          // Overlays Area (hover suggestions, completions UI)
+          if (scrollController.hasClients && showingCompletions)
+            Positioned(
+              top: utils.AffogatoConstants.breadcrumbHeight +
+                  textController.text
+                          .substring(0, textController.selection.baseOffset)
+                          .split('\n')
+                          .length *
+                      cellHeight -
+                  scrollController.offset,
+              left: utils.AffogatoConstants.lineNumbersColWidth +
+                  utils.AffogatoConstants.lineNumbersGutterWidth +
+                  currentCharNum * cellWidth,
+              width: utils.AffogatoConstants.completionsMenuWidth,
+              child: AffogatoCompletionsWidget(
+                completions: completions,
+                editorTheme: widget.editorTheme,
+                currentSelection: completionItem,
+                onSelectionIndexChange: (newIndex) =>
+                    setState(() => completionItem = newIndex),
+                onSelectionAccept: () => setState(() {
+                  acceptAndDismissCompletionsWidget();
+                  textFieldFocusNode.requestFocus();
+                }),
+              ),
+            ),
+          // Search-and-replace overlays
           Positioned(
-            top: utils.AffogatoConstants.breadcrumbHeight +
-                textController.text
-                        .substring(0, textController.selection.baseOffset)
-                        .split('\n')
-                        .length *
-                    cellHeight -
-                scrollController.offset,
-            left: utils.AffogatoConstants.lineNumbersColWidth +
-                utils.AffogatoConstants.lineNumbersGutterWidth +
-                currentCharNum * cellWidth,
-            width: utils.AffogatoConstants.completionsMenuWidth,
-            child: AffogatoCompletionsWidget(
-              completions: completions,
-              editorTheme: widget.editorTheme,
-              currentSelection: completionItem,
-              onSelectionIndexChange: (newIndex) =>
-                  setState(() => completionItem = newIndex),
-              onSelectionAccept: () => setState(() {
-                acceptAndDismissCompletionsWidget();
-                textFieldFocusNode.requestFocus();
-              }),
+            top: utils.AffogatoConstants.breadcrumbHeight,
+            right: utils.AffogatoConstants.breadcrumbHeight + 5,
+            child: SlideTransition(
+              position:
+                  searchAndReplaceController.searchAndReplaceOffsetAnimation,
+              child: SearchAndReplaceWidget(
+                key: searchAndReplaceController.overlayKey,
+                width: 300,
+                textStyle: codeTextStyle,
+                editorTheme: widget.editorTheme,
+                onSearchTextChanged: (newText) {
+                  searchAndReplaceController.regenerateMatches(
+                      newText: newText);
+                  setState(() {});
+                },
+                onReplaceTextChanged: (newText) {
+                  searchAndReplaceController.replaceText = newText;
+                },
+                searchActionItems: [
+                  Text(
+                    "${searchAndReplaceController.searchItemCurrentIndex} of ${searchAndReplaceController.matches.length}",
+                    style: widget.editorTheme.defaultTextStyle.copyWith(
+                      color: widget.editorTheme.buttonSecondaryForeground,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  AffogatoButton(
+                    width:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    height:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    editorTheme: widget.editorTheme,
+                    isPrimary: false,
+                    onTap: () => setState(() {
+                      searchAndReplaceController
+                        ..prevMatch()
+                        ..scrollIfActiveMatchOutsideViewport(
+                          scrollOffset: scrollController.offset,
+                          viewportHeight: constraints.maxHeight -
+                              utils.AffogatoConstants.breadcrumbHeight,
+                          scrollCallback: scrollController.jumpTo,
+                        );
+                    }),
+                    child: Icon(
+                      Icons.arrow_upward,
+                      size: utils
+                              .AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                      color: widget.editorTheme.buttonSecondaryForeground,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  AffogatoButton(
+                    width:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    height:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    editorTheme: widget.editorTheme,
+                    isPrimary: false,
+                    onTap: () => setState(() {
+                      searchAndReplaceController
+                        ..nextMatch()
+                        ..scrollIfActiveMatchOutsideViewport(
+                          scrollOffset: scrollController.offset,
+                          viewportHeight: constraints.maxHeight -
+                              utils.AffogatoConstants.breadcrumbHeight,
+                          scrollCallback: scrollController.jumpTo,
+                        );
+                    }),
+                    child: Icon(
+                      Icons.arrow_downward,
+                      size: utils
+                              .AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                      color: widget.editorTheme.buttonSecondaryForeground,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  AffogatoButton(
+                    width:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    height:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    editorTheme: widget.editorTheme,
+                    isPrimary: false,
+                    onTap: () {
+                      searchAndReplaceController.dismiss();
+                      textFieldFocusNode.requestFocus();
+                    },
+                    child: Icon(
+                      Icons.close,
+                      size: utils
+                              .AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                      color: widget.editorTheme.buttonSecondaryForeground,
+                    ),
+                  )
+                ],
+                replaceActionItems: [
+                  AffogatoButton(
+                    width:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    height:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    editorTheme: widget.editorTheme,
+                    isPrimary: false,
+                    onTap: () => setState(() {
+                      if (searchAndReplaceController.replaceText == null) {
+                        return;
+                      } else {
+                        textController.text = textController.text.replaceAll(
+                          searchAndReplaceController.searchText,
+                          searchAndReplaceController.replaceText!,
+                        );
+                      }
+                      searchAndReplaceController.regenerateMatches(
+                          newText: searchAndReplaceController.searchText);
+                    }),
+                    child: Icon(
+                      Icons.find_replace,
+                      size: utils
+                              .AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                      color: widget.editorTheme.buttonSecondaryForeground,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        // Search-and-replace overlays
-        Positioned(
-          top: utils.AffogatoConstants.breadcrumbHeight,
-          right: utils.AffogatoConstants.breadcrumbHeight + 5,
-          child: SlideTransition(
-            position:
-                searchAndReplaceController.searchAndReplaceOffsetAnimation,
-            child: SearchAndReplaceWidget(
-              key: searchAndReplaceController.overlayKey,
-              width: 300,
-              textStyle: codeTextStyle,
-              editorTheme: widget.editorTheme,
-              onSearchTextChanged: (newText) {
-                searchAndReplaceController.regenerateMatches(newText: newText);
-                setState(() {});
-              },
-              onReplaceTextChanged: (newText) {},
-              searchActionItems: [
-                AffogatoButton(
-                  width: utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                      10,
-                  height:
-                      utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                          10,
-                  editorTheme: widget.editorTheme,
-                  isPrimary: false,
-                  onTap: () {
-                    searchAndReplaceController.dismiss();
-                    textFieldFocusNode.requestFocus();
-                  },
-                  child: Icon(
-                    Icons.close,
-                    size:
-                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                            10,
-                    color: widget.editorTheme.buttonSecondaryForeground,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                AffogatoButton(
-                  width: utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                      10,
-                  height:
-                      utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                          10,
-                  editorTheme: widget.editorTheme,
-                  isPrimary: false,
-                  onTap: () => setState(() {
-                    searchAndReplaceController.prevMatch();
-                  }),
-                  child: Icon(
-                    Icons.arrow_upward,
-                    size:
-                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                            10,
-                    color: widget.editorTheme.buttonSecondaryForeground,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                AffogatoButton(
-                  width: utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                      10,
-                  height:
-                      utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                          10,
-                  editorTheme: widget.editorTheme,
-                  isPrimary: false,
-                  onTap: () => setState(() {
-                    searchAndReplaceController.nextMatch();
-                  }),
-                  child: Icon(
-                    Icons.arrow_downward,
-                    size:
-                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
-                            10,
-                    color: widget.editorTheme.buttonSecondaryForeground,
-                  ),
-                ),
-              ],
-              replaceActionItems: [],
-            ),
-          ),
-        ),
-        // Breadcrumb Widget
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: utils.AffogatoConstants.breadcrumbHeight,
-          child: Container(
-            width: double.infinity,
+          // Breadcrumb Widget
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
             height: utils.AffogatoConstants.breadcrumbHeight,
-            decoration: BoxDecoration(
-              color: widget
-                  .workspaceConfigs.themeBundle.editorTheme.editorBackground,
-              boxShadow: hasScrolled
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 2,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : const [],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.workspaceConfigs.vfs.pathToEntity(widget.documentId) ??
-                      'Unsaved',
-                  style: widget.editorTheme.defaultTextStyle.copyWith(
-                      fontSize: widget
-                              .workspaceConfigs.stylingConfigs.editorFontSize -
-                          3),
+            child: Container(
+              width: double.infinity,
+              height: utils.AffogatoConstants.breadcrumbHeight,
+              decoration: BoxDecoration(
+                color: widget
+                    .workspaceConfigs.themeBundle.editorTheme.editorBackground,
+                boxShadow: hasScrolled
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 2,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    widget.workspaceConfigs.vfs
+                            .pathToEntity(widget.documentId) ??
+                        'Unsaved',
+                    style: widget.editorTheme.defaultTextStyle.copyWith(
+                        fontSize: widget.workspaceConfigs.stylingConfigs
+                                .editorFontSize -
+                            3),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

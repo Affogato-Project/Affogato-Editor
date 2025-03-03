@@ -25,10 +25,12 @@ class LocalSearchAndReplaceController {
   Iterable<Match> matches = Iterable.empty();
   int searchItemCurrentIndex = 0;
   String searchText = '';
+  String? replaceText;
   final VoidCallback? onDismiss;
   final double cellWidth;
   final double cellHeight;
   final TextEditingController textController;
+  double currentItemOffset = 0;
 
   LocalSearchAndReplaceController({
     required TickerProvider tickerProvider,
@@ -122,15 +124,14 @@ class LocalSearchAndReplaceController {
     final List<Positioned> widgets = [];
     for (int i = 0; i < matches.length; i++) {
       final Match match = matches.elementAt(i);
+      final double offset =
+          (textController.text.substring(0, match.start).split('\n').length -
+                  1) *
+              cellHeight;
       widgets.add(
         Positioned(
           key: ValueKey('$searchText-$searchItemCurrentIndex-$i'),
-          top: (textController.text
-                      .substring(0, match.start)
-                      .split('\n')
-                      .length -
-                  1) *
-              cellHeight,
+          top: offset,
           left: utils.AffogatoConstants.lineNumbersColWidth +
               utils.AffogatoConstants.lineNumbersGutterWidth +
               charNumAtIndex(match.start, controllerText: textController.text) *
@@ -145,6 +146,7 @@ class LocalSearchAndReplaceController {
           ),
         ),
       );
+      if (i == searchItemCurrentIndex) currentItemOffset = offset;
     }
     return widgets;
   }
@@ -163,6 +165,18 @@ class LocalSearchAndReplaceController {
   }
 
   bool get isShown => searchAndReplaceAnimationController.value == 0;
+
+  void scrollIfActiveMatchOutsideViewport({
+    required double scrollOffset,
+    required double viewportHeight,
+    required void Function(double) scrollCallback,
+  }) {
+    if (currentItemOffset > scrollOffset + viewportHeight - 10) {
+      scrollCallback(currentItemOffset + 40);
+    } else if (currentItemOffset < scrollOffset - viewportHeight + 10) {
+      scrollCallback(currentItemOffset - 40);
+    }
+  }
 }
 
 /// This object stores the state/data for the [SearchAndReplaceWidget] in an intra-file
