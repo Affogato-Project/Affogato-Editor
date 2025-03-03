@@ -18,6 +18,11 @@ part './editor_core/editor_actions.dart';
 part './editor_core/instance_state.dart';
 part './editor_core/virtual_file_system.dart';
 part './editor_core/core_extensions.dart';
+part './editor_core/keyboard_shortcuts.dart';
+
+part './components/shared/context_menu_region.dart';
+part './components/shared/search_and_replace_widget.dart';
+part './components/shared/button.dart';
 
 part './components/editor_pane.dart';
 part './components/file_tab_bar.dart';
@@ -26,9 +31,8 @@ part './components/editor_field_controller.dart';
 part './components/primary_bar.dart';
 part './components/file_browser_button.dart';
 part './components/status_bar.dart';
-part './components/shared/context_menu_region.dart';
 part './components/completions.dart';
-part './editor_core/keyboard_shortcuts.dart';
+part './components/local_search_and_replace.dart';
 
 part './syntax_highlighter/syntax_highlighter.dart';
 
@@ -362,13 +366,13 @@ class AffogatoWindowState extends State<AffogatoWindow>
     await AffogatoEvents.windowKeyboardEvents.close();
     await AffogatoEvents.editorInstanceCreateEvents.close();
     await AffogatoEvents.editorInstanceLoadedEvents.close();
-    await AffogatoEvents.editorKeyEvent.close();
+    await AffogatoEvents.editorKeyEvents.close();
     await AffogatoEvents.editorDocumentChangedEvents.close();
     await AffogatoEvents.editorDocumentRequestChangeEvents.close();
     await AffogatoEvents.editorDocumentClosedEvents.close();
     await AffogatoEvents.editorPaneAddDocumentEvents.close();
     await AffogatoEvents.editorInstanceRequestReloadEvents.close();
-    await AffogatoEvents.editorInstanceRequestShowFindOverlayEvents.close();
+    await AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.close();
     await AffogatoEvents.vfsStructureChangedEvents.close();
     await AffogatoEvents.windowCloseEvents.close();
     super.dispose();
@@ -390,8 +394,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
     if (widget.workspaceConfigs.activeDocument == null) {
       return;
     } else {
-      AffogatoEvents.editorInstanceRequestShowFindOverlayEvents.add(
-        EditorInstanceRequestShowFindOverlayEvent(
+      AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.add(
+        EditorInstanceRequestToggleSearchOverlayEvent(
           widget.workspaceConfigs.activeDocument!,
         ),
       );

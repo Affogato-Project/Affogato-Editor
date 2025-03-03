@@ -28,7 +28,7 @@ class PairMatcherExtension extends AffogatoExtension {
      *  2. handle bracket wrapping by keeping track of previous [TextSelection] in EditingContext
      *  3. use Editor API to make document change requests, not through the StreamController
      */
-    AffogatoEvents.editorKeyEvent.stream.listen((event) {
+    AffogatoEvents.editorKeyEvents.stream.listen((event) {
       if (event.keyEvent is KeyDownEvent || event.keyEvent is KeyRepeatEvent) {
         if (triggerChars.containsKey(event.keyEvent.character)) {
           final String newText = event.editingContext.selection
@@ -144,7 +144,7 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
     required AffogatoVFS vfs,
     required AffogatoWorkspaceConfigs workspaceConfigs,
   }) {
-    AffogatoEvents.editorKeyEvent.stream
+    AffogatoEvents.editorKeyEvents.stream
         .where((event) => event.keyEvent.logicalKey == LogicalKeyboardKey.enter)
         .listen((event) {});
   }

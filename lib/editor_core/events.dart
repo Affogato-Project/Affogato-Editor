@@ -22,7 +22,7 @@ class AffogatoEvents {
 
   static final StreamController<EditorInstanceLoadedEvent>
       editorInstanceLoadedEvents = StreamController.broadcast();
-  static final StreamController<EditorKeyEvent> editorKeyEvent =
+  static final StreamController<EditorKeyEvent> editorKeyEvents =
       StreamController.broadcast();
   static final StreamController<EditorDocumentChangedEvent>
       editorDocumentChangedEvents = StreamController.broadcast();
@@ -39,8 +39,9 @@ class AffogatoEvents {
   static final StreamController<EditorInstanceRequestReloadEvent>
       editorInstanceRequestReloadEvents = StreamController.broadcast();
 
-  static final StreamController<EditorInstanceRequestShowFindOverlayEvent>
-      editorInstanceRequestShowFindOverlayEvents = StreamController.broadcast();
+  static final StreamController<EditorInstanceRequestToggleSearchOverlayEvent>
+      editorInstanceRequestToggleSearchOverlayEvents =
+      StreamController.broadcast();
 
   static final StreamController<FileManagerStructureChangedEvent>
       vfsStructureChangedEvents = StreamController.broadcast();
@@ -137,10 +138,11 @@ class EditorInstanceRequestReloadEvent extends EditorInstanceEvent {
   const EditorInstanceRequestReloadEvent() : super('reload');
 }
 
-class EditorInstanceRequestShowFindOverlayEvent extends EditorInstanceEvent {
+class EditorInstanceRequestToggleSearchOverlayEvent
+    extends EditorInstanceEvent {
   final String documentId;
-  const EditorInstanceRequestShowFindOverlayEvent(this.documentId)
-      : super('requestShowFindOverlay');
+  const EditorInstanceRequestToggleSearchOverlayEvent(this.documentId)
+      : super('requestToggleSearchOverlay');
 }
 
 class EditingContext {

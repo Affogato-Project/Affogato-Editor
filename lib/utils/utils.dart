@@ -30,6 +30,9 @@ class AffogatoConstants {
   static const double primaryBarFileTreeIndentSize = 10;
   static const double completionsMenuItemHeight = 24;
   static const double completionsMenuWidth = 440;
+  static const double searchAndReplaceRowItemHeight = 30;
+  static const double searchAndReplacePadding = 4;
+  static const double searchAndReplaceTextFieldWidth = 160;
 }
 
 mixin StreamSubscriptionManager<T extends StatefulWidget> on State<T> {

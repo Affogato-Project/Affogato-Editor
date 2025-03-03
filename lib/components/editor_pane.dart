@@ -107,6 +107,7 @@ class EditorPaneState extends State<EditorPane>
             ),
           currentDocumentId != null
               ? Container(
+                  clipBehavior: Clip.hardEdge,
                   width: double.infinity,
                   height: widget.layoutConfigs.height -
                       widget.stylingConfigs.tabBarHeight -

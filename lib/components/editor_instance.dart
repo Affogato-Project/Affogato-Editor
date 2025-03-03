@@ -28,15 +28,15 @@ class AffogatoEditorInstance extends StatefulWidget {
 }
 
 class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
-    with utils.StreamSubscriptionManager {
+    with utils.StreamSubscriptionManager, SingleTickerProviderStateMixin {
   final ScrollController scrollController = ScrollController();
   late AffogatoEditorFieldController textController;
   late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
   late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
-  late final double cellWidth;
-  late final double cellHeight;
+  late double cellWidth;
+  late double cellHeight;
   bool hasScrolled = false;
   int currentLineNum = 0;
   int currentCharNum = 0;
@@ -44,14 +44,17 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
   bool showingCompletions = false;
   final List<String> completions = ['Hello', 'World', 'ABC', '123'];
 
+  late final LocalSearchAndReplaceController searchAndReplaceController =
+      LocalSearchAndReplaceController(
+    tickerProvider: this,
+    onDismiss: () => textFieldFocusNode.requestFocus(),
+    cellHeight: cellHeight,
+    cellWidth: cellWidth,
+    textController: textController,
+  );
+
   @override
   void initState() {
-    Future.delayed(const Duration(seconds: 10), () {
-      setState(() {
-        showingCompletions = true;
-      });
-    });
-
     scrollController.addListener(() {
       if (scrollController.offset > 0 && !hasScrolled) {
         setState(() {
@@ -127,7 +130,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
       // Set off the event
       AffogatoEvents.editorInstanceLoadedEvents
-          .add(const EditorInstanceLoadedEvent());
+          .add(EditorInstanceLoadedEvent(widget.documentId));
+      widget.workspaceConfigs.activeDocument = widget.documentId;
 
       // Link the text controller to the document
       textController.addListener(() {
@@ -144,7 +148,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
       // the actual document parsing and interceptors
       registerListener(
-        AffogatoEvents.editorKeyEvent.stream
+        AffogatoEvents.editorKeyEvents.stream
             .where((e) => e.documentId == widget.documentId),
         (event) {
           if (event.keyEvent is KeyDownEvent) {
@@ -174,6 +178,14 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             ),
           );
         },
+      );
+
+      registerListener(
+        AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.stream
+            .where((event) => event.documentId == widget.documentId),
+        (_) => setState(() {
+          searchAndReplaceController.toggle();
+        }),
       );
     }
 
@@ -379,6 +391,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
             hitTestBehavior: HitTestBehavior.translucent,
             child: Stack(
               children: [
+                // Decorations Area — for decorations below the editing layer
+                ...searchAndReplaceController.searchAndReplaceMatchHighlights,
                 Positioned(
                   left: utils.AffogatoConstants.lineNumbersColWidth +
                       utils.AffogatoConstants.lineNumbersGutterWidth,
@@ -415,9 +429,13 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                         children: generateLeftGutterWidgets(),
                       ),
                     ),
+                    // Editing Field
                     Expanded(
                       child: Focus(
                         onKeyEvent: (_, key) {
+                          if (searchAndReplaceController.isShown) {
+                            searchAndReplaceController.dismiss();
+                          }
                           if (showingCompletions && key is KeyDownEvent) {
                             if (key.logicalKey == LogicalKeyboardKey.arrowUp) {
                               if (completionItem != 0) {
@@ -437,6 +455,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                               setState(() {
                                 showingCompletions = false;
                               });
+
                               return KeyEventResult.handled;
                             } else if (key.logicalKey ==
                                 LogicalKeyboardKey.enter) {
@@ -457,7 +476,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                             ),
                           );
 
-                          AffogatoEvents.editorKeyEvent.add(keyEvent);
+                          AffogatoEvents.editorKeyEvents.add(keyEvent);
 
                           return widget.extensionsEngine
                               .triggerEditorKeybindings(keyEvent);
@@ -544,6 +563,89 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
               }),
             ),
           ),
+        // Search-and-replace overlays
+        Positioned(
+          top: utils.AffogatoConstants.breadcrumbHeight,
+          right: utils.AffogatoConstants.breadcrumbHeight + 5,
+          child: SlideTransition(
+            position:
+                searchAndReplaceController.searchAndReplaceOffsetAnimation,
+            child: SearchAndReplaceWidget(
+              key: searchAndReplaceController.overlayKey,
+              width: 300,
+              textStyle: codeTextStyle,
+              editorTheme: widget.editorTheme,
+              onSearchTextChanged: (newText) {
+                searchAndReplaceController.regenerateMatches(newText: newText);
+                setState(() {});
+              },
+              onReplaceTextChanged: (newText) {},
+              searchActionItems: [
+                AffogatoButton(
+                  width: utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                      10,
+                  height:
+                      utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                  editorTheme: widget.editorTheme,
+                  isPrimary: false,
+                  onTap: () {
+                    searchAndReplaceController.dismiss();
+                    textFieldFocusNode.requestFocus();
+                  },
+                  child: Icon(
+                    Icons.close,
+                    size:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    color: widget.editorTheme.buttonSecondaryForeground,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                AffogatoButton(
+                  width: utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                      10,
+                  height:
+                      utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                  editorTheme: widget.editorTheme,
+                  isPrimary: false,
+                  onTap: () => setState(() {
+                    searchAndReplaceController.prevMatch();
+                  }),
+                  child: Icon(
+                    Icons.arrow_upward,
+                    size:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    color: widget.editorTheme.buttonSecondaryForeground,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                AffogatoButton(
+                  width: utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                      10,
+                  height:
+                      utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                  editorTheme: widget.editorTheme,
+                  isPrimary: false,
+                  onTap: () => setState(() {
+                    searchAndReplaceController.nextMatch();
+                  }),
+                  child: Icon(
+                    Icons.arrow_downward,
+                    size:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    color: widget.editorTheme.buttonSecondaryForeground,
+                  ),
+                ),
+              ],
+              replaceActionItems: [],
+            ),
+          ),
+        ),
         // Breadcrumb Widget
         Positioned(
           top: 0,
@@ -588,6 +690,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
   @override
   void dispose() async {
+    searchAndReplaceController.searchAndReplaceAnimationController.dispose();
     textController.dispose();
     cancelSubscriptions();
     super.dispose();

@@ -7,38 +7,40 @@ class KeyboardShortcutsDispatcher {
   final Map<String, VoidCallback> shortcuts = {};
 
   KeyboardShortcutsDispatcher() {
-    AffogatoEvents.windowKeyboardEvents.stream.listen((event) {
-      if (event.keyEvent is KeyUpEvent) {
+    AffogatoEvents.windowKeyboardEvents.stream.listen(handleKeystroke);
+  }
+
+  void handleKeystroke(WindowKeyboardEvent event) {
+    if (event.keyEvent is KeyUpEvent) {
+      sequence.clear();
+      return;
+    } else if (event.keyEvent is KeyRepeatEvent) {
+      return;
+    }
+    if (sequence.isNotEmpty) {
+      if (event.keyEvent.logicalKey == LogicalKeyboardKey.escape) {
+        // handle aborts
         sequence.clear();
-        return;
-      } else if (event.keyEvent is KeyRepeatEvent) {
-        return;
-      }
-      if (sequence.isNotEmpty) {
-        if (event.keyEvent.logicalKey == LogicalKeyboardKey.escape) {
-          // handle aborts
-          sequence.clear();
-        } else if (sequence.length > 8) {
-          // just in case we wrongly pick up normal text editing actions as key sequences
-          sequence.clear();
-        } else {
-          sequence.add(event.keyEvent.logicalKey);
-          final String signature = signatureOf(sequence);
-          // dispatch the corresponding shortcut
-          if (shortcuts.containsKey(signature)) {
-            shortcuts[signature]!.call();
-            sequence.clear();
-          }
-        }
-      } else if ([
-        LogicalKeyboardKey.metaLeft,
-        LogicalKeyboardKey.metaRight,
-        LogicalKeyboardKey.altLeft,
-        LogicalKeyboardKey.altRight,
-      ].contains(event.keyEvent.logicalKey)) {
+      } else if (sequence.length > 8) {
+        // just in case we wrongly pick up normal text editing actions as key sequences
+        sequence.clear();
+      } else {
         sequence.add(event.keyEvent.logicalKey);
+        final String signature = signatureOf(sequence);
+        // dispatch the corresponding shortcut
+        if (shortcuts.containsKey(signature)) {
+          shortcuts[signature]!.call();
+          sequence.clear();
+        }
       }
-    });
+    } else if ([
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.metaRight,
+      LogicalKeyboardKey.altLeft,
+      LogicalKeyboardKey.altRight,
+    ].contains(event.keyEvent.logicalKey)) {
+      sequence.add(event.keyEvent.logicalKey);
+    }
   }
 
   void overrideShortcut(
