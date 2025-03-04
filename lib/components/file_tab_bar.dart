@@ -2,16 +2,16 @@ part of affogato.editor;
 
 class FileTabBar extends StatefulWidget {
   final AffogatoStylingConfigs stylingConfigs;
-  final List<String> documentIds;
-  final String? currentDocId;
+  final List<String> instanceIds;
+  final String? currentInstanceId;
   final String paneId;
   final AffogatoWorkspaceConfigs workspaceConfigs;
 
-  const FileTabBar({
+  FileTabBar({
     required this.stylingConfigs,
     required this.workspaceConfigs,
-    required this.documentIds,
-    required this.currentDocId,
+    required this.instanceIds,
+    required this.currentInstanceId,
     required this.paneId,
     super.key,
   });
@@ -25,9 +25,8 @@ class FileTabBarState extends State<FileTabBar>
   @override
   Widget build(BuildContext context) {
     final List<Widget> tabs = [];
-
-    for (int i = 0; i < widget.documentIds.length; i++) {
-      final bool isCurrent = widget.documentIds[i] == widget.currentDocId;
+    for (int i = 0; i < widget.instanceIds.length; i++) {
+      final bool isCurrent = widget.instanceIds[i] == widget.currentInstanceId;
       final Color activeColor = isCurrent
           ? widget.workspaceConfigs.themeBundle.editorTheme
                   .tabActiveBackground ??
@@ -38,9 +37,9 @@ class FileTabBarState extends State<FileTabBar>
       tabs.add(
         GestureDetector(
           onTap: () {
-            AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
-              WindowEditorRequestDocumentSetActiveEvent(
-                documentId: widget.documentIds[i],
+            AffogatoEvents.editorInstanceSetActiveEvents.add(
+              WindowEditorInstanceSetActiveEvent(
+                instanceId: widget.instanceIds[i],
               ),
             );
             setState(() {});
@@ -86,7 +85,10 @@ class FileTabBarState extends State<FileTabBar>
                   children: [
                     Text(
                       widget.workspaceConfigs.vfs
-                          .accessEntity(widget.documentIds[i])!
+                          .accessEntity((widget.workspaceConfigs
+                                      .instancesData[widget.instanceIds[i]]
+                                  as AffogatoEditorInstanceData)
+                              .documentId)!
                           .name,
                       style: TextStyle(
                         color: isCurrent
@@ -99,9 +101,9 @@ class FileTabBarState extends State<FileTabBar>
                     const SizedBox(width: 10),
                     IconButton(
                       onPressed: () {
-                        AffogatoEvents.editorDocumentClosedEvents.add(
-                          EditorDocumentClosedEvent(
-                            documentId: widget.documentIds[i],
+                        AffogatoEvents.windowEditorInstanceClosedEvents.add(
+                          WindowEditorInstanceClosedEvent(
+                            instanceId: widget.instanceIds[i],
                             paneId: widget.paneId,
                           ),
                         );

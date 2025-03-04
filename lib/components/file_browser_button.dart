@@ -118,11 +118,9 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                           setState(() {
                             expanded = true;
                           });
-                          AffogatoEvents
-                              .windowEditorRequestDocumentSetActiveEvents
-                              .add(
-                            WindowEditorRequestDocumentSetActiveEvent(
-                                documentId: docId),
+                          AffogatoEvents.editorInstanceSetActiveEvents.add(
+                            WindowEditorInstanceSetActiveEvent(
+                                instanceId: docId),
                           );
                         },
                       ),

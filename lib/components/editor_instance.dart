@@ -1,37 +1,45 @@
 part of affogato.editor;
 
-class AffogatoEditorInstance extends StatefulWidget {
+class AffogatoEditorInstanceData extends PaneInstanceData {
   final String documentId;
-  final AffogatoInstanceState? instanceState;
-  final EditorTheme<Color, TextStyle> editorTheme;
-  final double width;
-  final AffogatoWorkspaceConfigs workspaceConfigs;
   final LanguageBundle? languageBundle;
-  final AffogatoExtensionsEngine extensionsEngine;
   final ThemeBundle<dynamic, Color, TextStyle, TextSpan> themeBundle;
 
-  AffogatoEditorInstance({
+  AffogatoEditorInstanceData({
     required this.documentId,
-    required this.width,
-    required this.editorTheme,
-    required this.workspaceConfigs,
     required this.languageBundle,
-    required this.extensionsEngine,
     required this.themeBundle,
-    this.instanceState,
-  }) : super(
-            key: ValueKey(
-                '$documentId${instanceState?.hashCode}${editorTheme.hashCode}$width${languageBundle?.bundleName}'));
-
+  });
   @override
-  State<StatefulWidget> createState() => AffogatoEditorInstanceState();
+  Map<String, Object?> toJson() => {
+        'documentId': documentId,
+        'languageBundle': languageBundle?.bundleName ?? '',
+        'themeBundle':
+            themeBundle.editorTheme.toString(), // should be .toJson()
+      };
 }
 
-class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
-    with utils.StreamSubscriptionManager, SingleTickerProviderStateMixin {
+class AffogatoEditorInstance extends PaneInstance<AffogatoEditorInstanceData> {
+  AffogatoEditorInstance({
+    required super.width,
+    required super.editorTheme,
+    required super.workspaceConfigs,
+    required super.extensionsEngine,
+    required super.instanceId,
+  });
+
+  @override
+  AffogatoEditorInstanceState createState() => AffogatoEditorInstanceState();
+}
+
+class AffogatoEditorInstanceState
+    extends State<PaneInstance<AffogatoEditorInstanceData>>
+    with
+        utils.StreamSubscriptionManager,
+        PaneInstanceStateManager<AffogatoEditorInstanceData>,
+        SingleTickerProviderStateMixin {
   final ScrollController scrollController = ScrollController();
   late AffogatoEditorFieldController textController;
-  late AffogatoInstanceState instanceState;
   final FocusNode textFieldFocusNode = FocusNode();
   late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
@@ -58,6 +66,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
   @override
   void initState() {
+    getData();
     scrollController.addListener(() {
       if (scrollController.offset > 0 && !hasScrolled) {
         setState(() {
@@ -96,8 +105,8 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
       tp.dispose();
 
       textController = AffogatoEditorFieldController(
-        languageBundle: widget.languageBundle,
-        themeBundle: widget.themeBundle,
+        languageBundle: data.languageBundle,
+        themeBundle: data.themeBundle,
         workspaceConfigs: widget.workspaceConfigs,
       )..addListener(() {
           if (textController.text.isNotEmpty) {
@@ -113,28 +122,15 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           }
         });
 
-      currentDoc = widget.workspaceConfigs.vfs
-          .accessEntity(widget.documentId)!
-          .document!;
+      currentDoc =
+          widget.workspaceConfigs.vfs.accessEntity(data.documentId)!.document!;
       // Assume instant autosave
       textController.text = currentDoc.content;
-      // Load or create instance state
-      AffogatoInstanceState? newState;
-      instanceState = widget.instanceState ??
-          (newState = const AffogatoInstanceState(
-            cursorPos: 0,
-            scrollHeight: 0,
-            languageBundle: null,
-          ));
-      if (newState != null) {
-        AffogatoEvents.editorInstanceCreateEvents
-            .add(const EditorInstanceCreateEvent());
-      }
 
       // Set off the event
       AffogatoEvents.editorInstanceLoadedEvents
-          .add(EditorInstanceLoadedEvent(widget.documentId));
-      widget.workspaceConfigs.activeDocument = widget.documentId;
+          .add(EditorInstanceLoadedEvent(data.documentId));
+      widget.workspaceConfigs.activeDocument = data.documentId;
 
       // Link the text controller to the document
       textController.addListener(() {
@@ -142,7 +138,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
         AffogatoEvents.editorDocumentChangedEvents.add(
           EditorDocumentChangedEvent(
             newContent: textController.text,
-            documentId: widget.documentId,
+            documentId: data.documentId,
             selection: textController.selection,
           ),
         );
@@ -152,7 +148,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
       // the actual document parsing and interceptors
       registerListener(
         AffogatoEvents.editorKeyEvents.stream
-            .where((e) => e.documentId == widget.documentId),
+            .where((e) => e.instanceId == widget.instanceId),
         (event) {
           if (event.keyEvent is KeyDownEvent) {
             textFieldFocusNode.requestFocus();
@@ -176,7 +172,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
           AffogatoEvents.editorDocumentChangedEvents.add(
             EditorDocumentChangedEvent(
               newContent: textController.text,
-              documentId: widget.documentId,
+              documentId: data.documentId,
               selection: textController.selection,
             ),
           );
@@ -185,7 +181,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
 
       registerListener(
         AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.stream
-            .where((event) => event.documentId == widget.documentId),
+            .where((event) => event.documentId == data.documentId),
         (_) => setState(() {
           searchAndReplaceController.toggle();
         }),
@@ -370,7 +366,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
     AffogatoEvents.editorDocumentChangedEvents.add(
       EditorDocumentChangedEvent(
         newContent: textController.text,
-        documentId: widget.documentId,
+        documentId: data.documentId,
         selection: textController.selection,
       ),
     );
@@ -470,11 +466,11 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                               }
                             }
                             final EditorKeyEvent keyEvent = EditorKeyEvent(
-                              documentId: widget.documentId,
+                              instanceId: widget.instanceId,
                               keyEvent: key,
                               editingContext: EditingContext(
                                 content: widget.workspaceConfigs.vfs
-                                    .accessEntity(widget.documentId,
+                                    .accessEntity(data.documentId,
                                         isDir: false)!
                                     .document!
                                     .content,
@@ -750,8 +746,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    widget.workspaceConfigs.vfs
-                            .pathToEntity(widget.documentId) ??
+                    widget.workspaceConfigs.vfs.pathToEntity(data.documentId) ??
                         'Unsaved',
                     style: widget.editorTheme.defaultTextStyle.copyWith(
                         fontSize: widget.workspaceConfigs.stylingConfigs

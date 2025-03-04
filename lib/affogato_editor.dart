@@ -1,6 +1,7 @@
 library affogato.editor;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -15,7 +16,7 @@ import 'package:re_highlight/re_highlight.dart';
 part './editor_core/configs.dart';
 part './editor_core/events.dart';
 part './editor_core/editor_actions.dart';
-part './editor_core/instance_state.dart';
+part 'editor_core/pane_instance_data.dart';
 part './editor_core/virtual_file_system.dart';
 part './editor_core/core_extensions.dart';
 part './editor_core/keyboard_shortcuts.dart';
@@ -25,6 +26,7 @@ part './components/shared/search_and_replace_widget.dart';
 part './components/shared/button.dart';
 
 part './components/editor_pane.dart';
+part './components/pane_instance.dart';
 part './components/file_tab_bar.dart';
 part './components/editor_instance.dart';
 part './components/editor_field_controller.dart';
@@ -122,64 +124,55 @@ class AffogatoWindowState extends State<AffogatoWindow>
       (event) {
         setState(() {
           final String paneId = utils.generateId();
-          widget.workspaceConfigs.paneDocumentData[paneId] = event.documentIds;
+          widget.workspaceConfigs.panesData[paneId] = event.instanceIds;
         });
       },
     );
     // initial set up of the editor based on the workspace configs
-    if (widget.workspaceConfigs.paneDocumentData.isEmpty) {
+    if (widget.workspaceConfigs.panesData.isEmpty) {
       AffogatoEvents.windowEditorPaneAddEvents
           .add(WindowEditorPaneAddEvent([]));
     } else {
-      for (final entry in widget.workspaceConfigs.paneDocumentData.entries) {
+      for (final entry in widget.workspaceConfigs.panesData.entries) {
         AffogatoEvents.windowEditorPaneAddEvents
             .add(WindowEditorPaneAddEvent(entry.value));
       }
     }
-    // listens to requests to focus the instance containing the specified document
-    // and creates the instance if it doesn't yet exist
+
     registerListener(
       AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.stream,
       (event) {
-        final LanguageBundle languageBundle;
-        bool hasBeenSetActive = false;
-        for (final entry in widget.workspaceConfigs.paneDocumentData.entries) {
-          if (entry.value.contains(event.documentId)) {
-            hasBeenSetActive = true;
-            // Respond by emitting the event that triggers the corresponding pane
-            // to make the specified document active
-            AffogatoEvents.editorInstanceSetActiveEvents.add(
-              WindowEditorInstanceSetActiveEvent(
-                paneId: entry.key,
-                documentId: event.documentId,
-                languageBundle: widget.workspaceConfigs.detectLanguage(widget
-                    .workspaceConfigs.vfs
-                    .accessEntity(event.documentId)!
-                    .document!
-                    .extension),
-              ),
-            );
+        String? instanceIdWithDocument;
+        for (final entry in widget.workspaceConfigs.instancesData.entries
+            .whereType<MapEntry<String, AffogatoEditorInstanceData>>()) {
+          if (entry.value.documentId == event.documentId) {
+            instanceIdWithDocument = entry.key;
+            break;
           }
         }
-
-        // if no current panes contain the document
-        if (!hasBeenSetActive) {
-          final MapEntry<String, List<String>> firstPane =
-              widget.workspaceConfigs.paneDocumentData.entries.first;
-          // modify the first pane's document list to include the new document
-          firstPane.value.add(event.documentId);
-          // trigger the event to make said pane activate the document
-          AffogatoEvents.editorInstanceSetActiveEvents.add(
-            WindowEditorInstanceSetActiveEvent(
-              paneId: firstPane.key,
-              documentId: event.documentId,
-              languageBundle: widget.workspaceConfigs.detectLanguage(widget
-                  .workspaceConfigs.vfs
-                  .accessEntity(event.documentId)!
-                  .document!
-                  .extension),
-            ),
+        if (instanceIdWithDocument == null) {
+          final String instanceId = utils.generateId();
+          widget.workspaceConfigs.instancesData[instanceId] =
+              AffogatoEditorInstanceData(
+            documentId: event.documentId,
+            languageBundle: widget.workspaceConfigs.detectLanguage(widget
+                .workspaceConfigs.vfs
+                .accessEntity(event.documentId)!
+                .document!
+                .extension),
+            themeBundle: widget.workspaceConfigs.themeBundle,
           );
+
+          if (widget.workspaceConfigs.panesData.isEmpty) {
+            widget.workspaceConfigs.panesData.addAll({
+              utils.generateId(): [instanceId],
+            });
+          } else {
+            widget.workspaceConfigs.panesData.entries.first.value
+                .add(instanceId);
+          }
+
+          setState(() {});
         }
       },
     );
@@ -201,18 +194,19 @@ class AffogatoWindowState extends State<AffogatoWindow>
         bool hasRemovedPane = false;
         // maintain the pane ID which has the least # of docs in it
         String paneWithLeastDocs =
-            widget.workspaceConfigs.paneDocumentData.entries.first.key;
+            widget.workspaceConfigs.panesData.entries.first.key;
         int paneDocsCount =
-            widget.workspaceConfigs.paneDocumentData.entries.first.value.length;
-        for (final pane in widget.workspaceConfigs.paneDocumentData.entries) {
+            widget.workspaceConfigs.panesData.entries.first.value.length;
+        for (final pane in widget.workspaceConfigs.panesData.entries) {
           if (pane.value.isEmpty) {
             hasRemovedPane = true;
-            for (final docId in pane.value) {
-              AffogatoEvents.editorDocumentClosedEvents.add(
-                EditorDocumentClosedEvent(documentId: docId, paneId: pane.key),
+            for (final instanceId in pane.value) {
+              AffogatoEvents.windowEditorInstanceClosedEvents.add(
+                WindowEditorInstanceClosedEvent(
+                    instanceId: instanceId, paneId: pane.key),
               );
             }
-            widget.workspaceConfigs.paneDocumentData.remove(pane.key);
+            widget.workspaceConfigs.panesData.remove(pane.key);
             break;
           } else {
             if (pane.value.length < paneDocsCount) {
@@ -223,14 +217,14 @@ class AffogatoWindowState extends State<AffogatoWindow>
         }
         if (!hasRemovedPane) {
           for (final docId
-              in widget.workspaceConfigs.paneDocumentData[paneWithLeastDocs]!) {
-            AffogatoEvents.editorDocumentClosedEvents.add(
-              EditorDocumentClosedEvent(
-                  documentId: docId, paneId: paneWithLeastDocs),
+              in widget.workspaceConfigs.panesData[paneWithLeastDocs]!) {
+            AffogatoEvents.windowEditorInstanceClosedEvents.add(
+              WindowEditorInstanceClosedEvent(
+                  instanceId: docId, paneId: paneWithLeastDocs),
             );
           }
           // remove the pane with the least number of docs
-          widget.workspaceConfigs.paneDocumentData.remove(paneWithLeastDocs);
+          widget.workspaceConfigs.panesData.remove(paneWithLeastDocs);
         }
         setState(() {});
       },
@@ -238,14 +232,14 @@ class AffogatoWindowState extends State<AffogatoWindow>
 
     // listen to document closing events
     registerListener(
-      AffogatoEvents.editorDocumentClosedEvents.stream,
+      AffogatoEvents.windowEditorInstanceClosedEvents.stream,
       (event) {
-        widget.workspaceConfigs.paneDocumentData[event.paneId]!
-            .remove(event.documentId);
+        widget.workspaceConfigs.panesData[event.paneId]!
+            .remove(event.instanceId);
         AffogatoEvents.windowEditorInstanceUnsetActiveEvents.add(
           WindowEditorInstanceUnsetActiveEvent(
             paneId: event.paneId,
-            documentId: event.documentId,
+            instanceId: event.instanceId,
           ),
         );
       },
@@ -263,6 +257,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
       );
     }
 
+    // AffogatoEvents.editorInstanceSetActiveEvents.stream
     super.initState();
   }
 
@@ -311,8 +306,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
                                 1,
                         child: Row(
                           children: [
-                            for (final pane in widget
-                                .workspaceConfigs.paneDocumentData.entries)
+                            for (final pane
+                                in widget.workspaceConfigs.panesData.entries)
                               EditorPane(
                                 key: ValueKey('${pane.key}${pane.value}'),
                                 paneId: pane.key,
@@ -328,7 +323,6 @@ class AffogatoWindowState extends State<AffogatoWindow>
                                 extensionsEngine: extensionsEngine,
                                 performanceConfigs: widget.performanceConfigs,
                                 workspaceConfigs: widget.workspaceConfigs,
-                                documentIds: pane.value,
                                 windowKey: windowKey,
                               ),
                           ],
@@ -359,7 +353,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
     cancelSubscriptions();
     extensionsEngine.deinit();
     await AffogatoEvents.windowEditorPaneAddEvents.close();
-    await AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.close();
+    await AffogatoEvents.editorInstanceSetActiveEvents.close();
     await AffogatoEvents.windowEditorPaneRemoveEvents.close();
     await AffogatoEvents.editorInstanceSetActiveEvents.close();
     await AffogatoEvents.windowEditorInstanceUnsetActiveEvents.close();
@@ -369,8 +363,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
     await AffogatoEvents.editorKeyEvents.close();
     await AffogatoEvents.editorDocumentChangedEvents.close();
     await AffogatoEvents.editorDocumentRequestChangeEvents.close();
-    await AffogatoEvents.editorDocumentClosedEvents.close();
-    await AffogatoEvents.editorPaneAddDocumentEvents.close();
+    await AffogatoEvents.windowEditorInstanceClosedEvents.close();
+    await AffogatoEvents.editorPaneAddInstanceEvents.close();
     await AffogatoEvents.editorInstanceRequestReloadEvents.close();
     await AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.close();
     await AffogatoEvents.vfsStructureChangedEvents.close();

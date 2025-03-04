@@ -54,12 +54,12 @@ class AffogatoWorkspaceConfigs {
 
   final List<AffogatoExtension> extensions;
 
-  /// A mapping of pane IDs to the IDs of the [AffogatoDocument]s contained by that pane
-  final Map<String, List<String>> paneDocumentData;
+  /// A mapping of pane IDs to the IDs of the [PaneInstance]s contained by that pane
+  final Map<String, List<String>> panesData;
 
-  /// Stores the instance states for opened documents, each one associated with the
-  /// corresponding document IDs.
-  final Map<String, AffogatoInstanceState> statesRegistry = {};
+  /// Stores the instance states for opened instances in the various panes, each one
+  /// associated with its corresponding [PaneInstanceData] object
+  final Map<String, PaneInstanceData> instancesData;
 
   final AffogatoVFS vfs;
 
@@ -77,7 +77,8 @@ class AffogatoWorkspaceConfigs {
 
   AffogatoWorkspaceConfigs({
     required this.projectName,
-    required this.paneDocumentData,
+    required this.panesData,
+    required this.instancesData,
     required this.themeBundle,
     required this.languageBundles,
     required this.stylingConfigs,
@@ -91,7 +92,7 @@ class AffogatoWorkspaceConfigs {
           ),
         );
 
-  bool isDocumentShown(String documentId) => paneDocumentData.values
+  bool isDocumentShown(String documentId) => panesData.values
       .firstWhere(
         (pane) => pane.contains(documentId),
         orElse: () => const [],
@@ -107,4 +108,18 @@ class AffogatoWorkspaceConfigs {
     }
     return null;
   }
+
+  Map<String, Object?> toJson() => {
+        'projectName': projectName,
+        'panesData': panesData,
+        'instancesData':
+            instancesData.map((id, data) => MapEntry(id, data.toJson())),
+        'extensions': extensions.map((e) => e.id),
+        'vfs': vfs.hashCode,
+      };
+
+  @override
+  int get hashCode =>
+      "$projectName$panesData$instancesData$themeBundle$languageBundles"
+          .hashCode;
 }

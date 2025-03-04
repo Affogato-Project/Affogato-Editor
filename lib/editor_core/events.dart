@@ -7,12 +7,14 @@ class AffogatoEvents {
       windowEditorPaneAddEvents = StreamController.broadcast();
   static final StreamController<WindowEditorPaneRemoveEvent>
       windowEditorPaneRemoveEvents = StreamController.broadcast();
+  static final StreamController<WindowEditorPaneReloadEvent>
+      windowEditorPaneReloadEvents = StreamController.broadcast();
   static final StreamController<WindowEditorInstanceSetActiveEvent>
       editorInstanceSetActiveEvents = StreamController.broadcast();
   static final StreamController<WindowEditorInstanceUnsetActiveEvent>
       windowEditorInstanceUnsetActiveEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorRequestDocumentSetActiveEvent>
-      windowEditorRequestDocumentSetActiveEvents = StreamController.broadcast();
+  static final StreamController<WindowEditorInstanceClosedEvent>
+      windowEditorInstanceClosedEvents = StreamController.broadcast();
 
   static final StreamController<WindowKeyboardEvent> windowKeyboardEvents =
       StreamController.broadcast();
@@ -30,11 +32,11 @@ class AffogatoEvents {
   static final StreamController<EditorDocumentRequestChangeEvent>
       editorDocumentRequestChangeEvents = StreamController.broadcast();
 
-  static final StreamController<EditorDocumentClosedEvent>
-      editorDocumentClosedEvents = StreamController.broadcast();
+  static final StreamController<WindowEditorRequestDocumentSetActiveEvent>
+      windowEditorRequestDocumentSetActiveEvents = StreamController.broadcast();
 
-  static final StreamController<EditorPaneAddDocumentEvent>
-      editorPaneAddDocumentEvents = StreamController.broadcast();
+  static final StreamController<EditorPaneAddInstanceEvent>
+      editorPaneAddInstanceEvents = StreamController.broadcast();
 
   static final StreamController<EditorInstanceRequestReloadEvent>
       editorInstanceRequestReloadEvents = StreamController.broadcast();
@@ -68,46 +70,58 @@ class WindowEditorPaneEvent extends WindowEvent {
 }
 
 class WindowEditorPaneAddEvent extends WindowEditorPaneEvent {
-  final List<String> documentIds;
-  const WindowEditorPaneAddEvent(this.documentIds) : super('add');
+  final List<String> instanceIds;
+  const WindowEditorPaneAddEvent(this.instanceIds) : super('add');
 }
 
 class WindowEditorPaneRemoveEvent extends WindowEditorPaneEvent {
   const WindowEditorPaneRemoveEvent() : super('remove');
 }
 
+class WindowEditorPaneReloadEvent extends WindowEditorPaneEvent {
+  final String paneId;
+  const WindowEditorPaneReloadEvent(this.paneId) : super('reload');
+}
+
 class WindowEditorInstanceEvent extends WindowEvent {
   const WindowEditorInstanceEvent(String id) : super('editorInstance.$id');
 }
 
-class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
+class WindowEditorInstanceClosedEvent extends WindowEditorInstanceEvent {
+  final String instanceId;
   final String paneId;
-  final String documentId;
-  final LanguageBundle? languageBundle;
 
-  const WindowEditorInstanceSetActiveEvent({
+  const WindowEditorInstanceClosedEvent({
+    required this.instanceId,
     required this.paneId,
-    required this.documentId,
-    required this.languageBundle,
-  }) : super('setActive');
-}
-
-class WindowEditorInstanceUnsetActiveEvent extends WindowEditorInstanceEvent {
-  final String paneId;
-  final String documentId;
-
-  const WindowEditorInstanceUnsetActiveEvent({
-    required this.paneId,
-    required this.documentId,
-  }) : super('unsetActive');
+  }) : super('close');
 }
 
 class WindowEditorRequestDocumentSetActiveEvent
     extends WindowEditorInstanceEvent {
   final String documentId;
+
   const WindowEditorRequestDocumentSetActiveEvent({
     required this.documentId,
-  }) : super('requestSetActive');
+  }) : super('requestDocumentSetActive');
+}
+
+class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
+  final String instanceId;
+
+  const WindowEditorInstanceSetActiveEvent({
+    required this.instanceId,
+  }) : super('setActive');
+}
+
+class WindowEditorInstanceUnsetActiveEvent extends WindowEditorInstanceEvent {
+  final String paneId;
+  final String instanceId;
+
+  const WindowEditorInstanceUnsetActiveEvent({
+    required this.paneId,
+    required this.instanceId,
+  }) : super('unsetActive');
 }
 
 class WindowKeyboardEvent extends WindowEvent {
@@ -130,8 +144,8 @@ class EditorInstanceCreateEvent extends EditorInstanceEvent {
 }
 
 class EditorInstanceLoadedEvent extends EditorInstanceEvent {
-  final String documentId;
-  const EditorInstanceLoadedEvent(this.documentId) : super('loaded');
+  final String instanceId;
+  const EditorInstanceLoadedEvent(this.instanceId) : super('loaded');
 }
 
 class EditorInstanceRequestReloadEvent extends EditorInstanceEvent {
@@ -157,12 +171,12 @@ class EditingContext {
 
 class EditorKeyEvent extends EditorEvent {
   final KeyEvent keyEvent;
-  final String documentId;
+  final String instanceId;
   final EditingContext editingContext;
 
   const EditorKeyEvent({
     required this.keyEvent,
-    required this.documentId,
+    required this.instanceId,
     required this.editingContext,
   }) : super('key');
 }
@@ -193,28 +207,18 @@ class EditorDocumentRequestChangeEvent extends EditorDocumentEvent {
   }) : super('changeRequest');
 }
 
-class EditorDocumentClosedEvent extends EditorDocumentEvent {
-  final String documentId;
-  final String paneId;
-
-  const EditorDocumentClosedEvent({
-    required this.documentId,
-    required this.paneId,
-  }) : super('close');
-}
-
 class EditorPaneEvent extends EditorEvent {
   const EditorPaneEvent(String id) : super('pane.$id');
 }
 
-class EditorPaneAddDocumentEvent extends EditorPaneEvent {
+class EditorPaneAddInstanceEvent extends EditorPaneEvent {
   final String paneId;
-  final String documentId;
+  final String instanceId;
 
-  const EditorPaneAddDocumentEvent({
+  const EditorPaneAddInstanceEvent({
     required this.paneId,
-    required this.documentId,
-  }) : super('addDoc');
+    required this.instanceId,
+  }) : super('addInstance');
 }
 
 /// FILE MANAGER EVENTS ///

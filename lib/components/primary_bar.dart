@@ -5,12 +5,12 @@ class PrimaryBar extends StatefulWidget {
   final EditorTheme<Color, TextStyle> editorTheme;
   final AffogatoWorkspaceConfigs workspaceConfigs;
 
-  PrimaryBar({
+  const PrimaryBar({
     required this.expandedWidth,
     required this.editorTheme,
     required this.workspaceConfigs,
-  }) : super(key: UniqueKey());
-  /**TODO: use a better state representation */
+    super.key,
+  });
 
   @override
   State<StatefulWidget> createState() => PrimaryBarState();
@@ -30,7 +30,7 @@ class PrimaryBarState extends State<PrimaryBar>
     );
 
     registerListener(
-      AffogatoEvents.editorDocumentClosedEvents.stream,
+      AffogatoEvents.windowEditorInstanceClosedEvents.stream,
       (event) {
         setState(() {});
       },

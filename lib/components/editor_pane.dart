@@ -1,14 +1,13 @@
 part of affogato.editor;
 
+/// An [EditorPane] corresponds to what VSCode calls the "EditorGroup".
 class EditorPane extends StatefulWidget {
-  final List<String> documentIds;
   final LayoutConfigs layoutConfigs;
   final AffogatoStylingConfigs stylingConfigs;
   final AffogatoPerformanceConfigs performanceConfigs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoExtensionsEngine extensionsEngine;
   final GlobalKey<AffogatoWindowState> windowKey;
-
   final String paneId;
 
   const EditorPane({
@@ -17,7 +16,6 @@ class EditorPane extends StatefulWidget {
     required this.performanceConfigs,
     required this.workspaceConfigs,
     required this.extensionsEngine,
-    required this.documentIds,
     required this.windowKey,
     required this.paneId,
     required super.key,
@@ -29,26 +27,35 @@ class EditorPane extends StatefulWidget {
 
 class EditorPaneState extends State<EditorPane>
     with utils.StreamSubscriptionManager {
-  String? currentDocumentId;
-  LanguageBundle? currentLB;
+  /// This is used to manage which [PaneInstance] is shown
+  String? currentInstanceId;
+  late List<String> instanceIds;
+
+  void paneLoad() {
+    instanceIds = widget.workspaceConfigs.panesData[widget.paneId]!;
+    if (instanceIds.isNotEmpty) currentInstanceId = instanceIds.first;
+  }
 
   @override
   void initState() {
-    if (!widget.workspaceConfigs.paneDocumentData.containsKey(widget.paneId)) {
-      widget.workspaceConfigs.paneDocumentData[widget.paneId] =
-          widget.documentIds;
-    }
+    paneLoad();
 
     registerListener(
-      AffogatoEvents.editorInstanceSetActiveEvents.stream
+      AffogatoEvents.windowEditorPaneReloadEvents.stream
           .where((e) => e.paneId == widget.paneId),
+      (_) => setState(() {
+        paneLoad();
+      }),
+    );
+
+    registerListener(
+      AffogatoEvents.editorInstanceSetActiveEvents.stream,
       (event) {
-        setState(() {
-          currentDocumentId = event.documentId;
-          currentLB = event.languageBundle;
-          AffogatoEvents.editorInstanceRequestReloadEvents
-              .add(const EditorInstanceRequestReloadEvent());
-        });
+        if (instanceIds.contains(event.instanceId)) {
+          setState(() {
+            currentInstanceId = event.instanceId;
+          });
+        }
       },
     );
 
@@ -57,16 +64,10 @@ class EditorPaneState extends State<EditorPane>
           .where((e) => e.paneId == widget.paneId),
       (event) {
         setState(() {
-          if (widget.documentIds.isEmpty) {
-            currentDocumentId = null;
-            currentLB = null;
+          if (instanceIds.isEmpty) {
+            currentInstanceId = null;
           } else {
-            currentDocumentId = widget.documentIds.last;
-            currentLB = widget.workspaceConfigs.detectLanguage(widget
-                .workspaceConfigs.vfs
-                .accessEntity(widget.documentIds.last)!
-                .document!
-                .extension);
+            currentInstanceId = instanceIds.last;
           }
         });
       },
@@ -77,35 +78,18 @@ class EditorPaneState extends State<EditorPane>
 
   @override
   Widget build(BuildContext context) {
-    AffogatoInstanceState? instanceState;
-    if (widget.performanceConfigs.rendererType ==
-        InstanceRendererType.savedState) {
-      if (widget.workspaceConfigs.statesRegistry
-          .containsKey(currentDocumentId)) {
-        instanceState =
-            widget.workspaceConfigs.statesRegistry[currentDocumentId!];
-      } else {
-        widget.workspaceConfigs.statesRegistry[currentDocumentId!] =
-            instanceState = AffogatoInstanceState(
-          cursorPos: 0,
-          scrollHeight: 0,
-          languageBundle: currentLB,
-        );
-      }
-    }
     return Expanded(
       child: Column(
         children: [
-          if (widget.documentIds.isNotEmpty)
+          if (instanceIds.isNotEmpty)
             FileTabBar(
               stylingConfigs: widget.stylingConfigs,
-              documentIds:
-                  widget.workspaceConfigs.paneDocumentData[widget.paneId]!,
+              instanceIds: instanceIds,
               workspaceConfigs: widget.workspaceConfigs,
-              currentDocId: currentDocumentId,
+              currentInstanceId: currentInstanceId,
               paneId: widget.paneId,
             ),
-          currentDocumentId != null
+          currentInstanceId != null
               ? Container(
                   clipBehavior: Clip.hardEdge,
                   width: double.infinity,
@@ -134,15 +118,12 @@ class EditorPaneState extends State<EditorPane>
                     ),
                   ),
                   child: AffogatoEditorInstance(
-                    documentId: currentDocumentId!,
+                    instanceId: currentInstanceId!,
                     workspaceConfigs: widget.workspaceConfigs,
                     width: widget.layoutConfigs.width,
                     editorTheme:
                         widget.workspaceConfigs.themeBundle.editorTheme,
-                    instanceState: instanceState,
                     extensionsEngine: widget.extensionsEngine,
-                    languageBundle: instanceState?.languageBundle ?? currentLB,
-                    themeBundle: widget.workspaceConfigs.themeBundle,
                   ),
                 )
               : Center(

@@ -16,7 +16,7 @@ class StatusBar extends StatefulWidget {
 
 class StatusBarState extends State<StatusBar>
     with utils.StreamSubscriptionManager {
-  String? currentDocumentId;
+  String? currentInstanceId;
   LanguageBundle? currentLB;
 
   @override
@@ -25,8 +25,12 @@ class StatusBarState extends State<StatusBar>
       AffogatoEvents.editorInstanceSetActiveEvents.stream,
       (event) {
         setState(() {
-          currentDocumentId = event.documentId;
-          currentLB = event.languageBundle;
+          currentInstanceId = event.instanceId;
+          final instanceData =
+              widget.workspaceConfigs.instancesData[currentInstanceId];
+          if (instanceData is AffogatoEditorInstanceData) {
+            currentLB = instanceData.languageBundle;
+          }
         });
       },
     );
@@ -85,12 +89,9 @@ class StatusBarState extends State<StatusBar>
             ),
           ),
           const Spacer(),
-          if (currentDocumentId != null)
+          if (currentInstanceId != null)
             TextButton(
-              onPressed: () {
-                AffogatoEvents.windowEditorPaneRemoveEvents
-                    .add(const WindowEditorPaneRemoveEvent());
-              },
+              onPressed: () {},
               child: Text(
                 currentLB?.bundleName ?? 'Generic',
                 style: TextStyle(

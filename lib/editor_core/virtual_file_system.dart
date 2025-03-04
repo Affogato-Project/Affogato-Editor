@@ -185,6 +185,19 @@ class AffogatoVFS {
   }
 
   String dumpTree() => root.dumpTree(0);
+
+  @override
+  int get hashCode => jsonEncode(toJson()).hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AffogatoVFS && other.toJson() == toJson();
+
+  Map<String, Object?> toJson() => {
+        'root': root.toJson(),
+        'cache': cache.map((key, entity) => MapEntry(key, entity.toJson())),
+        'bin': bin.map((key, entity) => MapEntry(key, entity.toJson())),
+      };
 }
 
 class AffogatoVFSEntity {
@@ -265,4 +278,19 @@ class AffogatoVFSEntity {
 
     return lines.join('\n');
   }
+
+  Map<String, Object?> toJson() => {
+        'entityId': entityId,
+        'name': name,
+        'isDirectory': isDirectory,
+        'files': files.map((f) => f.toJson()),
+        'subdirs': subdirs.map((s) => s.toJson()),
+      };
+
+  @override
+  int get hashCode => entityId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AffogatoVFSEntity && other.toJson() == toJson();
 }
