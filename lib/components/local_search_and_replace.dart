@@ -177,6 +177,27 @@ class LocalSearchAndReplaceController {
       scrollCallback(currentItemOffset - 40);
     }
   }
+
+  void replaceCurrentMatch() {
+    if (matches.isNotEmpty && searchText != '' && replaceText != null) {
+      textController.text = textController.text
+              .substring(0, matches.elementAt(searchItemCurrentIndex).start) +
+          replaceText! +
+          textController.text
+              .substring(matches.elementAt(searchItemCurrentIndex).end);
+      regenerateMatches(newText: searchText);
+    }
+  }
+
+  void replaceAllMatches() {
+    if (matches.isNotEmpty && searchText != '' && replaceText != null) {
+      textController.text = textController.text.replaceAll(
+        searchText,
+        replaceText!,
+      );
+      regenerateMatches(newText: searchText);
+    }
+  }
 }
 
 /// This object stores the state/data for the [SearchAndReplaceWidget] in an intra-file

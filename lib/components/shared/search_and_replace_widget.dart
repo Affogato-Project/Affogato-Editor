@@ -86,6 +86,8 @@ class SearchAndReplaceWidgetState extends State<SearchAndReplaceWidget> {
             ),
           ),
           Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
                 height: utils.AffogatoConstants.searchAndReplaceRowItemHeight,
@@ -124,7 +126,17 @@ class SearchAndReplaceWidgetState extends State<SearchAndReplaceWidget> {
                     children: [
                       Expanded(
                         child: TextField(
-                          decoration: null,
+                          decoration: InputDecoration(
+                            fillColor: widget.editorTheme.inputBackground,
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: (searchFieldFocusNode.hasFocus
+                                        ? widget.editorTheme.inputBorder
+                                        : Colors.green) ??
+                                    Colors.red,
+                              ),
+                            ),
+                          ),
                           style: widget.textStyle,
                           focusNode: replaceFieldFocusNode,
                           onChanged: widget.onReplaceTextChanged,

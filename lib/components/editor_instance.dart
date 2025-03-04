@@ -580,7 +580,7 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                   searchAndReplaceController.searchAndReplaceOffsetAnimation,
               child: SearchAndReplaceWidget(
                 key: searchAndReplaceController.overlayKey,
-                width: 300,
+                width: utils.AffogatoConstants.searchAndReplaceWidgetWidth,
                 textStyle: codeTextStyle,
                 editorTheme: widget.editorTheme,
                 onSearchTextChanged: (newText) {
@@ -688,19 +688,31 @@ class AffogatoEditorInstanceState extends State<AffogatoEditorInstance>
                     editorTheme: widget.editorTheme,
                     isPrimary: false,
                     onTap: () => setState(() {
-                      if (searchAndReplaceController.replaceText == null) {
-                        return;
-                      } else {
-                        textController.text = textController.text.replaceAll(
-                          searchAndReplaceController.searchText,
-                          searchAndReplaceController.replaceText!,
-                        );
-                      }
-                      searchAndReplaceController.regenerateMatches(
-                          newText: searchAndReplaceController.searchText);
+                      searchAndReplaceController.replaceCurrentMatch();
                     }),
                     child: Icon(
-                      Icons.find_replace,
+                      Icons.keyboard_return,
+                      size: utils
+                              .AffogatoConstants.searchAndReplaceRowItemHeight -
+                          10,
+                      color: widget.editorTheme.buttonSecondaryForeground,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  AffogatoButton(
+                    width:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    height:
+                        utils.AffogatoConstants.searchAndReplaceRowItemHeight -
+                            10,
+                    editorTheme: widget.editorTheme,
+                    isPrimary: false,
+                    onTap: () => setState(() {
+                      searchAndReplaceController.replaceAllMatches();
+                    }),
+                    child: Icon(
+                      Icons.restore_page,
                       size: utils
                               .AffogatoConstants.searchAndReplaceRowItemHeight -
                           10,
