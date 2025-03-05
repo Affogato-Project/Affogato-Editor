@@ -55,7 +55,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
     return TapRegion(
       onTapInside: (_) => setState(() => hasFocus = true),
       onTapOutside: (_) => setState(() => hasFocus = false),
-      child: Draggable(
+      child: Draggable<List<AffogatoVFSEntity>>(
         // only single file/directory for now.
         data: [widget.entry],
         feedback: Material(

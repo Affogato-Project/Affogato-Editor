@@ -102,101 +102,144 @@ class EditorPaneState extends State<EditorPane>
     }
 
     return Expanded(
-      child: DragTarget<FileTabDragData>(
-          onWillAcceptWithDetails: (details) {
-            final bool willAccept = widget.paneId != details.data.paneId;
-            if (willAccept) {
-              setState(() {
-                isDragTarget = willAccept;
-              });
-            }
+      child: DragTarget<List<AffogatoVFSEntity>>(
+        onWillAcceptWithDetails: (details) {
+          final bool willAccept =
+              details.data.every((entity) => !entity.isDirectory);
+          if (willAccept) {
+            setState(() {
+              isDragTarget = willAccept;
+            });
+          }
 
-            return willAccept;
-          },
-          onLeave: (_) => setState(() {
-                isDragTarget = false;
-              }),
-          onAcceptWithDetails: (details) {
-            AffogatoEvents.windowEditorInstanceClosedEvents.add(
-              WindowEditorInstanceClosedEvent(
-                paneId: details.data.paneId,
-                instanceId: details.data.instanceId,
-              ),
+          return willAccept;
+        },
+        onLeave: (_) => setState(() {
+          isDragTarget = false;
+        }),
+        onAcceptWithDetails: (details) {
+          for (final entity in details.data) {
+            final String instanceId = utils.generateId();
+            widget.workspaceConfigs.instancesData[instanceId] =
+                AffogatoEditorInstanceData(
+              documentId: entity.entityId,
+              languageBundle: widget.workspaceConfigs.detectLanguage(widget
+                  .workspaceConfigs.vfs
+                  .accessEntity(entity.entityId)!
+                  .document!
+                  .extension),
+              themeBundle: widget.workspaceConfigs.themeBundle,
             );
             AffogatoEvents.editorPaneAddInstanceEvents.add(
               EditorPaneAddInstanceEvent(
                 paneId: widget.paneId,
-                instanceId: details.data.instanceId,
+                instanceId: instanceId,
               ),
             );
-            setState(() {
-              isDragTarget = false;
-            });
-          },
-          builder: (conext, candidates, rejected) {
-            return Column(
-              children: [
-                instanceIds.isNotEmpty
-                    ? FileTabBar(
-                        stylingConfigs: widget.stylingConfigs,
-                        instanceIds: instanceIds,
-                        workspaceConfigs: widget.workspaceConfigs,
-                        currentInstanceId: currentInstanceId,
-                        paneId: widget.paneId,
-                      )
-                    : SizedBox(height: widget.stylingConfigs.tabBarHeight),
-                Container(
-                  clipBehavior: Clip.hardEdge,
-                  width: double.infinity,
-                  height: widget.layoutConfigs.height -
-                      widget.stylingConfigs.tabBarHeight -
-                      utils.AffogatoConstants.tabBarPadding * 2,
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    border: Border(
-                      left: BorderSide(
-                        color: widget.workspaceConfigs.themeBundle.editorTheme
-                                .panelBorder ??
-                            Colors.red,
-                      ),
-                      right: BorderSide(
-                        color: widget.workspaceConfigs.themeBundle.editorTheme
-                                .panelBorder ??
-                            Colors.red,
-                      ),
-                      bottom: BorderSide(
-                        color: widget.workspaceConfigs.themeBundle.editorTheme
-                                .panelBorder ??
-                            Colors.red,
-                      ),
-                    ),
+          }
+
+          setState(() {
+            isDragTarget = false;
+          });
+        },
+        builder: (context, _, __) {
+          return DragTarget<FileTabDragData>(
+              onWillAcceptWithDetails: (details) {
+                final bool willAccept = widget.paneId != details.data.paneId;
+                if (willAccept) {
+                  setState(() {
+                    isDragTarget = willAccept;
+                  });
+                }
+
+                return willAccept;
+              },
+              onLeave: (_) => setState(() {
+                    isDragTarget = false;
+                  }),
+              onAcceptWithDetails: (details) {
+                AffogatoEvents.windowEditorInstanceClosedEvents.add(
+                  WindowEditorInstanceClosedEvent(
+                    paneId: details.data.paneId,
+                    instanceId: details.data.instanceId,
                   ),
-                  child: currentInstanceId != null
-                      ? AffogatoEditorInstance(
-                          instanceId: currentInstanceId!,
-                          workspaceConfigs: widget.workspaceConfigs,
-                          width: widget.layoutConfigs.width,
-                          editorTheme:
-                              widget.workspaceConfigs.themeBundle.editorTheme,
-                          extensionsEngine: widget.extensionsEngine,
-                        )
-                      : Center(
-                          child: SizedBox(
-                            width: 100,
-                            height: 50,
-                            child: Text(
-                              'Affogato',
-                              style: TextStyle(
-                                color: widget.workspaceConfigs.themeBundle
-                                    .editorTheme.editorForeground,
-                              ),
-                            ),
+                );
+                AffogatoEvents.editorPaneAddInstanceEvents.add(
+                  EditorPaneAddInstanceEvent(
+                    paneId: widget.paneId,
+                    instanceId: details.data.instanceId,
+                  ),
+                );
+                setState(() {
+                  isDragTarget = false;
+                });
+              },
+              builder: (context, ___, ____) {
+                return Column(
+                  children: [
+                    instanceIds.isNotEmpty
+                        ? FileTabBar(
+                            stylingConfigs: widget.stylingConfigs,
+                            instanceIds: instanceIds,
+                            workspaceConfigs: widget.workspaceConfigs,
+                            currentInstanceId: currentInstanceId,
+                            paneId: widget.paneId,
+                          )
+                        : SizedBox(height: widget.stylingConfigs.tabBarHeight),
+                    Container(
+                      clipBehavior: Clip.hardEdge,
+                      width: double.infinity,
+                      height: widget.layoutConfigs.height -
+                          widget.stylingConfigs.tabBarHeight -
+                          utils.AffogatoConstants.tabBarPadding * 2,
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        border: Border(
+                          left: BorderSide(
+                            color: widget.workspaceConfigs.themeBundle
+                                    .editorTheme.panelBorder ??
+                                Colors.red,
+                          ),
+                          right: BorderSide(
+                            color: widget.workspaceConfigs.themeBundle
+                                    .editorTheme.panelBorder ??
+                                Colors.red,
+                          ),
+                          bottom: BorderSide(
+                            color: widget.workspaceConfigs.themeBundle
+                                    .editorTheme.panelBorder ??
+                                Colors.red,
                           ),
                         ),
-                ),
-              ],
-            );
-          }),
+                      ),
+                      child: currentInstanceId != null
+                          ? AffogatoEditorInstance(
+                              instanceId: currentInstanceId!,
+                              workspaceConfigs: widget.workspaceConfigs,
+                              width: widget.layoutConfigs.width,
+                              editorTheme: widget
+                                  .workspaceConfigs.themeBundle.editorTheme,
+                              extensionsEngine: widget.extensionsEngine,
+                            )
+                          : Center(
+                              child: SizedBox(
+                                width: 100,
+                                height: 50,
+                                child: Text(
+                                  'Affogato',
+                                  style: TextStyle(
+                                    color: widget.workspaceConfigs.themeBundle
+                                        .editorTheme.editorForeground,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                );
+              });
+        },
+      ),
     );
   }
 
