@@ -28,6 +28,7 @@ part './components/shared/button.dart';
 part './components/editor_pane.dart';
 part './components/pane_instance.dart';
 part './components/file_tab_bar.dart';
+part './components/file_tab.dart';
 part './components/editor_instance.dart';
 part './components/editor_field_controller.dart';
 part './components/primary_bar.dart';

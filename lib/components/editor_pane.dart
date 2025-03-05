@@ -30,6 +30,7 @@ class EditorPaneState extends State<EditorPane>
   /// This is used to manage which [PaneInstance] is shown
   String? currentInstanceId;
   late List<String> instanceIds;
+  bool isDragTarget = false;
 
   void paneLoad() {
     instanceIds = widget.workspaceConfigs.panesData[widget.paneId]!;
@@ -73,32 +74,85 @@ class EditorPaneState extends State<EditorPane>
       },
     );
 
+    registerListener(
+      AffogatoEvents.editorPaneAddInstanceEvents.stream
+          .where((e) => e.paneId == widget.paneId),
+      (event) {
+        if (instanceIds.contains(event.instanceId)) return;
+        setState(() {
+          instanceIds.add(currentInstanceId = event.instanceId);
+        });
+      },
+    );
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final Color? bgColor;
+    if (isDragTarget) {
+      bgColor = widget.workspaceConfigs.themeBundle.editorTheme
+          .buttonSecondaryHoverBackground;
+    } else if (currentInstanceId != null) {
+      bgColor =
+          widget.workspaceConfigs.themeBundle.editorTheme.editorBackground;
+    } else {
+      bgColor = null;
+    }
+
     return Expanded(
-      child: Column(
-        children: [
-          if (instanceIds.isNotEmpty)
-            FileTabBar(
-              stylingConfigs: widget.stylingConfigs,
-              instanceIds: instanceIds,
-              workspaceConfigs: widget.workspaceConfigs,
-              currentInstanceId: currentInstanceId,
-              paneId: widget.paneId,
-            ),
-          currentInstanceId != null
-              ? Container(
+      child: DragTarget<FileTabDragData>(
+          onWillAcceptWithDetails: (details) {
+            final bool willAccept = widget.paneId != details.data.paneId;
+            if (willAccept) {
+              setState(() {
+                isDragTarget = willAccept;
+              });
+            }
+
+            return willAccept;
+          },
+          onLeave: (_) => setState(() {
+                isDragTarget = false;
+              }),
+          onAcceptWithDetails: (details) {
+            AffogatoEvents.windowEditorInstanceClosedEvents.add(
+              WindowEditorInstanceClosedEvent(
+                paneId: details.data.paneId,
+                instanceId: details.data.instanceId,
+              ),
+            );
+            AffogatoEvents.editorPaneAddInstanceEvents.add(
+              EditorPaneAddInstanceEvent(
+                paneId: widget.paneId,
+                instanceId: details.data.instanceId,
+              ),
+            );
+            setState(() {
+              isDragTarget = false;
+            });
+          },
+          builder: (conext, candidates, rejected) {
+            return Column(
+              children: [
+                instanceIds.isNotEmpty
+                    ? FileTabBar(
+                        stylingConfigs: widget.stylingConfigs,
+                        instanceIds: instanceIds,
+                        workspaceConfigs: widget.workspaceConfigs,
+                        currentInstanceId: currentInstanceId,
+                        paneId: widget.paneId,
+                      )
+                    : SizedBox(height: widget.stylingConfigs.tabBarHeight),
+                Container(
                   clipBehavior: Clip.hardEdge,
                   width: double.infinity,
                   height: widget.layoutConfigs.height -
                       widget.stylingConfigs.tabBarHeight -
                       utils.AffogatoConstants.tabBarPadding * 2,
                   decoration: BoxDecoration(
-                    color: widget.workspaceConfigs.themeBundle.editorTheme
-                        .editorBackground,
+                    color: bgColor,
                     border: Border(
                       left: BorderSide(
                         color: widget.workspaceConfigs.themeBundle.editorTheme
@@ -117,30 +171,32 @@ class EditorPaneState extends State<EditorPane>
                       ),
                     ),
                   ),
-                  child: AffogatoEditorInstance(
-                    instanceId: currentInstanceId!,
-                    workspaceConfigs: widget.workspaceConfigs,
-                    width: widget.layoutConfigs.width,
-                    editorTheme:
-                        widget.workspaceConfigs.themeBundle.editorTheme,
-                    extensionsEngine: widget.extensionsEngine,
-                  ),
-                )
-              : Center(
-                  child: SizedBox(
-                    width: 100,
-                    height: 50,
-                    child: Text(
-                      'Affogato',
-                      style: TextStyle(
-                        color: widget.workspaceConfigs.themeBundle.editorTheme
-                            .editorForeground,
-                      ),
-                    ),
-                  ),
+                  child: currentInstanceId != null
+                      ? AffogatoEditorInstance(
+                          instanceId: currentInstanceId!,
+                          workspaceConfigs: widget.workspaceConfigs,
+                          width: widget.layoutConfigs.width,
+                          editorTheme:
+                              widget.workspaceConfigs.themeBundle.editorTheme,
+                          extensionsEngine: widget.extensionsEngine,
+                        )
+                      : Center(
+                          child: SizedBox(
+                            width: 100,
+                            height: 50,
+                            child: Text(
+                              'Affogato',
+                              style: TextStyle(
+                                color: widget.workspaceConfigs.themeBundle
+                                    .editorTheme.editorForeground,
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
-        ],
-      ),
+              ],
+            );
+          }),
     );
   }
 
