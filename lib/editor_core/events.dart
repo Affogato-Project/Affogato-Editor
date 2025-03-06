@@ -3,8 +3,10 @@ part of affogato.editor;
 class AffogatoEvents {
   static final StreamController<WindowCloseEvent> windowCloseEvents =
       StreamController.broadcast();
-  static final StreamController<WindowEditorPaneAddEvent>
-      windowEditorPaneAddEvents = StreamController.broadcast();
+  static final StreamController<WindowEditorPaneAddedEvent>
+      windowEditorPaneAddedEvents = StreamController.broadcast();
+  static final StreamController<WindowEditorPaneRequestAddEvent>
+      windowEditorPaneRequestAddEvents = StreamController.broadcast();
   static final StreamController<WindowEditorPaneRemoveEvent>
       windowEditorPaneRemoveEvents = StreamController.broadcast();
   static final StreamController<WindowEditorPaneReloadEvent>
@@ -69,9 +71,26 @@ class WindowEditorPaneEvent extends WindowEvent {
   const WindowEditorPaneEvent(String id) : super('editorPane.$id');
 }
 
-class WindowEditorPaneAddEvent extends WindowEditorPaneEvent {
+class WindowEditorPaneRequestAddEvent extends WindowEditorPaneEvent {
   final List<String> instanceIds;
-  const WindowEditorPaneAddEvent(this.instanceIds) : super('add');
+
+  /// The direction, relative to the pane given by [anchorPaneId], to which the new pane should be
+  /// placed. This merely informs whichever method computes the actual [PaneData] of the
+  /// *preference* for the new pane's placement. It may or may not be respected.
+  final DragAreaSegment areaSegment;
+
+  final String anchorPaneId;
+
+  const WindowEditorPaneRequestAddEvent({
+    required this.instanceIds,
+    required this.areaSegment,
+    required this.anchorPaneId,
+  }) : super('requestAdd');
+}
+
+class WindowEditorPaneAddedEvent extends WindowEditorPaneEvent {
+  final PaneData paneData;
+  const WindowEditorPaneAddedEvent(this.paneData) : super('added');
 }
 
 class WindowEditorPaneRemoveEvent extends WindowEditorPaneEvent {

@@ -54,8 +54,10 @@ class AffogatoWorkspaceConfigs {
 
   final List<AffogatoExtension> extensions;
 
+  late final PaneLayoutCell paneLayoutData;
+
   /// A mapping of pane IDs to the IDs of the [PaneInstance]s contained by that pane
-  final Map<String, List<String>> panesData;
+  final Map<String, PaneData> panesData;
 
   /// Stores the instance states for opened instances in the various panes, each one
   /// associated with its corresponding [PaneInstanceData] object
@@ -76,28 +78,25 @@ class AffogatoWorkspaceConfigs {
   String? activeDocument;
 
   AffogatoWorkspaceConfigs({
+    PaneLayoutCell? paneLayoutData,
+    Map<String, PaneData>? panesData,
     required this.projectName,
-    required this.panesData,
     required this.instancesData,
     required this.themeBundle,
     required this.languageBundles,
     required this.stylingConfigs,
     required this.extensions,
-  }) : vfs = AffogatoVFS(
+  })  : panesData = panesData ?? {},
+        vfs = AffogatoVFS(
           root: AffogatoVFSEntity.dir(
             entityId: utils.generateId(),
             name: projectName,
             files: [],
             subdirs: [],
           ),
-        );
-
-  bool isDocumentShown(String documentId) => panesData.values
-      .firstWhere(
-        (pane) => pane.contains(documentId),
-        orElse: () => const [],
-      )
-      .isNotEmpty;
+        ) {
+    if (paneLayoutData != null) paneLayoutData = paneLayoutData;
+  }
 
   LanguageBundle? detectLanguage(String extension) {
     for (final entry in languageBundles.entries) {
@@ -107,6 +106,44 @@ class AffogatoWorkspaceConfigs {
       }
     }
     return null;
+  }
+
+  void removePane(String paneId) {
+    panesData.remove(paneId);
+  }
+
+  /// Since adding a new pane to the window involves configuring both its associated data
+  /// as well as its layout information, a separate method is implemented for this action.
+  /// This method inserts the provided pane into the root-level cell's [PaneLayoutCell.horizontalChildren],
+  /// meaning it will be inserted into a row. To change the parent of the pane from the root cell to any other cell,
+  /// use the [addPaneHorizontalChild] or [addPaneVerticalChild] methods.
+  void addPane({
+    required String paneId,
+    required PaneData paneData,
+    required PaneLayoutCell layoutCell,
+  }) {
+    panesData[paneId] = paneData;
+    paneLayoutData.horizontalChildren.add((layoutCell, null));
+  }
+
+  void addPaneHorizontalChild({
+    required String paneId,
+    required PaneData paneData,
+    required PaneLayoutCell layoutCell,
+    required PaneLayoutCell anchorCell,
+  }) {
+    panesData[paneId] = paneData;
+    anchorCell.horizontalChildren.add((layoutCell, null));
+  }
+
+  void addPaneVerticalChild({
+    required String paneId,
+    required PaneData paneData,
+    required PaneLayoutCell layoutCell,
+    required PaneLayoutCell anchorCell,
+  }) {
+    panesData[paneId] = paneData;
+    anchorCell.verticalChildren.add((layoutCell, null));
   }
 
   Map<String, Object?> toJson() => {

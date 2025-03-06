@@ -61,33 +61,6 @@ class StatusBarState extends State<StatusBar>
       ),
       child: Row(
         children: [
-          TextButton(
-            onPressed: () {
-              AffogatoEvents.windowEditorPaneAddEvents
-                  .add(WindowEditorPaneAddEvent([]));
-            },
-            child: Text(
-              'Add Pane',
-              style: TextStyle(
-                color: widget.workspaceConfigs.themeBundle.editorTheme
-                    .statusBarForeground,
-              ),
-            ),
-          ),
-          const SizedBox(width: 20),
-          TextButton(
-            onPressed: () {
-              AffogatoEvents.windowEditorPaneRemoveEvents
-                  .add(const WindowEditorPaneRemoveEvent());
-            },
-            child: Text(
-              'Remove Pane',
-              style: TextStyle(
-                color: widget.workspaceConfigs.themeBundle.editorTheme
-                    .statusBarForeground,
-              ),
-            ),
-          ),
           const Spacer(),
           if (currentInstanceId != null)
             TextButton(

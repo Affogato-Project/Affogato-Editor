@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,7 +17,9 @@ import 'package:re_highlight/re_highlight.dart';
 part './editor_core/configs.dart';
 part './editor_core/events.dart';
 part './editor_core/editor_actions.dart';
-part 'editor_core/pane_instance_data.dart';
+part './editor_core/pane_instance_data.dart';
+part './editor_core/pane_data.dart';
+part './editor_core/pane_layout_cell.dart';
 part './editor_core/virtual_file_system.dart';
 part './editor_core/core_extensions.dart';
 part './editor_core/keyboard_shortcuts.dart';
@@ -27,6 +30,7 @@ part './components/shared/button.dart';
 
 part './components/editor_pane.dart';
 part './components/pane_instance.dart';
+part './components/pane_layout_cell_widget.dart';
 part './components/file_tab_bar.dart';
 part './components/file_tab.dart';
 part './components/editor_instance.dart';
@@ -77,6 +81,15 @@ class AffogatoWindowState extends State<AffogatoWindow>
       extensions: extensionsApi,
     );
 
+    widget.workspaceConfigs.paneLayoutData = PaneLayoutCell.horizontal(
+      horizontalChildren: [],
+      width: widget.workspaceConfigs.stylingConfigs.windowWidth -
+          utils.AffogatoConstants.primaryBarWidth -
+          1,
+      height: widget.workspaceConfigs.stylingConfigs.windowHeight -
+          utils.AffogatoConstants.statusBarHeight,
+    );
+
     BrowserContextMenu.disableContextMenu();
     widget.workspaceConfigs.vfs.createEntity(
       AffogatoVFSEntity.dir(
@@ -121,22 +134,24 @@ class AffogatoWindowState extends State<AffogatoWindow>
     );
 
     registerListener(
-      AffogatoEvents.windowEditorPaneAddEvents.stream,
+      AffogatoEvents.windowEditorPaneRequestAddEvents.stream,
       (event) {
         setState(() {
           final String paneId = utils.generateId();
-          widget.workspaceConfigs.panesData[paneId] = event.instanceIds;
+          widget.workspaceConfigs.panesData[paneId] =
+              PaneData(instances: event.instanceIds);
         });
       },
     );
     // initial set up of the editor based on the workspace configs
     if (widget.workspaceConfigs.panesData.isEmpty) {
-      AffogatoEvents.windowEditorPaneAddEvents
-          .add(WindowEditorPaneAddEvent([]));
+      AffogatoEvents.windowEditorPaneAddedEvents.add(
+        WindowEditorPaneAddedEvent(PaneData(instances: [])),
+      );
     } else {
       for (final entry in widget.workspaceConfigs.panesData.entries) {
-        AffogatoEvents.windowEditorPaneAddEvents
-            .add(WindowEditorPaneAddEvent(entry.value));
+        AffogatoEvents.windowEditorPaneAddedEvents
+            .add(WindowEditorPaneAddedEvent(entry.value));
       }
     }
 
@@ -144,16 +159,20 @@ class AffogatoWindowState extends State<AffogatoWindow>
       AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.stream,
       (event) {
         String? instanceIdWithDocument;
-        for (final entry in widget.workspaceConfigs.instancesData.entries
-            .whereType<MapEntry<String, AffogatoEditorInstanceData>>()) {
-          if (entry.value.documentId == event.documentId) {
-            instanceIdWithDocument = entry.key;
-            break;
+        for (final entry in widget.workspaceConfigs.instancesData.entries) {
+          // whereType<MapEntry<String, AffogatoEditorInstanceData>>()
+          if (entry.value is AffogatoEditorInstanceData) {
+            final value = entry.value as AffogatoEditorInstanceData;
+
+            if (value.documentId == event.documentId) {
+              instanceIdWithDocument = entry.key;
+              break;
+            }
           }
         }
         if (instanceIdWithDocument == null) {
-          final String instanceId = utils.generateId();
-          widget.workspaceConfigs.instancesData[instanceId] =
+          instanceIdWithDocument = utils.generateId();
+          widget.workspaceConfigs.instancesData[instanceIdWithDocument] =
               AffogatoEditorInstanceData(
             documentId: event.documentId,
             languageBundle: widget.workspaceConfigs.detectLanguage(widget
@@ -165,16 +184,29 @@ class AffogatoWindowState extends State<AffogatoWindow>
           );
 
           if (widget.workspaceConfigs.panesData.isEmpty) {
-            widget.workspaceConfigs.panesData.addAll({
-              utils.generateId(): [instanceId],
-            });
+            final String paneId = utils.generateId();
+            widget.workspaceConfigs.addPane(
+              paneId: paneId,
+              paneData: PaneData(instances: [instanceIdWithDocument]),
+              layoutCell: PaneLayoutCell.horizontal(
+                horizontalChildren: [(null, paneId)],
+                width: widget.workspaceConfigs.stylingConfigs.windowWidth -
+                    utils.AffogatoConstants.primaryBarWidth -
+                    1,
+                height: widget.workspaceConfigs.stylingConfigs.windowHeight -
+                    utils.AffogatoConstants.statusBarHeight -
+                    2,
+              ),
+            );
           } else {
-            widget.workspaceConfigs.panesData.entries.first.value
-                .add(instanceId);
+            widget.workspaceConfigs.panesData.entries.first.value.instances
+                .add(instanceIdWithDocument);
           }
-
-          setState(() {});
         }
+        AffogatoEvents.editorInstanceSetActiveEvents.add(
+            WindowEditorInstanceSetActiveEvent(
+                instanceId: instanceIdWithDocument));
+        setState(() {});
       },
     );
 
@@ -196,36 +228,36 @@ class AffogatoWindowState extends State<AffogatoWindow>
         // maintain the pane ID which has the least # of docs in it
         String paneWithLeastDocs =
             widget.workspaceConfigs.panesData.entries.first.key;
-        int paneDocsCount =
-            widget.workspaceConfigs.panesData.entries.first.value.length;
+        int paneDocsCount = widget
+            .workspaceConfigs.panesData.entries.first.value.instances.length;
         for (final pane in widget.workspaceConfigs.panesData.entries) {
-          if (pane.value.isEmpty) {
+          if (pane.value.instances.isEmpty) {
             hasRemovedPane = true;
-            for (final instanceId in pane.value) {
+            for (final instanceId in pane.value.instances) {
               AffogatoEvents.windowEditorInstanceClosedEvents.add(
                 WindowEditorInstanceClosedEvent(
                     instanceId: instanceId, paneId: pane.key),
               );
             }
-            widget.workspaceConfigs.panesData.remove(pane.key);
+            widget.workspaceConfigs.removePane(pane.key);
             break;
           } else {
-            if (pane.value.length < paneDocsCount) {
-              paneDocsCount = pane.value.length;
+            if (pane.value.instances.length < paneDocsCount) {
+              paneDocsCount = pane.value.instances.length;
               paneWithLeastDocs = pane.key;
             }
           }
         }
         if (!hasRemovedPane) {
-          for (final docId
-              in widget.workspaceConfigs.panesData[paneWithLeastDocs]!) {
+          for (final docId in widget
+              .workspaceConfigs.panesData[paneWithLeastDocs]!.instances) {
             AffogatoEvents.windowEditorInstanceClosedEvents.add(
               WindowEditorInstanceClosedEvent(
                   instanceId: docId, paneId: paneWithLeastDocs),
             );
           }
           // remove the pane with the least number of docs
-          widget.workspaceConfigs.panesData.remove(paneWithLeastDocs);
+          widget.workspaceConfigs.removePane(paneWithLeastDocs);
         }
         setState(() {});
       },
@@ -235,7 +267,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
     registerListener(
       AffogatoEvents.windowEditorInstanceClosedEvents.stream,
       (event) {
-        widget.workspaceConfigs.panesData[event.paneId]!
+        widget.workspaceConfigs.panesData[event.paneId]!.instances
             .remove(event.instanceId);
         AffogatoEvents.windowEditorInstanceUnsetActiveEvents.add(
           WindowEditorInstanceUnsetActiveEvent(
@@ -300,12 +332,13 @@ class AffogatoWindowState extends State<AffogatoWindow>
                               widget.workspaceConfigs.themeBundle.editorTheme,
                         ),
                       ),
-                      SizedBox(
-                        width:
-                            widget.workspaceConfigs.stylingConfigs.windowWidth -
-                                utils.AffogatoConstants.primaryBarWidth -
-                                1,
-                        child: Row(
+                      PaneLayoutCellWidget(
+                        cell: widget.workspaceConfigs.paneLayoutData,
+                        workspaceConfigs: widget.workspaceConfigs,
+                        extensionsEngine: extensionsEngine,
+                        performanceConfigs: widget.performanceConfigs,
+                        windowKey: windowKey,
+                      ), /* Row(
                           children: [
                             for (final pane
                                 in widget.workspaceConfigs.panesData.entries)
@@ -327,8 +360,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
                                 windowKey: windowKey,
                               ),
                           ],
-                        ),
-                      ),
+                        ), */
                     ],
                   ),
                 ),
@@ -353,7 +385,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
     AffogatoEvents.windowCloseEvents.add(const WindowCloseEvent());
     cancelSubscriptions();
     extensionsEngine.deinit();
-    await AffogatoEvents.windowEditorPaneAddEvents.close();
+    await AffogatoEvents.windowEditorPaneRequestAddEvents.close();
+    await AffogatoEvents.windowEditorPaneAddedEvents.close();
     await AffogatoEvents.editorInstanceSetActiveEvents.close();
     await AffogatoEvents.windowEditorPaneRemoveEvents.close();
     await AffogatoEvents.editorInstanceSetActiveEvents.close();
@@ -396,6 +429,34 @@ class AffogatoWindowState extends State<AffogatoWindow>
       );
     }
   }
+
+/*   PaneData computeNewPaneLayout({
+    required WindowEditorPaneRequestAddEvent request,
+    required double panesAreaWidth,
+    required double panesAreaHeight,
+  }) {
+    if (widget.workspaceConfigs.panesData.isEmpty) {
+      return PaneData(
+        instances: request.instanceIds,
+        position: const Offset(0, 0),
+        width: panesAreaWidth,
+        height: panesAreaHeight,
+      );
+    } else {
+      switch (request.areaSegment) {
+        case DragAreaSegment.top:
+          return;
+        case DragAreaSegment.bottom:
+          return;
+        case DragAreaSegment.left:
+          return;
+        case DragAreaSegment.right:
+          return;
+        case DragAreaSegment.center:
+          return;
+      }
+    }
+  } */
 }
 
 final List<AffogatoExtension> affogatoCoreExtensions = [

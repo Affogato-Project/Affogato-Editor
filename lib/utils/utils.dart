@@ -54,3 +54,5 @@ mixin StreamSubscriptionManager<T extends StatefulWidget> on State<T> {
     }
   }
 }
+
+typedef Either<A, B> = (A? a, B? b);

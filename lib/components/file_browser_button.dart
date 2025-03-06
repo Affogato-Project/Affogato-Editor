@@ -38,7 +38,10 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
   Widget build(BuildContext context) {
     final Color buttonColor;
     if (widget.entry.isDirectory) {
-      if (widget.workspaceConfigs.isDocumentShown(widget.entry.entityId)) {
+      if (widget.workspaceConfigs.instancesData.values
+          .whereType<AffogatoEditorInstanceData>()
+          .map((data) => data.documentId)
+          .contains(widget.entry.entityId)) {
         buttonColor = hasFocus
             ? widget.editorTheme.buttonBackground ?? Colors.red
             : widget.editorTheme.buttonSecondaryBackground ?? Colors.red;
@@ -216,7 +219,6 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                           AffogatoEvents.vfsStructureChangedEvents
                               .add(const FileManagerStructureChangedEvent());
 
-                          print(widget.workspaceConfigs.vfs.dumpTree());
                           isDragTarget = false;
                         }
                       },

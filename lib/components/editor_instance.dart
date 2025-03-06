@@ -21,7 +21,7 @@ class AffogatoEditorInstanceData extends PaneInstanceData {
 
 class AffogatoEditorInstance extends PaneInstance<AffogatoEditorInstanceData> {
   AffogatoEditorInstance({
-    required super.width,
+    required super.layoutConfigs,
     required super.editorTheme,
     required super.workspaceConfigs,
     required super.extensionsEngine,

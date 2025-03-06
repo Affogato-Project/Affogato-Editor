@@ -17,17 +17,17 @@ abstract class PaneInstance<T extends PaneInstanceData> extends StatefulWidget {
   final EditorTheme<Color, TextStyle> editorTheme;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoExtensionsEngine extensionsEngine;
-  final double width;
+  final LayoutConfigs layoutConfigs;
 
   PaneInstance({
     required this.editorTheme,
     required this.workspaceConfigs,
     required this.extensionsEngine,
     required this.instanceId,
-    required this.width,
+    required this.layoutConfigs,
   }) : super(
           key: ValueKey(
-            "$instanceId${editorTheme.hashCode}${workspaceConfigs.hashCode}${extensionsEngine.hashCode}$width",
+            "$instanceId${editorTheme.hashCode}${workspaceConfigs.hashCode}${extensionsEngine.hashCode}$layoutConfigs",
           ),
         );
 }
