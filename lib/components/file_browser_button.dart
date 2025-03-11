@@ -164,6 +164,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                           .add(
                         WindowEditorRequestDocumentSetActiveEvent(
                           documentId: (widget.entry).entityId,
+                          paneId: null,
                         ),
                       );
                     }

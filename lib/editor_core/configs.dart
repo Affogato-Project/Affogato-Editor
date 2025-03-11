@@ -54,7 +54,7 @@ class AffogatoWorkspaceConfigs {
 
   final List<AffogatoExtension> extensions;
 
-  late final PaneLayoutCell paneLayoutData;
+  late final PaneManager paneManager;
 
   /// A mapping of pane IDs to the IDs of the [PaneInstance]s contained by that pane
   final Map<String, PaneData> panesData;
@@ -78,8 +78,8 @@ class AffogatoWorkspaceConfigs {
   String? activeDocument;
 
   AffogatoWorkspaceConfigs({
-    PaneLayoutCell? paneLayoutData,
     Map<String, PaneData>? panesData,
+    PaneManager? paneManager,
     required this.projectName,
     required this.instancesData,
     required this.themeBundle,
@@ -95,7 +95,7 @@ class AffogatoWorkspaceConfigs {
             subdirs: [],
           ),
         ) {
-    if (paneLayoutData != null) paneLayoutData = paneLayoutData;
+    if (paneManager != null) this.paneManager = paneManager;
   }
 
   LanguageBundle? detectLanguage(String extension) {
@@ -110,40 +110,6 @@ class AffogatoWorkspaceConfigs {
 
   void removePane(String paneId) {
     panesData.remove(paneId);
-  }
-
-  /// Since adding a new pane to the window involves configuring both its associated data
-  /// as well as its layout information, a separate method is implemented for this action.
-  /// This method inserts the provided pane into the root-level cell's [PaneLayoutCell.horizontalChildren],
-  /// meaning it will be inserted into a row. To change the parent of the pane from the root cell to any other cell,
-  /// use the [addPaneHorizontalChild] or [addPaneVerticalChild] methods.
-  void addPane({
-    required String paneId,
-    required PaneData paneData,
-    required PaneLayoutCell layoutCell,
-  }) {
-    panesData[paneId] = paneData;
-    paneLayoutData.horizontalChildren.add((layoutCell, null));
-  }
-
-  void addPaneHorizontalChild({
-    required String paneId,
-    required PaneData paneData,
-    required PaneLayoutCell layoutCell,
-    required PaneLayoutCell anchorCell,
-  }) {
-    panesData[paneId] = paneData;
-    anchorCell.horizontalChildren.add((layoutCell, null));
-  }
-
-  void addPaneVerticalChild({
-    required String paneId,
-    required PaneData paneData,
-    required PaneLayoutCell layoutCell,
-    required PaneLayoutCell anchorCell,
-  }) {
-    panesData[paneId] = paneData;
-    anchorCell.verticalChildren.add((layoutCell, null));
   }
 
   Map<String, Object?> toJson() => {

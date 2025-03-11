@@ -3,12 +3,6 @@ part of affogato.editor;
 class AffogatoEvents {
   static final StreamController<WindowCloseEvent> windowCloseEvents =
       StreamController.broadcast();
-  static final StreamController<WindowEditorPaneAddedEvent>
-      windowEditorPaneAddedEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorPaneRequestAddEvent>
-      windowEditorPaneRequestAddEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorPaneRemoveEvent>
-      windowEditorPaneRemoveEvents = StreamController.broadcast();
   static final StreamController<WindowEditorPaneReloadEvent>
       windowEditorPaneReloadEvents = StreamController.broadcast();
   static final StreamController<WindowEditorInstanceSetActiveEvent>
@@ -39,6 +33,9 @@ class AffogatoEvents {
 
   static final StreamController<EditorPaneAddInstanceEvent>
       editorPaneAddInstanceEvents = StreamController.broadcast();
+
+  static final StreamController<EditorPaneLayoutChangedEvent>
+      editorPaneLayoutChangedEvents = StreamController.broadcast();
 
   static final StreamController<EditorInstanceRequestReloadEvent>
       editorInstanceRequestReloadEvents = StreamController.broadcast();
@@ -119,9 +116,11 @@ class WindowEditorInstanceClosedEvent extends WindowEditorInstanceEvent {
 class WindowEditorRequestDocumentSetActiveEvent
     extends WindowEditorInstanceEvent {
   final String documentId;
+  final String? paneId;
 
   const WindowEditorRequestDocumentSetActiveEvent({
     required this.documentId,
+    required this.paneId,
   }) : super('requestDocumentSetActive');
 }
 
@@ -238,6 +237,15 @@ class EditorPaneAddInstanceEvent extends EditorPaneEvent {
     required this.paneId,
     required this.instanceId,
   }) : super('addInstance');
+}
+
+/// Indicates that a layout change has occurred and descendants of the cell given by
+/// [cellId] need to be rebuilt. Each pane cell listens to events from this stream that have
+/// their [cellId]. Once such an event is received, `setState` is called and that widget will then
+/// emit more such [EditorPaneLayoutChangedEvent]s, one for each [cellId] in its immediate children.
+class EditorPaneLayoutChangedEvent extends EditorPaneEvent {
+  final String cellId;
+  const EditorPaneLayoutChangedEvent(this.cellId) : super('layoutChanged');
 }
 
 /// FILE MANAGER EVENTS ///
