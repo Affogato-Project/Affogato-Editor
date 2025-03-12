@@ -41,8 +41,7 @@ class AffogatoEditorInstanceState
   final ScrollController scrollController = ScrollController();
   late AffogatoEditorFieldController textController;
   final FocusNode textFieldFocusNode = FocusNode();
-  final CompletionsController completionsController =
-      CompletionsController(dictionary: []);
+  late final CompletionsController completionsController;
   late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
   late double cellWidth;
@@ -50,8 +49,6 @@ class AffogatoEditorInstanceState
   bool hasScrolled = false;
   int currentLineNum = 0;
   int currentCharNum = 0;
-  int completionItem = 0;
-  bool showingCompletions = false;
 
   late final LocalSearchAndReplaceController searchAndReplaceController =
       LocalSearchAndReplaceController(
@@ -67,6 +64,11 @@ class AffogatoEditorInstanceState
 
   @override
   void initState() {
+    completionsController = CompletionsController(
+      dictionary: [],
+      refresh: setState,
+      onAcceptAndDismiss: acceptAndDismissCompletionsWidget,
+    );
     getData();
     scrollController.addListener(() {
       if (scrollController.offset > 0 && !hasScrolled) {
@@ -165,22 +167,13 @@ class AffogatoEditorInstanceState
               });
             }
 
-            final String char = HardwareKeyboard.instance.isShiftPressed
-                ? event.keyEvent.logicalKey.keyLabel
-                : event.keyEvent.logicalKey.keyLabel.toLowerCase();
-            if (utils.charIsAlphaNum(char) ||
-                (const [' ', '\n']).contains(char)) {
-              if (completionsController.registerTokenInsert(
-                    content: "${textController.text}$char",
-                    selection: textController.selection,
-                  ) !=
-                  null) {
-                showingCompletions = true;
-              } else {
-                showingCompletions = false;
-              }
-              setState(() {});
-            }
+            setState(() {
+              completionsController.registerTextChanged(
+                content: textController.text,
+                selection: textController.selection,
+                keyEvent: event.keyEvent,
+              );
+            });
           }
         },
       );
@@ -374,17 +367,15 @@ class AffogatoEditorInstanceState
     return results;
   }
 
-  void acceptAndDismissCompletionsWidget() {
+  void acceptAndDismissCompletionsWidget(String insertText) {
     final String textBefore =
         textController.selection.textBefore(textController.text);
     textController.value = TextEditingValue(
       text: textBefore +
-          completionsController.currentCompletions![completionItem] +
+          insertText +
           textController.selection.textAfter(textController.text),
       selection: TextSelection.collapsed(
-        offset: (textBefore +
-                completionsController.currentCompletions![completionItem])
-            .length,
+        offset: (textBefore + insertText).length,
       ),
     );
     AffogatoEvents.editorDocumentChangedEvents.add(
@@ -394,8 +385,9 @@ class AffogatoEditorInstanceState
         selection: textController.selection,
       ),
     );
+    textFieldFocusNode.requestFocus();
     setState(() {
-      showingCompletions = false;
+      completionsController.showingCompletions = false;
     });
   }
 
@@ -463,36 +455,9 @@ class AffogatoEditorInstanceState
                             if (searchAndReplaceController.isShown) {
                               searchAndReplaceController.dismiss();
                             }
-                            if (showingCompletions && key is KeyDownEvent) {
-                              if (key.logicalKey ==
-                                  LogicalKeyboardKey.arrowUp) {
-                                if (completionItem != 0) {
-                                  completionItem -= 1;
-                                }
-                                setState(() {});
-                                return KeyEventResult.handled;
-                              } else if (key.logicalKey ==
-                                  LogicalKeyboardKey.arrowDown) {
-                                if (completionItem !=
-                                    completionsController
-                                            .currentCompletions!.length -
-                                        1) {
-                                  completionItem += 1;
-                                }
-                                setState(() {});
-                                return KeyEventResult.handled;
-                              } else if (key.logicalKey ==
-                                  LogicalKeyboardKey.escape) {
-                                setState(() {
-                                  showingCompletions = false;
-                                });
-
-                                return KeyEventResult.handled;
-                              } else if (key.logicalKey ==
-                                  LogicalKeyboardKey.enter) {
-                                acceptAndDismissCompletionsWidget();
-                                return KeyEventResult.handled;
-                              }
+                            if (completionsController.handleKeyEvent(key) ==
+                                KeyEventResult.handled) {
+                              return KeyEventResult.handled;
                             }
                             final EditorKeyEvent keyEvent = EditorKeyEvent(
                               instanceId: widget.instanceId,
@@ -571,7 +536,8 @@ class AffogatoEditorInstanceState
             ),
           ),
           // Overlays Area (hover suggestions, completions UI)
-          if (scrollController.hasClients && showingCompletions)
+          if (scrollController.hasClients &&
+              completionsController.showingCompletions)
             Positioned(
               top: utils.AffogatoConstants.breadcrumbHeight +
                   textController.text
@@ -585,18 +551,8 @@ class AffogatoEditorInstanceState
                   currentCharNum * cellWidth,
               width: utils.AffogatoConstants.completionsMenuWidth,
               child: AffogatoCompletionsWidget(
-                key: ValueKey(
-                    "${completionsController.currentCompletions?.map((e) => e.hashCode).join('-').hashCode}-$completionItem"
-                        .hashCode),
-                completions: completionsController.currentCompletions!,
                 editorTheme: widget.editorTheme,
-                currentSelection: completionItem,
-                onSelectionIndexChange: (newIndex) =>
-                    setState(() => completionItem = newIndex),
-                onSelectionAccept: () => setState(() {
-                  acceptAndDismissCompletionsWidget();
-                  textFieldFocusNode.requestFocus();
-                }),
+                controller: completionsController,
               ),
             ),
           // Search-and-replace overlays

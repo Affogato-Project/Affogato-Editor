@@ -16,24 +16,24 @@ class LSPClient {
   late final Stream<lsp.ServerResponse> responseStream =
       _responseStreamController.stream;
 
-  HtmlWebSocketChannel? _socket;
+  // HtmlWebSocketChannel? _socket;
   final Map<String, void Function(JSON)> _requests = {};
 
   void initClient({
     required String host,
     required int port,
   }) async {
-    _socket = HtmlWebSocketChannel.connect("ws://$host:$port");
+    /* _socket = HtmlWebSocketChannel.connect("ws://$host:$port");
     _socket!.stream.listen((message) {
       if (_requests.containsKey(message['id'])) {
         _requests[message['id']]!.call(message);
         _requests.remove(message['id']);
       }
-    });
+    }); */
   }
 
   void send(Map<String, dynamic> payload) {
-    _socket!.sink.add(jsonEncode(payload));
+    //_socket!.sink.add(jsonEncode(payload));
   }
 
   void sendRequest(
@@ -163,6 +163,6 @@ class LSPClient {
   }
 
   Future<void> closeServer() async {
-    await _socket?.sink.close(1001); // going away
+    // await _socket?.sink.close(1001); // going away
   }
 }

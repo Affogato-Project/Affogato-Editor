@@ -30,6 +30,8 @@ flutter:
     - family: IBMPlexMono
       fonts:
         - asset: assets/IBM_Plex_Mono/IBMPlexMono-Regular.ttf
+        - asset: assets/IBM_Plex_Mono/IBMPlexMono-SemiBold.ttf
+          weight: 600
   # To add assets to your package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
