@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:affogato_editor/apis/affogato_apis.dart';
 import 'package:affogato_core/affogato_core.dart';
 import 'package:affogato_editor/utils/utils.dart' as utils;
+import 'package:affogato_editor/lsp/lsp_client.dart' as lsp;
 import 'package:re_highlight/languages/all.dart';
 import 'package:re_highlight/re_highlight.dart';
 
@@ -22,6 +23,8 @@ part './editor_core/pane_manager.dart';
 part './editor_core/virtual_file_system.dart';
 part './editor_core/core_extensions.dart';
 part './editor_core/keyboard_shortcuts.dart';
+
+part './lsp/lsp.dart';
 
 part './components/shared/context_menu_region.dart';
 part './components/shared/search_and_replace_widget.dart';

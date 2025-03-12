@@ -41,6 +41,8 @@ class AffogatoEditorInstanceState
   final ScrollController scrollController = ScrollController();
   late AffogatoEditorFieldController textController;
   final FocusNode textFieldFocusNode = FocusNode();
+  final CompletionsController completionsController =
+      CompletionsController(dictionary: []);
   late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
   late double cellWidth;
@@ -50,7 +52,6 @@ class AffogatoEditorInstanceState
   int currentCharNum = 0;
   int completionItem = 0;
   bool showingCompletions = false;
-  final List<String> completions = ['Hello', 'World', 'ABC', '123'];
 
   late final LocalSearchAndReplaceController searchAndReplaceController =
       LocalSearchAndReplaceController(
@@ -127,6 +128,10 @@ class AffogatoEditorInstanceState
       // Assume instant autosave
       textController.text = currentDoc.content;
 
+      // Set up completions and LSP (if applicable)
+      completionsController.dictionary.addAll(completionsController
+          .parseAllWordsInDocument(content: textController.text));
+
       // Set off the event
       AffogatoEvents.editorInstanceLoadedEvents
           .add(EditorInstanceLoadedEvent(data.documentId));
@@ -158,6 +163,23 @@ class AffogatoEditorInstanceState
                 insertTextAtCursorPos(' ' *
                     widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces);
               });
+            }
+
+            final String char = HardwareKeyboard.instance.isShiftPressed
+                ? event.keyEvent.logicalKey.keyLabel
+                : event.keyEvent.logicalKey.keyLabel.toLowerCase();
+            if (utils.charIsAlphaNum(char) ||
+                (const [' ', '\n']).contains(char)) {
+              if (completionsController.registerTokenInsert(
+                    content: "${textController.text}$char",
+                    selection: textController.selection,
+                  ) !=
+                  null) {
+                showingCompletions = true;
+              } else {
+                showingCompletions = false;
+              }
+              setState(() {});
             }
           }
         },
@@ -357,10 +379,12 @@ class AffogatoEditorInstanceState
         textController.selection.textBefore(textController.text);
     textController.value = TextEditingValue(
       text: textBefore +
-          completions[completionItem] +
+          completionsController.currentCompletions![completionItem] +
           textController.selection.textAfter(textController.text),
       selection: TextSelection.collapsed(
-        offset: (textBefore + completions[completionItem]).length,
+        offset: (textBefore +
+                completionsController.currentCompletions![completionItem])
+            .length,
       ),
     );
     AffogatoEvents.editorDocumentChangedEvents.add(
@@ -449,7 +473,10 @@ class AffogatoEditorInstanceState
                                 return KeyEventResult.handled;
                               } else if (key.logicalKey ==
                                   LogicalKeyboardKey.arrowDown) {
-                                if (completionItem != completions.length - 1) {
+                                if (completionItem !=
+                                    completionsController
+                                            .currentCompletions!.length -
+                                        1) {
                                   completionItem += 1;
                                 }
                                 setState(() {});
@@ -558,7 +585,10 @@ class AffogatoEditorInstanceState
                   currentCharNum * cellWidth,
               width: utils.AffogatoConstants.completionsMenuWidth,
               child: AffogatoCompletionsWidget(
-                completions: completions,
+                key: ValueKey(
+                    "${completionsController.currentCompletions?.map((e) => e.hashCode).join('-').hashCode}-$completionItem"
+                        .hashCode),
+                completions: completionsController.currentCompletions!,
                 editorTheme: widget.editorTheme,
                 currentSelection: completionItem,
                 onSelectionIndexChange: (newIndex) =>
