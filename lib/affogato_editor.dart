@@ -63,6 +63,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
   late final AffogatoExtensionsEngine extensionsEngine;
   late final AffogatoExtensionsAPI extensionsApi;
   late final AffogatoAPI api;
+  UniqueKey paneLayoutKey = UniqueKey();
 
   @override
   void initState() {
@@ -91,8 +92,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
               utils.AffogatoConstants.primaryBarWidth -
               1,
           height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-              utils.AffogatoConstants.statusBarHeight -
-              2,
+              utils.AffogatoConstants.statusBarHeight,
         ),
       );
 
@@ -143,7 +143,9 @@ class AffogatoWindowState extends State<AffogatoWindow>
     registerListener(
       AffogatoEvents.editorPaneLayoutChangedEvents.stream,
       (_) {
-        setState(() {});
+        setState(() {
+          paneLayoutKey = UniqueKey();
+        });
       },
     );
 
@@ -281,43 +283,50 @@ class AffogatoWindowState extends State<AffogatoWindow>
                     Colors.red,
               ),
             ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: utils.AffogatoConstants.primaryBarWidth,
-                        child: PrimaryBar(
-                          expandedWidth:
-                              utils.AffogatoConstants.primaryBarWidth,
-                          workspaceConfigs: widget.workspaceConfigs,
-                          editorTheme:
-                              widget.workspaceConfigs.themeBundle.editorTheme,
+            child: SizedBox(
+              width: widget.workspaceConfigs.stylingConfigs.windowWidth,
+              height: widget.workspaceConfigs.stylingConfigs.windowHeight,
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: widget.workspaceConfigs.stylingConfigs.windowWidth,
+                    height:
+                        widget.workspaceConfigs.stylingConfigs.windowHeight -
+                            utils.AffogatoConstants.statusBarHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: utils.AffogatoConstants.primaryBarWidth,
+                          child: PrimaryBar(
+                            expandedWidth:
+                                utils.AffogatoConstants.primaryBarWidth,
+                            workspaceConfigs: widget.workspaceConfigs,
+                            editorTheme:
+                                widget.workspaceConfigs.themeBundle.editorTheme,
+                          ),
                         ),
-                      ),
-                      PaneLayoutCellWidget(
-                        key: ValueKey(
-                            widget.workspaceConfigs.paneManager.panesLayout.id),
-                        cellId:
-                            widget.workspaceConfigs.paneManager.panesLayout.id,
-                        workspaceConfigs: widget.workspaceConfigs,
-                        extensionsEngine: extensionsEngine,
-                        performanceConfigs: widget.performanceConfigs,
-                        windowKey: windowKey,
-                      ),
-                    ],
+                        PaneLayoutCellWidget(
+                          key: paneLayoutKey,
+                          cellId: widget
+                              .workspaceConfigs.paneManager.panesLayout.id,
+                          workspaceConfigs: widget.workspaceConfigs,
+                          extensionsEngine: extensionsEngine,
+                          performanceConfigs: widget.performanceConfigs,
+                          windowKey: windowKey,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: utils.AffogatoConstants.statusBarHeight,
-                  child: StatusBar(
-                    stylingConfigs: widget.workspaceConfigs.stylingConfigs,
-                    workspaceConfigs: widget.workspaceConfigs,
+                  SizedBox(
+                    height: utils.AffogatoConstants.statusBarHeight,
+                    child: StatusBar(
+                      stylingConfigs: widget.workspaceConfigs.stylingConfigs,
+                      workspaceConfigs: widget.workspaceConfigs,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

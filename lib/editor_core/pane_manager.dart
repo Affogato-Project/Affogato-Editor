@@ -31,94 +31,175 @@ class PaneManager {
     throw Exception('$cellId not found');
   }
 
-  void addPaneLeft({
+  List<PaneList> splitIntoTwoPanes({
+    required String paneIdA,
+    required String paneIdB,
+    required double width,
+    required double height,
+    required Axis axis,
+    String? cellIdA,
+    String? cellIdB,
+  }) {
+    return <PaneList>[
+      SinglePaneList(
+        paneIdA,
+        id: cellIdA,
+        width: axis == Axis.horizontal ? width / 2 : width,
+        height: axis == Axis.horizontal ? height : height / 2,
+      ),
+      SinglePaneList(
+        paneIdB,
+        id: cellIdB,
+        width: axis == Axis.horizontal ? width / 2 : width,
+        height: axis == Axis.horizontal ? height : height / 2,
+      )
+    ];
+  }
+
+  void addPane({
+    required Axis axis,
     required String anchorCellId,
     required String anchorPaneId,
     required String newPaneId,
+    required bool insertPrev,
   }) {
     // handle the case where there is only one pane
     if (panesLayout is SinglePaneList) {
       final anchorCell = findCellById(anchorCellId);
-      panesLayout = HorizontalPaneList(
-        [
-          SinglePaneList(
-            newPaneId,
-            width: anchorCell.width / 2,
-            height: anchorCell.height,
-          ),
-          SinglePaneList(
-            anchorPaneId,
-            id: anchorCellId,
-            width: anchorCell.width / 2,
-            height: anchorCell.height,
-          )
-        ],
+      final items = splitIntoTwoPanes(
+        paneIdA: insertPrev ? newPaneId : anchorPaneId,
+        paneIdB: insertPrev ? anchorPaneId : newPaneId,
         width: anchorCell.width,
         height: anchorCell.height,
+        cellIdA: insertPrev ? null : anchorCellId,
+        cellIdB: insertPrev ? anchorCellId : null,
+        axis: axis,
       );
+
+      panesLayout = axis == Axis.horizontal
+          ? HorizontalPaneList(
+              items,
+              width: anchorCell.width,
+              height: anchorCell.height,
+            )
+          : VerticalPaneList(
+              items,
+              width: anchorCell.width,
+              height: anchorCell.height,
+            );
       AffogatoEvents.editorPaneLayoutChangedEvents
           .add(EditorPaneLayoutChangedEvent(panesLayout.id));
     } else {
+      final path = (panesLayout as MultiplePaneList).pathToPane(anchorPaneId);
       MultiplePaneList parentOfAnchor =
-          (panesLayout as MultiplePaneList).pathToPane(anchorPaneId)?.last ??
-              (throw Exception('Parent of anchor not found'));
+          path?.last ?? (throw Exception('Parent of anchor not found'));
       final int index = parentOfAnchor.value.indexWhere(
           (pane) => pane is SinglePaneList && pane.paneId == anchorPaneId);
       final PaneList anchorCell = parentOfAnchor.value[index];
-
-      if (parentOfAnchor is VerticalPaneList) {
-        parentOfAnchor.value[index] = HorizontalPaneList(
-          [
-            SinglePaneList(
-              newPaneId,
-              width: anchorCell.width / 2,
-              height: anchorCell.height,
-            ),
-            SinglePaneList(
-              anchorPaneId,
-              width: anchorCell.width / 2,
-              height: anchorCell.height,
-            )
-          ],
+      final Axis childAxis =
+          parentOfAnchor is VerticalPaneList ? Axis.vertical : Axis.horizontal;
+      final bool axisIsConflicting = axis != childAxis;
+      if (axisIsConflicting) {
+        // create a new pane along the insertion axis, `axis`
+        final items = splitIntoTwoPanes(
+          paneIdA: insertPrev ? newPaneId : anchorPaneId,
+          paneIdB: insertPrev ? anchorPaneId : newPaneId,
           width: anchorCell.width,
           height: anchorCell.height,
+          axis: axis,
         );
-      } else if (parentOfAnchor is HorizontalPaneList) {
-        final double newWidth =
-            parentOfAnchor.width / (parentOfAnchor.value.length + 1);
-        for (int i = 0; i < parentOfAnchor.value.length; i++) {
-          if (i == index) {
-            parentOfAnchor.value.insert(
-              index,
-              SinglePaneList(
-                newPaneId,
-                width: newWidth,
+        // update the parent to resolve the axis conflict
+        parentOfAnchor.value[index] = axis == Axis.horizontal
+            ? HorizontalPaneList(
+                items,
+                width: anchorCell.width,
                 height: anchorCell.height,
-              ),
-            );
-          } else {
-            parentOfAnchor.value[i].width = newWidth;
+              )
+            : VerticalPaneList(
+                items,
+                width: anchorCell.width,
+                height: anchorCell.height,
+              );
+      } else {
+        final double newWidth = axis == Axis.horizontal
+            ? parentOfAnchor.width / (parentOfAnchor.value.length + 1)
+            : anchorCell.width;
+        final double newHeight = axis == Axis.horizontal
+            ? anchorCell.height
+            : parentOfAnchor.height / (parentOfAnchor.value.length + 1);
+
+        parentOfAnchor.value.insert(
+          insertPrev ? index : index + 1,
+          SinglePaneList(
+            newPaneId,
+            width: newWidth,
+            height: newHeight,
+          ),
+        );
+        for (int i = 0; i < parentOfAnchor.value.length; i++) {
+          if (i != index) {
+            axis == Axis.horizontal
+                ? parentOfAnchor.value[i].width = newWidth
+                : parentOfAnchor.value[i].height = newHeight;
           }
         }
       }
-
       AffogatoEvents.editorPaneLayoutChangedEvents
           .add(EditorPaneLayoutChangedEvent(parentOfAnchor.id));
     }
   }
 
+  void addPaneLeft({
+    required String anchorCellId,
+    required String anchorPaneId,
+    required String newPaneId,
+  }) =>
+      addPane(
+        axis: Axis.horizontal,
+        anchorCellId: anchorCellId,
+        anchorPaneId: anchorPaneId,
+        newPaneId: newPaneId,
+        insertPrev: true,
+      );
+
   void addPaneRight({
+    required String anchorCellId,
     required String anchorPaneId,
     required String newPaneId,
-  }) {}
+  }) =>
+      addPane(
+        axis: Axis.horizontal,
+        anchorCellId: anchorCellId,
+        anchorPaneId: anchorPaneId,
+        newPaneId: newPaneId,
+        insertPrev: false,
+      );
+
   void addPaneBottom({
+    required String anchorCellId,
     required String anchorPaneId,
     required String newPaneId,
-  }) {}
+  }) =>
+      addPane(
+        axis: Axis.vertical,
+        anchorCellId: anchorCellId,
+        anchorPaneId: anchorPaneId,
+        newPaneId: newPaneId,
+        insertPrev: false,
+      );
+
   void addPaneTop({
+    required String anchorCellId,
     required String anchorPaneId,
     required String newPaneId,
-  }) {}
+  }) =>
+      addPane(
+        axis: Axis.vertical,
+        anchorCellId: anchorCellId,
+        anchorPaneId: anchorPaneId,
+        newPaneId: newPaneId,
+        insertPrev: true,
+      );
 }
 
 sealed class PaneList {
@@ -133,7 +214,7 @@ sealed class PaneList {
   }) : id = id ?? utils.generateId();
 }
 
-final class SinglePaneList extends PaneList {
+class SinglePaneList extends PaneList {
   final String paneId;
 
   SinglePaneList(
@@ -145,7 +226,7 @@ final class SinglePaneList extends PaneList {
 }
 
 sealed class MultiplePaneList extends PaneList {
-  final List<PaneList> value;
+  List<PaneList> value;
 
   MultiplePaneList(
     this.value, {
@@ -168,7 +249,7 @@ sealed class MultiplePaneList extends PaneList {
   }
 }
 
-final class VerticalPaneList extends MultiplePaneList {
+class VerticalPaneList extends MultiplePaneList {
   VerticalPaneList(
     super.value, {
     required super.width,
@@ -177,7 +258,7 @@ final class VerticalPaneList extends MultiplePaneList {
   });
 }
 
-final class HorizontalPaneList extends MultiplePaneList {
+class HorizontalPaneList extends MultiplePaneList {
   HorizontalPaneList(
     super.value, {
     required super.width,

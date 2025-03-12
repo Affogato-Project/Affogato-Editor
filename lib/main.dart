@@ -37,7 +37,7 @@ void main(List<String> args) {
           instancesData: {},
           stylingConfigs: const AffogatoStylingConfigs(
             windowWidth: 1100,
-            windowHeight: 800,
+            windowHeight: 786,
             tabBarHeight: 40,
             editorFontSize: 14,
           ),

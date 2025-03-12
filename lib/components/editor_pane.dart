@@ -134,273 +134,294 @@ class EditorPaneState extends State<EditorPane>
 
   @override
   Widget build(BuildContext context) {
-    return DragTarget<List<AffogatoVFSEntity>>(
-      onWillAcceptWithDetails: (details) {
-        final bool willAccept =
-            details.data.every((entity) => !entity.isDirectory);
-        if (willAccept) {
-          setState(() {
-            isDragTarget = willAccept;
-            dragAreaSegment = DragAreaSegment.centre;
-          });
-        }
+    return SizedBox(
+      width: widget.layoutConfigs.width,
+      height: widget.layoutConfigs.height,
+      child: DragTarget<List<AffogatoVFSEntity>>(
+        onWillAcceptWithDetails: (details) {
+          final bool willAccept =
+              details.data.every((entity) => !entity.isDirectory);
+          if (willAccept) {
+            setState(() {
+              isDragTarget = willAccept;
+              dragAreaSegment = DragAreaSegment.centre;
+            });
+          }
 
-        return willAccept;
-      },
-      onLeave: (_) => setState(() {
-        isDragTarget = false;
-        dragAreaSegment = null;
-      }),
-      onMove: updatePointer,
-      onAcceptWithDetails: (details) {
-        final String newPaneId = utils.generateId();
-        widget.workspaceConfigs.panesData[newPaneId] =
-            PaneData(instances: createInstancesFromEntities(details.data));
-        switch (dragAreaSegment!) {
-          case DragAreaSegment.left:
-            widget.workspaceConfigs.paneManager.addPaneLeft(
-              newPaneId: newPaneId,
-              anchorPaneId: widget.paneId,
-              anchorCellId: widget.cellId,
-            );
-            break;
-          case DragAreaSegment.right:
-            widget.workspaceConfigs.paneManager.addPaneRight(
-              newPaneId: newPaneId,
-              anchorPaneId: widget.paneId,
-            );
-            break;
-          case DragAreaSegment.bottom:
-            widget.workspaceConfigs.paneManager.addPaneBottom(
-              newPaneId: newPaneId,
-              anchorPaneId: widget.paneId,
-            );
-            break;
-          case DragAreaSegment.top:
-            widget.workspaceConfigs.paneManager.addPaneTop(
-              newPaneId: newPaneId,
-              anchorPaneId: widget.paneId,
-            );
-            break;
-          case DragAreaSegment.centre:
-            for (final entity in details.data) {
-              AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
-                WindowEditorRequestDocumentSetActiveEvent(
-                  documentId: entity.entityId,
-                  paneId: widget.paneId,
-                ),
-              );
-            }
-            break;
-        }
-
-        setState(() {
+          return willAccept;
+        },
+        onLeave: (_) => setState(() {
           isDragTarget = false;
           dragAreaSegment = null;
-        });
-      },
-      builder: (context, _, __) {
-        return DragTarget<FileTabDragData>(
-            onWillAcceptWithDetails: (details) {
-              final bool willAccept = widget.paneId != details.data.paneId;
-              if (willAccept) {
-                setState(() {
-                  isDragTarget = willAccept;
-                  dragAreaSegment = DragAreaSegment.centre;
-                });
+        }),
+        onMove: updatePointer,
+        onAcceptWithDetails: (details) {
+          final String newPaneId = utils.generateId();
+          widget.workspaceConfigs.panesData[newPaneId] =
+              PaneData(instances: createInstancesFromEntities(details.data));
+          switch (dragAreaSegment!) {
+            case DragAreaSegment.left:
+              widget.workspaceConfigs.paneManager.addPaneLeft(
+                newPaneId: newPaneId,
+                anchorPaneId: widget.paneId,
+                anchorCellId: widget.cellId,
+              );
+              break;
+            case DragAreaSegment.right:
+              widget.workspaceConfigs.paneManager.addPaneRight(
+                newPaneId: newPaneId,
+                anchorPaneId: widget.paneId,
+                anchorCellId: widget.cellId,
+              );
+              break;
+            case DragAreaSegment.bottom:
+              widget.workspaceConfigs.paneManager.addPaneBottom(
+                newPaneId: newPaneId,
+                anchorPaneId: widget.paneId,
+                anchorCellId: widget.cellId,
+              );
+              break;
+            case DragAreaSegment.top:
+              widget.workspaceConfigs.paneManager.addPaneTop(
+                newPaneId: newPaneId,
+                anchorPaneId: widget.paneId,
+                anchorCellId: widget.cellId,
+              );
+              break;
+            case DragAreaSegment.centre:
+              for (final entity in details.data) {
+                AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
+                  WindowEditorRequestDocumentSetActiveEvent(
+                    documentId: entity.entityId,
+                    paneId: widget.paneId,
+                  ),
+                );
               }
+              break;
+          }
 
-              return willAccept;
-            },
-            onLeave: (_) => setState(() {
+          setState(() {
+            isDragTarget = false;
+            dragAreaSegment = null;
+          });
+        },
+        builder: (context, _, __) {
+          return DragTarget<FileTabDragData>(
+              onWillAcceptWithDetails: (details) {
+                final bool willAccept = widget.paneId != details.data.paneId;
+                if (willAccept) {
+                  setState(() {
+                    isDragTarget = willAccept;
+                    dragAreaSegment = DragAreaSegment.centre;
+                  });
+                }
+
+                return willAccept;
+              },
+              onLeave: (_) => setState(() {
+                    isDragTarget = false;
+                    dragAreaSegment = null;
+                  }),
+              onMove: updatePointer,
+              onAcceptWithDetails: (details) {
+                AffogatoEvents.windowEditorInstanceClosedEvents.add(
+                  WindowEditorInstanceClosedEvent(
+                    paneId: details.data.paneId,
+                    instanceId: details.data.instanceId,
+                  ),
+                );
+
+                switch (dragAreaSegment!) {
+                  case DragAreaSegment.left:
+                    widget.workspaceConfigs.paneManager.addPaneLeft(
+                      anchorPaneId: widget.paneId,
+                      newPaneId: details.data.instanceId,
+                      anchorCellId: widget.cellId,
+                    );
+                    break;
+                  case DragAreaSegment.right:
+                    widget.workspaceConfigs.paneManager.addPaneRight(
+                      anchorPaneId: widget.paneId,
+                      newPaneId: details.data.instanceId,
+                      anchorCellId: widget.cellId,
+                    );
+                    break;
+                  case DragAreaSegment.bottom:
+                    widget.workspaceConfigs.paneManager.addPaneBottom(
+                      anchorPaneId: widget.paneId,
+                      newPaneId: details.data.instanceId,
+                      anchorCellId: widget.cellId,
+                    );
+                    break;
+                  case DragAreaSegment.top:
+                    widget.workspaceConfigs.paneManager.addPaneTop(
+                      anchorPaneId: widget.paneId,
+                      newPaneId: details.data.instanceId,
+                      anchorCellId: widget.cellId,
+                    );
+                    break;
+                  case DragAreaSegment.centre:
+                    AffogatoEvents.editorPaneAddInstanceEvents.add(
+                      EditorPaneAddInstanceEvent(
+                        paneId: widget.paneId,
+                        instanceId: details.data.instanceId,
+                      ),
+                    );
+                    break;
+                }
+
+                setState(() {
                   isDragTarget = false;
                   dragAreaSegment = null;
-                }),
-            onMove: updatePointer,
-            onAcceptWithDetails: (details) {
-              AffogatoEvents.windowEditorInstanceClosedEvents.add(
-                WindowEditorInstanceClosedEvent(
-                  paneId: details.data.paneId,
-                  instanceId: details.data.instanceId,
-                ),
-              );
-
-              switch (dragAreaSegment!) {
-                case DragAreaSegment.left:
-                  widget.workspaceConfigs.paneManager.addPaneLeft(
-                    anchorPaneId: widget.paneId,
-                    newPaneId: details.data.instanceId,
-                    anchorCellId: widget.cellId,
-                  );
-                  break;
-                case DragAreaSegment.right:
-                  widget.workspaceConfigs.paneManager.addPaneRight(
-                    anchorPaneId: widget.paneId,
-                    newPaneId: details.data.instanceId,
-                  );
-                  break;
-                case DragAreaSegment.bottom:
-                  widget.workspaceConfigs.paneManager.addPaneBottom(
-                    anchorPaneId: widget.paneId,
-                    newPaneId: details.data.instanceId,
-                  );
-                  break;
-                case DragAreaSegment.top:
-                  widget.workspaceConfigs.paneManager.addPaneTop(
-                    anchorPaneId: widget.paneId,
-                    newPaneId: details.data.instanceId,
-                  );
-                  break;
-                case DragAreaSegment.centre:
-                  AffogatoEvents.editorPaneAddInstanceEvents.add(
-                    EditorPaneAddInstanceEvent(
-                      paneId: widget.paneId,
-                      instanceId: details.data.instanceId,
-                    ),
-                  );
-                  break;
-              }
-
-              setState(() {
-                isDragTarget = false;
-                dragAreaSegment = null;
-              });
-            },
-            builder: (context, ___, ____) {
-              return Column(
-                children: [
-                  if (instanceIds.isNotEmpty)
-                    FileTabBar(
-                      stylingConfigs: widget.stylingConfigs,
-                      instanceIds: instanceIds,
-                      workspaceConfigs: widget.workspaceConfigs,
-                      currentInstanceId: currentInstanceId,
-                      paneId: widget.paneId,
-                    ),
-                  Container(
-                    clipBehavior: Clip.hardEdge,
-                    width: double.infinity,
-                    height: (instanceIds.isEmpty
-                            ? widget.layoutConfigs.height
-                            : widget.layoutConfigs.height -
-                                widget.stylingConfigs.tabBarHeight) -
-                        utils.AffogatoConstants.tabBarPadding * 2,
-                    decoration: BoxDecoration(
-                      color: widget.workspaceConfigs.themeBundle.editorTheme
-                          .editorBackground,
-                      border: Border(
-                        left: BorderSide(
-                          color: widget.workspaceConfigs.themeBundle.editorTheme
-                                  .panelBorder ??
-                              Colors.red,
-                        ),
-                        right: BorderSide(
-                          color: widget.workspaceConfigs.themeBundle.editorTheme
-                                  .panelBorder ??
-                              Colors.red,
-                        ),
-                        bottom: BorderSide(
-                          color: widget.workspaceConfigs.themeBundle.editorTheme
-                                  .panelBorder ??
-                              Colors.red,
+                });
+              },
+              builder: (context, ___, ____) {
+                return Column(
+                  children: [
+                    if (instanceIds.isNotEmpty)
+                      FileTabBar(
+                        stylingConfigs: widget.stylingConfigs,
+                        instanceIds: instanceIds,
+                        workspaceConfigs: widget.workspaceConfigs,
+                        currentInstanceId: currentInstanceId,
+                        paneId: widget.paneId,
+                      ),
+                    Container(
+                      clipBehavior: Clip.hardEdge,
+                      width: double.infinity,
+                      height: (instanceIds.isEmpty
+                          ? widget.layoutConfigs.height
+                          : widget.layoutConfigs.height -
+                              widget.stylingConfigs.tabBarHeight),
+                      decoration: BoxDecoration(
+                        color: widget.workspaceConfigs.themeBundle.editorTheme
+                            .editorBackground,
+                        border: Border(
+                          left: BorderSide(
+                            color: widget.workspaceConfigs.themeBundle
+                                    .editorTheme.panelBorder ??
+                                Colors.red,
+                          ),
+                          right: BorderSide(
+                            color: widget.workspaceConfigs.themeBundle
+                                    .editorTheme.panelBorder ??
+                                Colors.red,
+                          ),
+                          bottom: BorderSide(
+                            color: widget.workspaceConfigs.themeBundle
+                                    .editorTheme.panelBorder ??
+                                Colors.red,
+                          ),
                         ),
                       ),
-                    ),
-                    child: Stack(
-                      children: [
-                        currentInstanceId != null
-                            ? AffogatoEditorInstance(
-                                instanceId: currentInstanceId!,
-                                workspaceConfigs: widget.workspaceConfigs,
-                                layoutConfigs: widget.layoutConfigs,
-                                editorTheme: widget
-                                    .workspaceConfigs.themeBundle.editorTheme,
-                                extensionsEngine: widget.extensionsEngine,
-                              )
-                            : Center(
-                                child: SizedBox(
-                                  width: 100,
-                                  height: 50,
-                                  child: Text(
-                                    'Affogato',
-                                    style: TextStyle(
-                                      color: widget.workspaceConfigs.themeBundle
-                                          .editorTheme.editorForeground,
+                      child: Stack(
+                        children: [
+                          currentInstanceId != null
+                              ? AffogatoEditorInstance(
+                                  instanceId: currentInstanceId!,
+                                  workspaceConfigs: widget.workspaceConfigs,
+                                  layoutConfigs: LayoutConfigs(
+                                    width: widget.layoutConfigs.width,
+                                    height: (instanceIds.isEmpty
+                                            ? widget.layoutConfigs.height
+                                            : widget.layoutConfigs.height -
+                                                widget.stylingConfigs
+                                                    .tabBarHeight) -
+                                        utils.AffogatoConstants.tabBarPadding *
+                                            2,
+                                  ),
+                                  editorTheme: widget
+                                      .workspaceConfigs.themeBundle.editorTheme,
+                                  extensionsEngine: widget.extensionsEngine,
+                                )
+                              : Center(
+                                  child: SizedBox(
+                                    width: 100,
+                                    height: 50,
+                                    child: Text(
+                                      'Affogato',
+                                      style: TextStyle(
+                                        color: widget
+                                            .workspaceConfigs
+                                            .themeBundle
+                                            .editorTheme
+                                            .editorForeground,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                        if (isDragTarget && dragAreaSegment != null)
-                          switch (dragAreaSegment!) {
-                            DragAreaSegment.left => Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                width: widget.layoutConfigs.width * 0.5,
-                                child: Container(
-                                  color: widget
-                                      .workspaceConfigs
-                                      .themeBundle
-                                      .editorTheme
-                                      .buttonSecondaryHoverBackground,
+                          if (isDragTarget && dragAreaSegment != null)
+                            switch (dragAreaSegment!) {
+                              DragAreaSegment.left => Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: widget.layoutConfigs.width * 0.5,
+                                  child: Container(
+                                    color: widget
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme
+                                        .buttonSecondaryHoverBackground,
+                                  ),
                                 ),
-                              ),
-                            DragAreaSegment.right => Positioned(
-                                right: 0,
-                                top: 0,
-                                bottom: 0,
-                                width: widget.layoutConfigs.width * 0.5,
-                                child: Container(
-                                  color: widget
-                                      .workspaceConfigs
-                                      .themeBundle
-                                      .editorTheme
-                                      .buttonSecondaryHoverBackground,
+                              DragAreaSegment.right => Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: widget.layoutConfigs.width * 0.5,
+                                  child: Container(
+                                    color: widget
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme
+                                        .buttonSecondaryHoverBackground,
+                                  ),
                                 ),
-                              ),
-                            DragAreaSegment.top => Positioned(
-                                left: 0,
-                                top: 0,
-                                right: 0,
-                                height: widget.layoutConfigs.height * 0.5,
-                                child: Container(
-                                  color: widget
-                                      .workspaceConfigs
-                                      .themeBundle
-                                      .editorTheme
-                                      .buttonSecondaryHoverBackground,
+                              DragAreaSegment.top => Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  right: 0,
+                                  height: widget.layoutConfigs.height * 0.5,
+                                  child: Container(
+                                    color: widget
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme
+                                        .buttonSecondaryHoverBackground,
+                                  ),
                                 ),
-                              ),
-                            DragAreaSegment.bottom => Positioned(
-                                left: 0,
-                                bottom: 0,
-                                right: 0,
-                                height: widget.layoutConfigs.height * 0.5,
-                                child: Container(
-                                  color: widget
-                                      .workspaceConfigs
-                                      .themeBundle
-                                      .editorTheme
-                                      .buttonSecondaryHoverBackground,
+                              DragAreaSegment.bottom => Positioned(
+                                  left: 0,
+                                  bottom: 0,
+                                  right: 0,
+                                  height: widget.layoutConfigs.height * 0.5,
+                                  child: Container(
+                                    color: widget
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme
+                                        .buttonSecondaryHoverBackground,
+                                  ),
                                 ),
-                              ),
-                            DragAreaSegment.centre => Positioned(
-                                child: Container(
-                                  color: widget
-                                      .workspaceConfigs
-                                      .themeBundle
-                                      .editorTheme
-                                      .buttonSecondaryHoverBackground,
+                              DragAreaSegment.centre => Positioned(
+                                  child: Container(
+                                    color: widget
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme
+                                        .buttonSecondaryHoverBackground,
+                                  ),
                                 ),
-                              ),
-                          }
-                      ],
+                            }
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              );
-            });
-      },
+                  ],
+                );
+              });
+        },
+      ),
     );
   }
 

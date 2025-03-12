@@ -92,27 +92,21 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
         ),
       );
     } else if (cellState is VerticalPaneList) {
-      return LayoutBuilder(
-        builder: (ctx, constraints) {
-          final double itemHeight = (cellState.height) /
-              (cellState as HorizontalPaneList).value.length;
-          return SizedBox(
-            width: cellState.width,
-            height: itemHeight,
-            child: Column(
-              children: [
-                for (final child in (cellState as HorizontalPaneList).value)
-                  PaneLayoutCellWidget(
-                    cellId: child.id,
-                    workspaceConfigs: widget.workspaceConfigs,
-                    extensionsEngine: widget.extensionsEngine,
-                    performanceConfigs: widget.performanceConfigs,
-                    windowKey: widget.windowKey,
-                  ),
-              ],
-            ),
-          );
-        },
+      return SizedBox(
+        width: cellState.width,
+        height: cellState.height,
+        child: Column(
+          children: [
+            for (final child in (cellState as VerticalPaneList).value)
+              PaneLayoutCellWidget(
+                cellId: child.id,
+                workspaceConfigs: widget.workspaceConfigs,
+                extensionsEngine: widget.extensionsEngine,
+                performanceConfigs: widget.performanceConfigs,
+                windowKey: widget.windowKey,
+              ),
+          ],
+        ),
       );
     } else {
       throw Exception('impossibel');

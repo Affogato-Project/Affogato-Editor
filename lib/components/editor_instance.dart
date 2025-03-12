@@ -377,8 +377,10 @@ class AffogatoEditorInstanceState
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) => Stack(
+    return SizedBox(
+      width: widget.layoutConfigs.width,
+      height: widget.layoutConfigs.height,
+      child: Stack(
         children: [
           // Editing Area
           Positioned(
@@ -609,7 +611,7 @@ class AffogatoEditorInstanceState
                         ..prevMatch()
                         ..scrollIfActiveMatchOutsideViewport(
                           scrollOffset: scrollController.offset,
-                          viewportHeight: constraints.maxHeight -
+                          viewportHeight: widget.layoutConfigs.height -
                               utils.AffogatoConstants.breadcrumbHeight,
                           scrollCallback: scrollController.jumpTo,
                         );
@@ -637,7 +639,7 @@ class AffogatoEditorInstanceState
                         ..nextMatch()
                         ..scrollIfActiveMatchOutsideViewport(
                           scrollOffset: scrollController.offset,
-                          viewportHeight: constraints.maxHeight -
+                          viewportHeight: widget.layoutConfigs.height -
                               utils.AffogatoConstants.breadcrumbHeight,
                           scrollCallback: scrollController.jumpTo,
                         );
