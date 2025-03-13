@@ -86,18 +86,24 @@ class AffogatoWindowState extends State<AffogatoWindow>
 
     final String paneId = utils.generateId();
 
-    widget.workspaceConfigs
-      ..panesData[paneId] = PaneData(instances: [])
-      ..paneManager = PaneManager.empty(
-        rootPane: SinglePaneList(
-          paneId,
-          width: widget.workspaceConfigs.stylingConfigs.windowWidth -
-              utils.AffogatoConstants.primaryBarWidth -
-              1,
-          height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-              utils.AffogatoConstants.statusBarHeight,
-        ),
-      );
+    if (widget.workspaceConfigs.panesData.isEmpty) {
+      widget.workspaceConfigs
+        ..panesData[paneId] = PaneData(instances: [])
+        ..paneManager = PaneManager.empty(
+          rootPane: SinglePaneList(
+            paneId,
+            width: (widget.workspaceConfigs.isPrimaryBarExpanded
+                    ? widget.workspaceConfigs.stylingConfigs.windowWidth -
+                        (utils.AffogatoConstants.primaryBarExpandedWidth +
+                            utils.AffogatoConstants.primaryBarClosedWidth)
+                    : widget.workspaceConfigs.stylingConfigs.windowWidth -
+                        utils.AffogatoConstants.primaryBarClosedWidth) -
+                3,
+            height: widget.workspaceConfigs.stylingConfigs.windowHeight -
+                utils.AffogatoConstants.statusBarHeight,
+          ),
+        );
+    }
 
     BrowserContextMenu.disableContextMenu();
     widget.workspaceConfigs.vfs.createEntity(
@@ -147,8 +153,65 @@ class AffogatoWindowState extends State<AffogatoWindow>
       AffogatoEvents.editorPaneLayoutChangedEvents.stream,
       (_) {
         setState(() {
+          final tmp = widget.workspaceConfigs.paneManager.panesLayout;
+
+          if (tmp is SinglePaneList) {
+            widget.workspaceConfigs.paneManager.panesLayout = SinglePaneList(
+              paneId,
+              width: (widget.workspaceConfigs.isPrimaryBarExpanded
+                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          (utils.AffogatoConstants.primaryBarExpandedWidth +
+                              utils.AffogatoConstants.primaryBarClosedWidth)
+                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          utils.AffogatoConstants.primaryBarClosedWidth) -
+                  3,
+              height: widget.workspaceConfigs.stylingConfigs.windowHeight -
+                  utils.AffogatoConstants.statusBarHeight,
+              id: tmp.id,
+            );
+          } else if (tmp is HorizontalPaneList) {
+            widget.workspaceConfigs.paneManager.panesLayout =
+                HorizontalPaneList(
+              tmp.value,
+              width: (widget.workspaceConfigs.isPrimaryBarExpanded
+                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          (utils.AffogatoConstants.primaryBarExpandedWidth +
+                              utils.AffogatoConstants.primaryBarClosedWidth)
+                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          utils.AffogatoConstants.primaryBarClosedWidth) -
+                  3,
+              height: widget.workspaceConfigs.stylingConfigs.windowHeight -
+                  utils.AffogatoConstants.statusBarHeight,
+              id: tmp.id,
+            );
+          } else if (tmp is VerticalPaneList) {
+            widget.workspaceConfigs.paneManager.panesLayout = VerticalPaneList(
+              tmp.value,
+              width: (widget.workspaceConfigs.isPrimaryBarExpanded
+                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          (utils.AffogatoConstants.primaryBarExpandedWidth +
+                              utils.AffogatoConstants.primaryBarClosedWidth)
+                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          utils.AffogatoConstants.primaryBarClosedWidth) -
+                  3,
+              height: widget.workspaceConfigs.stylingConfigs.windowHeight -
+                  utils.AffogatoConstants.statusBarHeight,
+              id: tmp.id,
+            );
+          }
           paneLayoutKey = UniqueKey();
         });
+      },
+    );
+
+    registerListener(
+      AffogatoEvents.windowEditorPaneRemoveEvents.stream,
+      (event) {
+        /* if (widget.workspaceConfigs.panesData.length > 1) {
+          widget.workspaceConfigs.panesData.remove(event.paneId);
+          widget.workspaceConfigs.activePane =
+              widget.workspaceConfigs.paneManager.removePaneById(event.paneId);
+        } */
       },
     );
 
@@ -202,12 +265,15 @@ class AffogatoWindowState extends State<AffogatoWindow>
                 PaneData(instances: [instanceIdWithDocument]);
             widget.workspaceConfigs.paneManager.panesLayout = SinglePaneList(
               paneId,
-              width: widget.workspaceConfigs.stylingConfigs.windowWidth -
-                  utils.AffogatoConstants.primaryBarWidth -
-                  1,
+              width: (widget.workspaceConfigs.isPrimaryBarExpanded
+                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          (utils.AffogatoConstants.primaryBarExpandedWidth +
+                              utils.AffogatoConstants.primaryBarClosedWidth)
+                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
+                          utils.AffogatoConstants.primaryBarClosedWidth) -
+                  3,
               height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-                  utils.AffogatoConstants.statusBarHeight -
-                  2,
+                  utils.AffogatoConstants.statusBarHeight,
             );
           } else if (event.paneId != null) {
             widget.workspaceConfigs.panesData[event.paneId]!.instances
@@ -299,15 +365,10 @@ class AffogatoWindowState extends State<AffogatoWindow>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: utils.AffogatoConstants.primaryBarWidth,
-                          child: PrimaryBar(
-                            expandedWidth:
-                                utils.AffogatoConstants.primaryBarWidth,
-                            workspaceConfigs: widget.workspaceConfigs,
-                            editorTheme:
-                                widget.workspaceConfigs.themeBundle.editorTheme,
-                          ),
+                        PrimaryBar(
+                          workspaceConfigs: widget.workspaceConfigs,
+                          editorTheme:
+                              widget.workspaceConfigs.themeBundle.editorTheme,
                         ),
                         PaneLayoutCellWidget(
                           key: paneLayoutKey,

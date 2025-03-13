@@ -22,6 +22,14 @@ class StatusBarState extends State<StatusBar>
   @override
   void initState() {
     registerListener(
+      AffogatoEvents.windowEditorPaneAddedEvents.stream,
+      (event) {
+        widget.workspaceConfigs.activePane = event.paneId;
+        setState(() {});
+      },
+    );
+
+    registerListener(
       AffogatoEvents.editorInstanceSetActiveEvents.stream,
       (event) {
         setState(() {
@@ -73,6 +81,27 @@ class StatusBarState extends State<StatusBar>
                 ),
               ),
             ),
+          /* TextButton(
+            onPressed: widget.workspaceConfigs.activePane != null
+                ? () {
+                    AffogatoEvents.windowEditorPaneRemoveEvents.add(
+                        WindowEditorPaneRemoveEvent(
+                            widget.workspaceConfigs.activePane!));
+                    setState(() {});
+                  }
+                : null,
+            child: Text(
+              'Remove Pane',
+              style: TextStyle(
+                color: widget.workspaceConfigs.activePane != null
+                    ? widget.workspaceConfigs.themeBundle.editorTheme
+                        .editorForeground
+                    : widget.workspaceConfigs.themeBundle.editorTheme
+                        .editorForeground
+                        ?.withOpacity(0.4),
+              ),
+            ),
+          ), */
         ],
       ),
     );

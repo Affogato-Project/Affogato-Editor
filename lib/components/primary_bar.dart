@@ -1,12 +1,10 @@
 part of affogato.editor;
 
 class PrimaryBar extends StatefulWidget {
-  final double expandedWidth;
   final EditorTheme<Color, TextStyle> editorTheme;
   final AffogatoWorkspaceConfigs workspaceConfigs;
 
   const PrimaryBar({
-    required this.expandedWidth,
     required this.editorTheme,
     required this.workspaceConfigs,
     super.key,
@@ -18,8 +16,6 @@ class PrimaryBar extends StatefulWidget {
 
 class PrimaryBarState extends State<PrimaryBar>
     with utils.StreamSubscriptionManager {
-  bool expanded = true;
-
   @override
   void initState() {
     registerListener(
@@ -48,33 +44,94 @@ class PrimaryBarState extends State<PrimaryBar>
 
   @override
   Widget build(BuildContext context) {
-    return expanded
-        ? Container(
-            width: widget.expandedWidth,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              color: widget.editorTheme.panelBackground,
-              border: Border(
-                left: BorderSide(
-                  color: widget.editorTheme.panelBorder ?? Colors.red,
-                ),
-                right: BorderSide(
-                  color: widget.editorTheme.panelBorder ?? Colors.red,
-                ),
+    return Container(
+      width: (widget.workspaceConfigs.isPrimaryBarExpanded
+              ? utils.AffogatoConstants.primaryBarExpandedWidth +
+                  utils.AffogatoConstants.primaryBarClosedWidth
+              : utils.AffogatoConstants.primaryBarClosedWidth) +
+          2,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: widget.editorTheme.panelBackground,
+        border: Border(
+          left: BorderSide(
+            color: widget.editorTheme.panelBorder ?? Colors.red,
+          ),
+          right: BorderSide(
+            color: widget.editorTheme.panelBorder ?? Colors.red,
+          ),
+        ),
+      ),
+      child: SizedBox(
+        width: widget.workspaceConfigs.isPrimaryBarExpanded
+            ? utils.AffogatoConstants.primaryBarExpandedWidth +
+                utils.AffogatoConstants.primaryBarClosedWidth
+            : utils.AffogatoConstants.primaryBarClosedWidth,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: utils.AffogatoConstants.primaryBarClosedWidth,
+              height: double.infinity,
+              decoration: widget.workspaceConfigs.isPrimaryBarExpanded
+                  ? BoxDecoration(
+                      color: widget.editorTheme.panelBackground,
+                      border: Border(
+                        left: BorderSide(
+                          color: widget.editorTheme.panelBorder ?? Colors.red,
+                        ),
+                        right: BorderSide(
+                          color: widget.editorTheme.panelBorder ?? Colors.red,
+                        ),
+                      ),
+                    )
+                  : null,
+              child: Column(
+                children: [
+                  AffogatoButton(
+                    isPrimary: false,
+                    width: utils.AffogatoConstants.primaryBarClosedWidth,
+                    height: utils.AffogatoConstants.primaryBarClosedWidth,
+                    editorTheme: widget.editorTheme,
+                    onTap: () {
+                      setState(() {
+                        widget.workspaceConfigs.isPrimaryBarExpanded =
+                            !widget.workspaceConfigs.isPrimaryBarExpanded;
+                        AffogatoEvents.editorPaneLayoutChangedEvents.add(
+                            EditorPaneLayoutChangedEvent(widget
+                                .workspaceConfigs.paneManager.panesLayout.id));
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Center(
+                        child: Icon(
+                          Icons.file_copy,
+                          size: 28,
+                          color: widget.editorTheme.buttonSecondaryForeground,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: FileBrowserButton(
-                isRoot: true,
-                entry: widget.workspaceConfigs.vfs.root,
-                indent: 0,
-                editorTheme: widget.editorTheme,
-                workspaceConfigs: widget.workspaceConfigs,
+            if (widget.workspaceConfigs.isPrimaryBarExpanded)
+              SizedBox(
+                width: utils.AffogatoConstants.primaryBarExpandedWidth,
+                child: FileBrowserButton(
+                  isRoot: true,
+                  entry: widget.workspaceConfigs.vfs.root,
+                  indent: 0,
+                  editorTheme: widget.editorTheme,
+                  workspaceConfigs: widget.workspaceConfigs,
+                ),
               ),
-            ),
-          )
-        : const SizedBox(width: 0, height: 0);
+          ],
+        ),
+      ),
+    );
   }
 
   @override

@@ -59,6 +59,10 @@ class AffogatoWorkspaceConfigs {
   /// A mapping of pane IDs to the IDs of the [PaneInstance]s contained by that pane
   final Map<String, PaneData> panesData;
 
+  String? activePane;
+
+  bool isPrimaryBarExpanded = false;
+
   /// Stores the instance states for opened instances in the various panes, each one
   /// associated with its corresponding [PaneInstanceData] object
   final Map<String, PaneInstanceData> instancesData;

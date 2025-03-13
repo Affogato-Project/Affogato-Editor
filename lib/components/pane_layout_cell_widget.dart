@@ -59,8 +59,6 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
         width: cellState.width,
         height: cellState.height,
         child: EditorPane(
-          key: ValueKey(
-              '${(cellState as SinglePaneList).paneId}${widget.workspaceConfigs.panesData[(cellState as SinglePaneList).paneId]}'),
           paneId: (cellState as SinglePaneList).paneId,
           cellId: cellState.id,
           stylingConfigs: widget.workspaceConfigs.stylingConfigs,

@@ -18,7 +18,6 @@ String generateId() => String.fromCharCodes(
     );
 
 class AffogatoConstants {
-  static const double primaryBarWidth = 350;
   static const double tabBarPadding = 6;
   static const double statusBarHeight = 24;
   static const double lineNumbersColWidth = 60;
@@ -28,6 +27,8 @@ class AffogatoConstants {
   static const double breadcrumbHeight = 26;
   static const double lineHeight = 1.5;
   static const double primaryBarFileTreeIndentSize = 10;
+  static const double primaryBarClosedWidth = 60;
+  static const double primaryBarExpandedWidth = 350;
   static const double completionsMenuItemHeight = 24;
   static const double completionsMenuWidth = 440;
   static const double searchAndReplaceRowItemHeight = 30;

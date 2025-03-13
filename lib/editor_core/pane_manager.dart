@@ -56,6 +56,29 @@ class PaneManager {
     ];
   }
 
+/*   /// Removes the [SinglePaneList] that contains the given [paneId], and returns the
+  /// paneId of the next pane to give focus to. Also emits and event to [AffogatoEvents.editorPaneLayoutChangedEvents]
+  /// as a side effect.
+  String removePaneById(String paneId) {
+    // must have at least one pane
+    if (panesLayout is SinglePaneList) {
+      return (panesLayout as SinglePaneList).paneId;
+    } else {
+      final MultiplePaneList? parent =
+          (panesLayout as MultiplePaneList).pathToPane(
+        paneId,
+        removeGivenPane: true,
+      )?.lastOrNull;
+      if (parent != null && parent.value.isNotEmpty) {
+        for (final nextPane in parent.value) {
+          if (nextPane)
+        }
+      } else {
+        throw Exception("Could not find parent");
+      }
+    }
+  } */
+
   void addPane({
     required Axis axis,
     required String anchorCellId,
@@ -235,13 +258,22 @@ sealed class MultiplePaneList extends PaneList {
     super.id,
   });
 
-  /// Uses DFS to search for the ancestor tree of a given pane ID
-  List<MultiplePaneList>? pathToPane(String paneId) {
+  /// Uses DFS to search for the ancestor tree of a given pane ID. Set [removeGivenPane]
+  /// if the [SinglePaneList] containing the [paneId] should be deleted. This is used by
+  /// the [removePaneById] method.
+  List<MultiplePaneList>? pathToPane(
+    String paneId, {
+    bool removeGivenPane = false,
+  }) {
     for (final val in value) {
       if (val is SinglePaneList) {
-        if (val.paneId == paneId) return [this];
+        if (val.paneId == paneId) {
+          value.remove(val);
+          return [this];
+        }
       } else {
-        final tmp = (val as MultiplePaneList).pathToPane(paneId);
+        final tmp = (val as MultiplePaneList)
+            .pathToPane(paneId, removeGivenPane: removeGivenPane);
         if (tmp != null) return [this, ...tmp];
       }
     }
