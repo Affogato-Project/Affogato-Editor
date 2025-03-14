@@ -8,8 +8,10 @@ class FileBrowserButton extends StatefulWidget {
   final AffogatoVFSEntity entry;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final bool isRoot;
+  final AffogatoAPI api;
 
   FileBrowserButton({
+    required this.api,
     required this.entry,
     required this.indent,
     required this.editorTheme,
@@ -121,10 +123,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                           setState(() {
                             expanded = true;
                           });
-                          AffogatoEvents.editorInstanceSetActiveEvents.add(
-                            WindowEditorInstanceSetActiveEvent(
-                                instanceId: docId),
-                          );
+                          widget.api.window.requestDocumentSetActive(docId);
                         },
                       ),
                       ContextMenuButtonItem(
@@ -160,13 +159,8 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                   onDoubleTap: () => setState(() {
                     if (!widget.entry.isDirectory) {
                       buttonState = QuartetButtonState.active;
-                      AffogatoEvents.windowEditorRequestDocumentSetActiveEvents
-                          .add(
-                        WindowEditorRequestDocumentSetActiveEvent(
-                          documentId: (widget.entry).entityId,
-                          paneId: null,
-                        ),
-                      );
+                      widget.api.window
+                          .requestDocumentSetActive((widget.entry).entityId);
                     }
                   }),
                   child: MouseRegion(
@@ -217,8 +211,8 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                             newDirId: widget.entry.entityId,
                           );
 
-                          AffogatoEvents.vfsStructureChangedEvents
-                              .add(const FileManagerStructureChangedEvent());
+                          AffogatoEvents.vfsStructureChangedEventsController
+                              .add(const VFSStructureChangedEvent());
 
                           isDragTarget = false;
                         }
@@ -279,6 +273,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                               utils.AffogatoConstants
                                   .primaryBarFileTreeIndentSize),
                       child: FileBrowserButton(
+                        api: widget.api,
                         entry: subentry,
                         indent: widget.indent + 1,
                         editorTheme: widget.editorTheme,
@@ -292,6 +287,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                               utils.AffogatoConstants
                                   .primaryBarFileTreeIndentSize),
                       child: FileBrowserButton(
+                        api: widget.api,
                         entry: subentry,
                         indent: widget.indent + 1,
                         editorTheme: widget.editorTheme,

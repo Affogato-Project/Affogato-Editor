@@ -5,8 +5,7 @@ class EditorPane extends StatefulWidget {
   final LayoutConfigs layoutConfigs;
   final AffogatoStylingConfigs stylingConfigs;
   final AffogatoPerformanceConfigs performanceConfigs;
-  final AffogatoWorkspaceConfigs workspaceConfigs;
-  final AffogatoExtensionsEngine extensionsEngine;
+  final AffogatoAPI api;
   final GlobalKey<AffogatoWindowState> windowKey;
   final String paneId;
   final String cellId;
@@ -16,13 +15,11 @@ class EditorPane extends StatefulWidget {
     required this.stylingConfigs,
     required this.layoutConfigs,
     required this.performanceConfigs,
-    required this.workspaceConfigs,
-    required this.extensionsEngine,
+    required this.api,
     required this.windowKey,
     required this.paneId,
-  }) : super(
-            key: ValueKey(
-                "${workspaceConfigs.panesData[paneId]}${layoutConfigs.width}-${layoutConfigs.height}-$paneId-$cellId"));
+  });
+  // key: ValueKey( "${api.workspace.workspaceConfigs.panesData[paneId]}${layoutConfigs.width}-${layoutConfigs.height}-$paneId-$cellId")
 
   @override
   State<StatefulWidget> createState() => EditorPaneState();
@@ -32,64 +29,16 @@ enum DragAreaSegment { centre, left, right, top, bottom }
 
 class EditorPaneState extends State<EditorPane>
     with utils.StreamSubscriptionManager {
-  /// This is used to manage which [PaneInstance] is shown
-  String? currentInstanceId;
-  late List<String> instanceIds;
   bool isDragTarget = false;
   DragAreaSegment? dragAreaSegment;
 
-  void paneLoad() {
-    instanceIds = widget.workspaceConfigs.panesData[widget.paneId]!.instances;
-    if (instanceIds.isNotEmpty) currentInstanceId = instanceIds.first;
-  }
-
   @override
   void initState() {
-    paneLoad();
-
     registerListener(
-      AffogatoEvents.windowEditorPaneReloadEvents.stream
-          .where((e) => e.paneId == widget.paneId),
-      (_) => setState(() {
-        paneLoad();
-      }),
-    );
-
-    registerListener(
-      AffogatoEvents.editorInstanceSetActiveEvents.stream,
-      (event) {
-        paneLoad();
-        if (instanceIds.contains(event.instanceId)) {
-          setState(() {
-            currentInstanceId = event.instanceId;
-          });
-        }
-      },
-    );
-
-    registerListener(
-      AffogatoEvents.windowEditorInstanceUnsetActiveEvents.stream
-          .where((e) => e.paneId == widget.paneId),
-      (event) {
-        setState(() {
-          if (instanceIds.isEmpty) {
-            currentInstanceId = null;
-          } else {
-            currentInstanceId = instanceIds.last;
-          }
-        });
-      },
-    );
-
-    registerListener(
-      AffogatoEvents.editorPaneAddInstanceEvents.stream
-          .where((e) => e.paneId == widget.paneId),
-      (event) {
-        paneLoad();
-        if (instanceIds.contains(event.instanceId)) return;
-        setState(() {
-          instanceIds.add(currentInstanceId = event.instanceId);
-        });
+      widget.api.window.panes.requestReloadStream
+          .where((event) => event.paneId == widget.paneId),
+      (_) {
+        setState(() {});
       },
     );
 
@@ -117,16 +66,15 @@ class EditorPaneState extends State<EditorPane>
 
     for (final entity in entities) {
       final String id = utils.generateId();
-      AffogatoEvents.editorInstanceCreateEvents
-          .add(const EditorInstanceCreateEvent());
-      widget.workspaceConfigs.instancesData[id] = AffogatoEditorInstanceData(
+      widget.api.workspace.workspaceConfigs.instancesData[id] =
+          AffogatoEditorInstanceData(
         documentId: entity.entityId,
-        languageBundle: widget.workspaceConfigs.detectLanguage(widget
-            .workspaceConfigs.vfs
-            .accessEntity(entity.entityId)!
-            .document!
-            .extension),
-        themeBundle: widget.workspaceConfigs.themeBundle,
+        languageBundle: widget.api.workspace.workspaceConfigs.detectLanguage(
+            widget.api.workspace.workspaceConfigs.vfs
+                .accessEntity(entity.entityId)!
+                .document!
+                .extension),
+        themeBundle: widget.api.workspace.workspaceConfigs.themeBundle,
       );
       results.add(id);
     }
@@ -139,7 +87,8 @@ class EditorPaneState extends State<EditorPane>
       width: widget.layoutConfigs.width,
       height: widget.layoutConfigs.height,
       child: GestureDetector(
-        onTap: () => widget.workspaceConfigs.activePane = widget.paneId,
+        onTap: () =>
+            widget.api.workspace.workspaceConfigs.activePane = widget.paneId,
         child: DragTarget<List<AffogatoVFSEntity>>(
           onWillAcceptWithDetails: (details) {
             final bool willAccept =
@@ -160,46 +109,43 @@ class EditorPaneState extends State<EditorPane>
           onMove: updatePointer,
           onAcceptWithDetails: (details) {
             final String newPaneId = utils.generateId();
-            widget.workspaceConfigs.panesData[newPaneId] =
+            widget.api.workspace.workspaceConfigs.panesData[newPaneId] =
                 PaneData(instances: createInstancesFromEntities(details.data));
             switch (dragAreaSegment!) {
               case DragAreaSegment.left:
-                widget.workspaceConfigs.paneManager.addPaneLeft(
+                widget.api.workspace.workspaceConfigs.paneManager.addPaneLeft(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.right:
-                widget.workspaceConfigs.paneManager.addPaneRight(
+                widget.api.workspace.workspaceConfigs.paneManager.addPaneRight(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.bottom:
-                widget.workspaceConfigs.paneManager.addPaneBottom(
+                widget.api.workspace.workspaceConfigs.paneManager.addPaneBottom(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.top:
-                widget.workspaceConfigs.paneManager.addPaneTop(
+                widget.api.workspace.workspaceConfigs.paneManager.addPaneTop(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.centre:
-                for (final entity in details.data) {
-                  AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.add(
-                    WindowEditorRequestDocumentSetActiveEvent(
-                      documentId: entity.entityId,
-                      paneId: widget.paneId,
-                    ),
-                  );
-                }
+                widget.api.workspace.addInstancesToPane(
+                  instanceIds: widget.api.workspace
+                      .createEditorInstancesForEntities(entities: details.data),
+                  paneId: widget.paneId,
+                );
                 break;
             }
 
@@ -227,49 +173,48 @@ class EditorPaneState extends State<EditorPane>
                     }),
                 onMove: updatePointer,
                 onAcceptWithDetails: (details) {
-                  AffogatoEvents.windowEditorInstanceClosedEvents.add(
-                    WindowEditorInstanceClosedEvent(
-                      paneId: details.data.paneId,
-                      instanceId: details.data.instanceId,
-                    ),
-                  );
+                  widget.api.editor
+                      .closeInstance(instanceId: details.data.instanceId);
 
                   switch (dragAreaSegment!) {
                     case DragAreaSegment.left:
-                      widget.workspaceConfigs.paneManager.addPaneLeft(
+                      widget.api.workspace.workspaceConfigs.paneManager
+                          .addPaneLeft(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.right:
-                      widget.workspaceConfigs.paneManager.addPaneRight(
+                      widget.api.workspace.workspaceConfigs.paneManager
+                          .addPaneRight(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.bottom:
-                      widget.workspaceConfigs.paneManager.addPaneBottom(
+                      widget.api.workspace.workspaceConfigs.paneManager
+                          .addPaneBottom(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.top:
-                      widget.workspaceConfigs.paneManager.addPaneTop(
+                      widget.api.workspace.workspaceConfigs.paneManager
+                          .addPaneTop(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.centre:
-                      AffogatoEvents.editorPaneAddInstanceEvents.add(
-                        EditorPaneAddInstanceEvent(
-                          paneId: widget.paneId,
-                          instanceId: details.data.instanceId,
-                        ),
+                      widget.api.workspace.addInstancesToPane(
+                        instanceIds: [details.data.instanceId],
+                        paneId: widget.paneId,
                       );
+
                       break;
                   }
 
@@ -281,51 +226,81 @@ class EditorPaneState extends State<EditorPane>
                 builder: (context, ___, ____) {
                   return Column(
                     children: [
-                      if (instanceIds.isNotEmpty)
+                      if (widget.api.workspace.workspaceConfigs
+                          .panesData[widget.paneId]!.instances.isNotEmpty)
                         FileTabBar(
+                          api: widget.api,
                           stylingConfigs: widget.stylingConfigs,
-                          instanceIds: instanceIds,
-                          workspaceConfigs: widget.workspaceConfigs,
-                          currentInstanceId: currentInstanceId,
+                          instanceIds: widget.api.workspace.workspaceConfigs
+                              .panesData[widget.paneId]!.instances,
+                          workspaceConfigs:
+                              widget.api.workspace.workspaceConfigs,
+                          currentInstanceId: widget
+                              .api
+                              .workspace
+                              .workspaceConfigs
+                              .panesData[widget.paneId]!
+                              .activeInstance,
                           paneId: widget.paneId,
                         ),
                       Container(
                         clipBehavior: Clip.hardEdge,
                         width: double.infinity,
-                        height: (instanceIds.isEmpty
+                        height: (widget.api.workspace.workspaceConfigs
+                                .panesData[widget.paneId]!.instances.isEmpty
                             ? widget.layoutConfigs.height
                             : widget.layoutConfigs.height -
                                 widget.stylingConfigs.tabBarHeight),
                         decoration: BoxDecoration(
-                          color: widget.workspaceConfigs.themeBundle.editorTheme
-                              .editorBackground,
+                          color: widget.api.workspace.workspaceConfigs
+                              .themeBundle.editorTheme.editorBackground,
                           border: Border(
                             left: BorderSide(
-                              color: widget.workspaceConfigs.themeBundle
-                                      .editorTheme.panelBorder ??
+                              color: widget.api.workspace.workspaceConfigs
+                                      .themeBundle.editorTheme.panelBorder ??
                                   Colors.red,
                             ),
                             right: BorderSide(
-                              color: widget.workspaceConfigs.themeBundle
-                                      .editorTheme.panelBorder ??
+                              color: widget.api.workspace.workspaceConfigs
+                                      .themeBundle.editorTheme.panelBorder ??
                                   Colors.red,
                             ),
                             bottom: BorderSide(
-                              color: widget.workspaceConfigs.themeBundle
-                                      .editorTheme.panelBorder ??
+                              color: widget.api.workspace.workspaceConfigs
+                                      .themeBundle.editorTheme.panelBorder ??
                                   Colors.red,
                             ),
                           ),
                         ),
                         child: Stack(
                           children: [
-                            currentInstanceId != null
+                            widget
+                                        .api
+                                        .workspace
+                                        .workspaceConfigs
+                                        .panesData[widget.paneId]!
+                                        .activeInstance !=
+                                    null
                                 ? AffogatoEditorInstance(
-                                    instanceId: currentInstanceId!,
-                                    workspaceConfigs: widget.workspaceConfigs,
+                                    api: widget.api,
+                                    paneId: widget.paneId,
+                                    instanceId: widget
+                                        .api
+                                        .workspace
+                                        .workspaceConfigs
+                                        .panesData[widget.paneId]!
+                                        .activeInstance!,
+                                    workspaceConfigs:
+                                        widget.api.workspace.workspaceConfigs,
                                     layoutConfigs: LayoutConfigs(
                                       width: widget.layoutConfigs.width,
-                                      height: (instanceIds.isEmpty
+                                      height: (widget
+                                                  .api
+                                                  .workspace
+                                                  .workspaceConfigs
+                                                  .panesData[widget.paneId]!
+                                                  .instances
+                                                  .isEmpty
                                               ? widget.layoutConfigs.height
                                               : widget.layoutConfigs.height -
                                                   widget.stylingConfigs
@@ -334,9 +309,14 @@ class EditorPaneState extends State<EditorPane>
                                                   .tabBarPadding *
                                               2,
                                     ),
-                                    editorTheme: widget.workspaceConfigs
-                                        .themeBundle.editorTheme,
-                                    extensionsEngine: widget.extensionsEngine,
+                                    editorTheme: widget
+                                        .api
+                                        .workspace
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme,
+                                    extensionsEngine:
+                                        widget.api.extensions.engine,
                                   )
                                 : Center(
                                     child: SizedBox(
@@ -346,6 +326,8 @@ class EditorPaneState extends State<EditorPane>
                                         'Affogato',
                                         style: TextStyle(
                                           color: widget
+                                              .api
+                                              .workspace
                                               .workspaceConfigs
                                               .themeBundle
                                               .editorTheme
@@ -363,6 +345,8 @@ class EditorPaneState extends State<EditorPane>
                                     width: widget.layoutConfigs.width * 0.5,
                                     child: Container(
                                       color: widget
+                                          .api
+                                          .workspace
                                           .workspaceConfigs
                                           .themeBundle
                                           .editorTheme
@@ -376,6 +360,8 @@ class EditorPaneState extends State<EditorPane>
                                     width: widget.layoutConfigs.width * 0.5,
                                     child: Container(
                                       color: widget
+                                          .api
+                                          .workspace
                                           .workspaceConfigs
                                           .themeBundle
                                           .editorTheme
@@ -389,6 +375,8 @@ class EditorPaneState extends State<EditorPane>
                                     height: widget.layoutConfigs.height * 0.5,
                                     child: Container(
                                       color: widget
+                                          .api
+                                          .workspace
                                           .workspaceConfigs
                                           .themeBundle
                                           .editorTheme
@@ -402,6 +390,8 @@ class EditorPaneState extends State<EditorPane>
                                     height: widget.layoutConfigs.height * 0.5,
                                     child: Container(
                                       color: widget
+                                          .api
+                                          .workspace
                                           .workspaceConfigs
                                           .themeBundle
                                           .editorTheme
@@ -411,6 +401,8 @@ class EditorPaneState extends State<EditorPane>
                                 DragAreaSegment.centre => Positioned(
                                     child: Container(
                                       color: widget
+                                          .api
+                                          .workspace
                                           .workspaceConfigs
                                           .themeBundle
                                           .editorTheme

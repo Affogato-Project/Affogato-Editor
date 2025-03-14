@@ -3,8 +3,10 @@ part of affogato.editor;
 class PrimaryBar extends StatefulWidget {
   final EditorTheme<Color, TextStyle> editorTheme;
   final AffogatoWorkspaceConfigs workspaceConfigs;
+  final AffogatoAPI api;
 
   const PrimaryBar({
+    required this.api,
     required this.editorTheme,
     required this.workspaceConfigs,
     super.key,
@@ -19,21 +21,21 @@ class PrimaryBarState extends State<PrimaryBar>
   @override
   void initState() {
     registerListener(
-      AffogatoEvents.editorInstanceSetActiveEvents.stream,
+      widget.api.window.instanceDidSetActive,
       (event) {
         setState(() {});
       },
     );
 
     registerListener(
-      AffogatoEvents.windowEditorInstanceClosedEvents.stream,
+      widget.api.editor.instanceClosedStream,
       (event) {
         setState(() {});
       },
     );
 
     registerListener(
-      AffogatoEvents.vfsStructureChangedEvents.stream,
+      widget.api.vfs.structureChangedStream,
       (_) {
         setState(() {});
       },
@@ -98,8 +100,9 @@ class PrimaryBarState extends State<PrimaryBar>
                       setState(() {
                         widget.workspaceConfigs.isPrimaryBarExpanded =
                             !widget.workspaceConfigs.isPrimaryBarExpanded;
-                        AffogatoEvents.editorPaneLayoutChangedEvents.add(
-                            EditorPaneLayoutChangedEvent(widget
+
+                        AffogatoEvents.windowPaneLayoutChangedEventsController
+                            .add(WindowPaneLayoutChangedEvent(widget
                                 .workspaceConfigs.paneManager.panesLayout.id));
                       });
                     },
@@ -121,6 +124,7 @@ class PrimaryBarState extends State<PrimaryBar>
               SizedBox(
                 width: utils.AffogatoConstants.primaryBarExpandedWidth,
                 child: FileBrowserButton(
+                  api: widget.api,
                   isRoot: true,
                   entry: widget.workspaceConfigs.vfs.root,
                   indent: 0,

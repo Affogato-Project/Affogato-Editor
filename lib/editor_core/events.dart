@@ -1,55 +1,103 @@
 part of affogato.editor;
 
+/// AffogatoEvents forms the foundation of all communication and interaction in the Affogato Editor.
+/// It is how actions are executed and how state is observed. However, actions are not meant to be performed directly
+/// by adding events to streams in this class. Use the [AffogatoAPI], which groups events into specific tasks,
+/// to perform actions safely. As for reading [Stream] events, while there is no issue with listening to streams from
+/// this class directly, it is preferred that the [AffogatoAPI] is used for that purpose as well, just because it clearly
+/// delineates different endpoints and for consistency.
+///
+/// There is a specific naming convention for each [Event]:
+/// <area><label>Event
+/// where `area` represents the specific part of the Affogato Editor that the event concerns, such as
+/// "windowPane" or "editorInstance", etc. [Event]s from streams in this class can be of two categories:
+/// 1. A *request* to perform an action
+/// 2. A *notification* that an action has been performed
+/// The `label` gives us information about the type of the event. The label for a request will start with
+/// `request`, while the label for a notification will be in past tense. For example, "requestDocumentSetActive" is a request label,
+/// while "documentChanged" or "instanceDidSetActive" are notification labels.
 class AffogatoEvents {
-  static final StreamController<WindowCloseEvent> windowCloseEvents =
+  // WINDOW //
+  /// Emitted whenever the [AffogatoWindow] is closed. Usually, the last event emitted
+  /// before the whole widget is disposed.
+  static final StreamController<WindowClosedEvent>
+      windowClosedEventsController = StreamController.broadcast();
+
+  /// Emitted after the [AffogatoWindow] is initialised and once extensions are ready to be loaded.
+  static final StreamController<WindowStartupFinishedEvent>
+      windowStartupFinishedEventsController = StreamController.broadcast();
+
+  /* static final StreamController<WindowPaneReloadEvent>
+      windowPaneRequestReloadEvents = StreamController.broadcast(); */
+
+  /// Emitted whenever the layout of panes in the window changes.
+  static final StreamController<WindowPaneLayoutChangedEvent>
+      windowPaneLayoutChangedEventsController = StreamController.broadcast();
+
+  /// Emitted whenever an instance has been set as the active instance
+  static final StreamController<WindowInstanceDidSetActiveEvent>
+      windowInstanceDidSetActiveEventsController = StreamController.broadcast();
+
+  /// Emitted whenever an instance has been unset as the active instance
+  static final StreamController<WindowInstanceDidUnsetActiveEvent>
+      windowInstanceDidUnsetActiveEventsController =
       StreamController.broadcast();
-  static final StreamController<WindowEditorPaneReloadEvent>
-      windowEditorPaneReloadEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorPaneAddedEvent>
-      windowEditorPaneAddedEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorPaneRemoveEvent>
-      windowEditorPaneRemoveEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorInstanceSetActiveEvent>
-      editorInstanceSetActiveEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorInstanceUnsetActiveEvent>
-      windowEditorInstanceUnsetActiveEvents = StreamController.broadcast();
-  static final StreamController<WindowEditorInstanceClosedEvent>
-      windowEditorInstanceClosedEvents = StreamController.broadcast();
 
-  static final StreamController<WindowKeyboardEvent> windowKeyboardEvents =
+  /// Emitted to request for a document to be set as the active instance, regardless
+  /// of whether there is an instance associated with it or whether the instance is currently
+  /// in any of the panes.
+  static final StreamController<WindowRequestDocumentSetActiveEvent>
+      windowRequestDocumentSetActiveEventsController =
       StreamController.broadcast();
 
-  static final StreamController<EditorInstanceCreateEvent>
-      editorInstanceCreateEvents = StreamController.broadcast();
+  static final StreamController<WindowPaneRequestReloadEvent>
+      windowPaneRequestReloadEventsController = StreamController.broadcast();
+  /* /// Emitted to ask for a specific instance to be added to a specific pane.
+  static final StreamController<WindowPaneRequestAddInstanceEvent>
+      windowPaneRequestAddInstanceEventsController =
+      StreamController.broadcast(); */
 
+  /// Emitted for key presses while no instance is currently in focus. If an instance is
+  /// in focus, listen instead for events on [editorKeyEventsController].
+  static final StreamController<WindowKeyboardEvent>
+      windowKeyboardEventsController = StreamController.broadcast();
+
+  // EDITOR //
+  /// Emitted when an instance has been loaded.
   static final StreamController<EditorInstanceLoadedEvent>
-      editorInstanceLoadedEvents = StreamController.broadcast();
-  static final StreamController<EditorKeyEvent> editorKeyEvents =
+      editorInstanceLoadedEventsController = StreamController.broadcast();
+
+  /// Emitted when an instance has been closed.
+  static final StreamController<EditorInstanceClosedEvent>
+      editorInstanceClosedEventsController = StreamController.broadcast();
+
+  /// Emitted for key presses while focus is currently on the [TextField] of
+  /// a specific instance.
+  static final StreamController<EditorKeyEvent> editorKeyEventsController =
       StreamController.broadcast();
-  static final StreamController<EditorDocumentChangedEvent>
-      editorDocumentChangedEvents = StreamController.broadcast();
 
-  static final StreamController<EditorDocumentRequestChangeEvent>
-      editorDocumentRequestChangeEvents = StreamController.broadcast();
-
-  static final StreamController<WindowEditorRequestDocumentSetActiveEvent>
-      windowEditorRequestDocumentSetActiveEvents = StreamController.broadcast();
-
-  static final StreamController<EditorPaneAddInstanceEvent>
-      editorPaneAddInstanceEvents = StreamController.broadcast();
-
-  static final StreamController<EditorPaneLayoutChangedEvent>
-      editorPaneLayoutChangedEvents = StreamController.broadcast();
-
+  /// Emitted to ask a specific instance to reload its state.
   static final StreamController<EditorInstanceRequestReloadEvent>
-      editorInstanceRequestReloadEvents = StreamController.broadcast();
-
-  static final StreamController<EditorInstanceRequestToggleSearchOverlayEvent>
-      editorInstanceRequestToggleSearchOverlayEvents =
+      editorInstanceRequestReloadEventsController =
       StreamController.broadcast();
 
-  static final StreamController<FileManagerStructureChangedEvent>
-      vfsStructureChangedEvents = StreamController.broadcast();
+  /// Emitted to ask a specific instance to toggle the search-and-replace overlay.
+  static final StreamController<EditorInstanceRequestToggleSearchOverlayEvent>
+      editorInstanceRequestToggleSearchOverlayEventsController =
+      StreamController.broadcast();
+
+  // VFS //
+  /// Emitted when a specific document's contents have changed.
+  static final StreamController<VFSDocumentChangedEvent>
+      vfsDocumentChangedEventsController = StreamController.broadcast();
+
+  /// Emitted to modify the contents of a specific document.
+  static final StreamController<VFSDocumentRequestChangeEvent>
+      vfsDocumentRequestChangeEventsController = StreamController.broadcast();
+
+  /// Emitted when the directory structure of the VFS has changed.
+  static final StreamController<VFSStructureChangedEvent>
+      vfsStructureChangedEventsController = StreamController.broadcast();
 }
 
 sealed class Event {
@@ -60,91 +108,67 @@ sealed class Event {
 
 /// WINDOW EVENTS ///
 
-class WindowEvent extends Event {
+abstract class WindowEvent extends Event {
   const WindowEvent(String id) : super('window.$id');
 }
 
-class WindowCloseEvent extends WindowEvent {
-  const WindowCloseEvent() : super('close');
+/// This event is also a bind trigger, which means extensions can give this event's
+/// ID as a bind trigger in the [AffogatoExtension.bindTriggers] property
+class WindowStartupFinishedEvent extends WindowEvent {
+  const WindowStartupFinishedEvent() : super('startupFinished');
 }
 
-class WindowEditorPaneEvent extends WindowEvent {
-  const WindowEditorPaneEvent(String id) : super('editorPane.$id');
+class WindowClosedEvent extends WindowEvent {
+  const WindowClosedEvent() : super('closed');
 }
 
-class WindowEditorPaneRequestAddEvent extends WindowEditorPaneEvent {
-  final List<String> instanceIds;
-
-  /// The direction, relative to the pane given by [anchorPaneId], to which the new pane should be
-  /// placed. This merely informs whichever method computes the actual [PaneData] of the
-  /// *preference* for the new pane's placement. It may or may not be respected.
-  final DragAreaSegment areaSegment;
-
-  final String anchorPaneId;
-
-  const WindowEditorPaneRequestAddEvent({
-    required this.instanceIds,
-    required this.areaSegment,
-    required this.anchorPaneId,
-  }) : super('requestAdd');
+abstract class WindowPaneEvent extends WindowEvent {
+  const WindowPaneEvent(String id) : super('pane.$id');
 }
 
-class WindowEditorPaneAddedEvent extends WindowEditorPaneEvent {
+/// Indicates that a layout change has occurred and descendants of the cell given by
+/// [cellId] need to be rebuilt. Each pane cell listens to events from this stream that have
+/// their [cellId]. Once such an event is received, `setState` is called and that widget will then
+/// emit more such [WindowPaneLayoutChangedEvent]s, one for each [cellId] in its immediate children.
+class WindowPaneLayoutChangedEvent extends WindowPaneEvent {
+  final String cellId;
+  const WindowPaneLayoutChangedEvent(this.cellId) : super('layoutChanged');
+}
+
+/// Requests the pane specified by [paneId] to perform a reload of its state
+class WindowPaneRequestReloadEvent extends WindowPaneEvent {
   final String paneId;
-  const WindowEditorPaneAddedEvent(this.paneId) : super('added');
+  const WindowPaneRequestReloadEvent(this.paneId) : super('requestReload');
 }
 
-class WindowEditorPaneRemoveEvent extends WindowEditorPaneEvent {
-  final String paneId;
-  const WindowEditorPaneRemoveEvent(this.paneId) : super('remove');
+abstract class WindowInstanceEvent extends WindowEvent {
+  const WindowInstanceEvent(String id) : super('instance.$id');
 }
 
-class WindowEditorPaneReloadEvent extends WindowEditorPaneEvent {
-  final String paneId;
-  const WindowEditorPaneReloadEvent(this.paneId) : super('reload');
-}
-
-class WindowEditorInstanceEvent extends WindowEvent {
-  const WindowEditorInstanceEvent(String id) : super('editorInstance.$id');
-}
-
-class WindowEditorInstanceClosedEvent extends WindowEditorInstanceEvent {
-  final String instanceId;
-  final String paneId;
-
-  const WindowEditorInstanceClosedEvent({
-    required this.instanceId,
-    required this.paneId,
-  }) : super('close');
-}
-
-class WindowEditorRequestDocumentSetActiveEvent
-    extends WindowEditorInstanceEvent {
+class WindowRequestDocumentSetActiveEvent extends WindowInstanceEvent {
   final String documentId;
   final String? paneId;
 
-  const WindowEditorRequestDocumentSetActiveEvent({
+  const WindowRequestDocumentSetActiveEvent({
     required this.documentId,
     required this.paneId,
   }) : super('requestDocumentSetActive');
 }
 
-class WindowEditorInstanceSetActiveEvent extends WindowEditorInstanceEvent {
+class WindowInstanceDidSetActiveEvent extends WindowInstanceEvent {
   final String instanceId;
 
-  const WindowEditorInstanceSetActiveEvent({
+  const WindowInstanceDidSetActiveEvent({
     required this.instanceId,
-  }) : super('setActive');
+  }) : super('didSetActive');
 }
 
-class WindowEditorInstanceUnsetActiveEvent extends WindowEditorInstanceEvent {
-  final String paneId;
+class WindowInstanceDidUnsetActiveEvent extends WindowInstanceEvent {
   final String instanceId;
 
-  const WindowEditorInstanceUnsetActiveEvent({
-    required this.paneId,
+  const WindowInstanceDidUnsetActiveEvent({
     required this.instanceId,
-  }) : super('unsetActive');
+  }) : super('didUnsetActive');
 }
 
 class WindowKeyboardEvent extends WindowEvent {
@@ -154,25 +178,42 @@ class WindowKeyboardEvent extends WindowEvent {
 
 /// EDITOR AND DOCUMENT EVENTS ///
 
-class EditorEvent extends Event {
+abstract class EditorEvent extends Event {
   const EditorEvent(String id) : super('editor.$id');
 }
 
-class EditorInstanceEvent extends EditorEvent {
+abstract class EditorInstanceEvent extends EditorEvent {
   const EditorInstanceEvent(String id) : super('instance.$id');
 }
 
-class EditorInstanceCreateEvent extends EditorInstanceEvent {
-  const EditorInstanceCreateEvent() : super('create');
+/// The [instanceId] gives the ID of the instance that was loaded, the
+/// [paneId] containing that instance, as well as the [documentId] being handled
+/// by the instance.
+class EditorInstanceLoadedEvent extends EditorInstanceEvent {
+  final String paneId;
+  final String instanceId;
+  final String documentId;
+  const EditorInstanceLoadedEvent({
+    required this.instanceId,
+    required this.paneId,
+    required this.documentId,
+
+  }) : super('loaded');
 }
 
-class EditorInstanceLoadedEvent extends EditorInstanceEvent {
+class EditorInstanceClosedEvent extends EditorInstanceEvent {
   final String instanceId;
-  const EditorInstanceLoadedEvent(this.instanceId) : super('loaded');
+  final String paneId;
+
+  const EditorInstanceClosedEvent({
+    required this.instanceId,
+    required this.paneId,
+  }) : super('closed');
 }
 
 class EditorInstanceRequestReloadEvent extends EditorInstanceEvent {
-  const EditorInstanceRequestReloadEvent() : super('reload');
+  final String instanceId;
+  const EditorInstanceRequestReloadEvent(this.instanceId) : super('reload');
 }
 
 class EditorInstanceRequestToggleSearchOverlayEvent
@@ -204,61 +245,40 @@ class EditorKeyEvent extends EditorEvent {
   }) : super('key');
 }
 
-class EditorDocumentEvent extends EditorEvent {
-  const EditorDocumentEvent(String id) : super('document.$id');
-}
-
 enum DocumentChangeType { addition, deletion, overwrite }
 
-class EditorDocumentChangedEvent extends EditorDocumentEvent {
+/// FILE MANAGER EVENTS ///
+
+abstract class VFSEvent extends Event {
+  const VFSEvent(String id) : super('vfs.$id');
+}
+
+abstract class VFSDocumentEvent extends Event {
+  const VFSDocumentEvent(String id) : super('document.$id');
+}
+
+class VFSStructureChangedEvent extends VFSEvent {
+  const VFSStructureChangedEvent() : super('structureChanged');
+}
+
+class VFSDocumentChangedEvent extends VFSDocumentEvent {
   final String newContent;
   final String documentId;
   final TextSelection selection;
 
-  const EditorDocumentChangedEvent({
+  const VFSDocumentChangedEvent({
     required this.newContent,
     required this.documentId,
     required this.selection,
-  }) : super('change');
+  }) : super('documentChanged');
 }
 
-class EditorDocumentRequestChangeEvent extends EditorDocumentEvent {
+class VFSDocumentRequestChangeEvent extends VFSDocumentEvent {
+  final String entityId;
   final EditorAction editorAction;
 
-  const EditorDocumentRequestChangeEvent({
+  const VFSDocumentRequestChangeEvent({
+    required this.entityId,
     required this.editorAction,
-  }) : super('changeRequest');
-}
-
-class EditorPaneEvent extends EditorEvent {
-  const EditorPaneEvent(String id) : super('pane.$id');
-}
-
-class EditorPaneAddInstanceEvent extends EditorPaneEvent {
-  final String paneId;
-  final String instanceId;
-
-  const EditorPaneAddInstanceEvent({
-    required this.paneId,
-    required this.instanceId,
-  }) : super('addInstance');
-}
-
-/// Indicates that a layout change has occurred and descendants of the cell given by
-/// [cellId] need to be rebuilt. Each pane cell listens to events from this stream that have
-/// their [cellId]. Once such an event is received, `setState` is called and that widget will then
-/// emit more such [EditorPaneLayoutChangedEvent]s, one for each [cellId] in its immediate children.
-class EditorPaneLayoutChangedEvent extends EditorPaneEvent {
-  final String cellId;
-  const EditorPaneLayoutChangedEvent(this.cellId) : super('layoutChanged');
-}
-
-/// FILE MANAGER EVENTS ///
-
-class FileManagerEvent extends Event {
-  const FileManagerEvent(String id) : super('vfs.$id');
-}
-
-class FileManagerStructureChangedEvent extends FileManagerEvent {
-  const FileManagerStructureChangedEvent() : super('structureChanged');
+  }) : super('documentRequestChange');
 }

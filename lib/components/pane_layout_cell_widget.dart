@@ -5,14 +5,14 @@ part of affogato.editor;
 /// of drag-and-drop for [PaneInstance]s.
 class PaneLayoutCellWidget extends StatefulWidget {
   final AffogatoWorkspaceConfigs workspaceConfigs;
-  final AffogatoExtensionsEngine extensionsEngine;
+  final AffogatoAPI api;
   final AffogatoPerformanceConfigs performanceConfigs;
   final GlobalKey<AffogatoWindowState> windowKey;
   final String cellId;
 
   const PaneLayoutCellWidget({
     required this.workspaceConfigs,
-    required this.extensionsEngine,
+    required this.api,
     required this.performanceConfigs,
     required this.windowKey,
     required this.cellId,
@@ -35,7 +35,7 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
   void initState() {
     loadData();
     registerListener(
-      AffogatoEvents.editorPaneLayoutChangedEvents.stream
+      widget.api.window.panes.layoutChangedStream
           .where((event) => event.cellId == widget.cellId),
       (_) {
         setState(() {
@@ -43,8 +43,8 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
         });
         if (cellState is MultiplePaneList) {
           for (final child in (cellState as MultiplePaneList).value) {
-            AffogatoEvents.editorPaneLayoutChangedEvents
-                .add(EditorPaneLayoutChangedEvent(child.id));
+            AffogatoEvents.windowPaneLayoutChangedEventsController
+                .add(WindowPaneLayoutChangedEvent(child.id));
           }
         }
       },
@@ -66,9 +66,8 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
             width: cellState.width,
             height: cellState.height,
           ),
-          extensionsEngine: widget.extensionsEngine,
+          api: widget.api,
           performanceConfigs: widget.performanceConfigs,
-          workspaceConfigs: widget.workspaceConfigs,
           windowKey: widget.windowKey,
         ),
       );
@@ -82,7 +81,7 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
               PaneLayoutCellWidget(
                 cellId: child.id,
                 workspaceConfigs: widget.workspaceConfigs,
-                extensionsEngine: widget.extensionsEngine,
+                api: widget.api,
                 performanceConfigs: widget.performanceConfigs,
                 windowKey: widget.windowKey,
               ),
@@ -99,7 +98,7 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
               PaneLayoutCellWidget(
                 cellId: child.id,
                 workspaceConfigs: widget.workspaceConfigs,
-                extensionsEngine: widget.extensionsEngine,
+                api: widget.api,
                 performanceConfigs: widget.performanceConfigs,
                 windowKey: widget.windowKey,
               ),

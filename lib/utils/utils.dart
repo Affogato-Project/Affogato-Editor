@@ -37,7 +37,7 @@ class AffogatoConstants {
   static const double searchAndReplaceWidgetWidth = 380;
 }
 
-mixin StreamSubscriptionManager<T extends StatefulWidget> on State<T> {
+mixin StreamSubscriptionManager<T extends StatefulWidget> {
   final List<StreamSubscription> _subscriptions = [];
 
   /// Wraps the `stream.listen` with two additional benefits:
@@ -45,7 +45,11 @@ mixin StreamSubscriptionManager<T extends StatefulWidget> on State<T> {
   /// 2. The [callback] specified is only called when the widget is [mounted]
   void registerListener<E>(Stream<E> stream, void Function(E event) callback) {
     _subscriptions.add(stream.listen((e) {
-      if (mounted) callback(e);
+      if (this is State) {
+        if ((this as State).mounted) callback(e);
+      } else {
+        callback(e);
+      }
     }));
   }
 

@@ -63,50 +63,46 @@ class AffogatoWindowState extends State<AffogatoWindow>
     with utils.StreamSubscriptionManager {
   final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
   final FocusNode keyboardListenerFocusNode = FocusNode();
-  late final AffogatoExtensionsEngine extensionsEngine;
-  late final AffogatoExtensionsAPI extensionsApi;
   late final AffogatoAPI api;
   UniqueKey paneLayoutKey = UniqueKey();
 
   @override
   void initState() {
+    // Set up the [AffogatoAPI], which should always be the first step
+    api = AffogatoAPI(
+      extensions: AffogatoExtensionsAPI(
+        extensionsEngine: AffogatoExtensionsEngine(
+          workspaceConfigs: widget.workspaceConfigs,
+        ),
+      ),
+      window: AffogatoWindowAPI(
+        panes: AffogatoPanesAPI(),
+      ),
+      editor: AffogatoEditorAPI(),
+      vfs: AffogatoVFSAPI(),
+      workspace:
+          AffogatoWorkspaceAPI(workspaceConfigs: widget.workspaceConfigs),
+    );
+    api.init();
+
+    // Request for attention to the global [KeyboardListener] that catches
+    // non-editor keyboard shortcuts
     keyboardListenerFocusNode.requestFocus();
 
-    extensionsEngine = AffogatoExtensionsEngine(
-      vfs: widget.workspaceConfigs.vfs,
-      workspaceConfigs: widget.workspaceConfigs,
-    );
     // Register built-in keyboard shortcuts
     registerBuiltInKeyboardShortcuts();
 
-    extensionsApi = AffogatoExtensionsAPI(extensionsEngine: extensionsEngine);
-    api = AffogatoAPI(
-      extensions: extensionsApi,
-    );
+    // since the editor must always have at least one pane
 
-    final String paneId = utils.generateId();
+    api.window.panes
+        .initPaneManager(api.workspace.workspaceConfigs.panesData.keys.first);
 
-    if (widget.workspaceConfigs.panesData.isEmpty) {
-      widget.workspaceConfigs
-        ..panesData[paneId] = PaneData(instances: [])
-        ..paneManager = PaneManager.empty(
-          rootPane: SinglePaneList(
-            paneId,
-            width: (widget.workspaceConfigs.isPrimaryBarExpanded
-                    ? widget.workspaceConfigs.stylingConfigs.windowWidth -
-                        (utils.AffogatoConstants.primaryBarExpandedWidth +
-                            utils.AffogatoConstants.primaryBarClosedWidth)
-                    : widget.workspaceConfigs.stylingConfigs.windowWidth -
-                        utils.AffogatoConstants.primaryBarClosedWidth) -
-                3,
-            height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-                utils.AffogatoConstants.statusBarHeight,
-          ),
-        );
-    }
-
+    // in order to show our own context menu, this achieves the `e.preventDefault()`
+    // behaviour for every right-click action
     BrowserContextMenu.disableContextMenu();
-    widget.workspaceConfigs.vfs.createEntity(
+
+    // initialise the virtual file system
+    api.workspace.workspaceConfigs.vfs.createEntity(
       AffogatoVFSEntity.dir(
         entityId: utils.generateId(),
         name: 'Dir_1',
@@ -148,183 +144,9 @@ class AffogatoWindowState extends State<AffogatoWindow>
       ),
     );
 
-    // rebuild the panes layout
-    registerListener(
-      AffogatoEvents.editorPaneLayoutChangedEvents.stream,
-      (_) {
-        setState(() {
-          final tmp = widget.workspaceConfigs.paneManager.panesLayout;
-
-          if (tmp is SinglePaneList) {
-            widget.workspaceConfigs.paneManager.panesLayout = SinglePaneList(
-              paneId,
-              width: (widget.workspaceConfigs.isPrimaryBarExpanded
-                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          (utils.AffogatoConstants.primaryBarExpandedWidth +
-                              utils.AffogatoConstants.primaryBarClosedWidth)
-                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          utils.AffogatoConstants.primaryBarClosedWidth) -
-                  3,
-              height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-                  utils.AffogatoConstants.statusBarHeight,
-              id: tmp.id,
-            );
-          } else if (tmp is HorizontalPaneList) {
-            widget.workspaceConfigs.paneManager.panesLayout =
-                HorizontalPaneList(
-              tmp.value,
-              width: (widget.workspaceConfigs.isPrimaryBarExpanded
-                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          (utils.AffogatoConstants.primaryBarExpandedWidth +
-                              utils.AffogatoConstants.primaryBarClosedWidth)
-                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          utils.AffogatoConstants.primaryBarClosedWidth) -
-                  3,
-              height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-                  utils.AffogatoConstants.statusBarHeight,
-              id: tmp.id,
-            );
-          } else if (tmp is VerticalPaneList) {
-            widget.workspaceConfigs.paneManager.panesLayout = VerticalPaneList(
-              tmp.value,
-              width: (widget.workspaceConfigs.isPrimaryBarExpanded
-                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          (utils.AffogatoConstants.primaryBarExpandedWidth +
-                              utils.AffogatoConstants.primaryBarClosedWidth)
-                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          utils.AffogatoConstants.primaryBarClosedWidth) -
-                  3,
-              height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-                  utils.AffogatoConstants.statusBarHeight,
-              id: tmp.id,
-            );
-          }
-          paneLayoutKey = UniqueKey();
-        });
-      },
-    );
-
-    registerListener(
-      AffogatoEvents.windowEditorPaneRemoveEvents.stream,
-      (event) {
-        /* if (widget.workspaceConfigs.panesData.length > 1) {
-          widget.workspaceConfigs.panesData.remove(event.paneId);
-          widget.workspaceConfigs.activePane =
-              widget.workspaceConfigs.paneManager.removePaneById(event.paneId);
-        } */
-      },
-    );
-
-    registerListener(
-      AffogatoEvents.windowEditorRequestDocumentSetActiveEvents.stream,
-      (event) {
-        String? instanceIdWithDocument;
-        if (event.paneId == null) {
-          for (final entry in widget.workspaceConfigs.instancesData.entries) {
-            // whereType<MapEntry<String, AffogatoEditorInstanceData>>()
-            if (entry.value is AffogatoEditorInstanceData) {
-              final value = entry.value as AffogatoEditorInstanceData;
-
-              if (value.documentId == event.documentId) {
-                instanceIdWithDocument = entry.key;
-                break;
-              }
-            }
-          }
-        } else {
-          for (final instance
-              in widget.workspaceConfigs.panesData[event.paneId]!.instances) {
-            if (widget.workspaceConfigs.instancesData[instance]
-                is AffogatoEditorInstanceData) {
-              final value = widget.workspaceConfigs.instancesData[instance]
-                  as AffogatoEditorInstanceData;
-
-              if (value.documentId == event.documentId) {
-                instanceIdWithDocument = instance;
-                break;
-              }
-            }
-          }
-        }
-        if (instanceIdWithDocument == null) {
-          instanceIdWithDocument = utils.generateId();
-          widget.workspaceConfigs.instancesData[instanceIdWithDocument] =
-              AffogatoEditorInstanceData(
-            documentId: event.documentId,
-            languageBundle: widget.workspaceConfigs.detectLanguage(widget
-                .workspaceConfigs.vfs
-                .accessEntity(event.documentId)!
-                .document!
-                .extension),
-            themeBundle: widget.workspaceConfigs.themeBundle,
-          );
-
-          if (widget.workspaceConfigs.panesData.isEmpty) {
-            final String paneId = utils.generateId();
-            widget.workspaceConfigs.panesData[paneId] =
-                PaneData(instances: [instanceIdWithDocument]);
-            widget.workspaceConfigs.paneManager.panesLayout = SinglePaneList(
-              paneId,
-              width: (widget.workspaceConfigs.isPrimaryBarExpanded
-                      ? widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          (utils.AffogatoConstants.primaryBarExpandedWidth +
-                              utils.AffogatoConstants.primaryBarClosedWidth)
-                      : widget.workspaceConfigs.stylingConfigs.windowWidth -
-                          utils.AffogatoConstants.primaryBarClosedWidth) -
-                  3,
-              height: widget.workspaceConfigs.stylingConfigs.windowHeight -
-                  utils.AffogatoConstants.statusBarHeight,
-            );
-          } else if (event.paneId != null) {
-            widget.workspaceConfigs.panesData[event.paneId]!.instances
-                .add(instanceIdWithDocument);
-          } else {
-            widget.workspaceConfigs.panesData.entries.first.value.instances
-                .add(instanceIdWithDocument);
-          }
-        }
-        AffogatoEvents.editorInstanceSetActiveEvents.add(
-            WindowEditorInstanceSetActiveEvent(
-                instanceId: instanceIdWithDocument));
-      },
-    );
-
-    registerListener(
-      AffogatoEvents.editorDocumentChangedEvents.stream,
-      (event) {
-        widget.workspaceConfigs.vfs
-            .accessEntity(event.documentId)!
-            .document!
-            .addVersion(event.newContent);
-      },
-    );
-
-    // listen to document closing events
-    registerListener(
-      AffogatoEvents.windowEditorInstanceClosedEvents.stream,
-      (event) {
-        widget.workspaceConfigs.panesData[event.paneId]!.instances
-            .remove(event.instanceId);
-        AffogatoEvents.windowEditorInstanceUnsetActiveEvents.add(
-          WindowEditorInstanceUnsetActiveEvent(
-            paneId: event.paneId,
-            instanceId: event.instanceId,
-          ),
-        );
-      },
-    );
-
-    // finally, register the extensions bound to the onStartupFinished trigger
-    for (final ext in widget.workspaceConfigs.extensions.where(
-      (e) => e.bindTriggers
-          .contains(const AffogatoBindTriggers.onStartupFinished().id),
-    )) {
-      api.extensions.register(ext);
-      ext.loadExtension(
-        vfs: widget.workspaceConfigs.vfs,
-        workspaceConfigs: widget.workspaceConfigs,
-      );
-    }
+    // finally, notify that the window has been started up
+    AffogatoEvents.windowStartupFinishedEventsController
+        .add(const WindowStartupFinishedEvent());
 
     // AffogatoEvents.editorInstanceSetActiveEvents.stream
     super.initState();
@@ -336,8 +158,8 @@ class AffogatoWindowState extends State<AffogatoWindow>
       key: windowKey,
       child: KeyboardListener(
         focusNode: keyboardListenerFocusNode,
-        onKeyEvent: (event) =>
-            AffogatoEvents.windowKeyboardEvents.add(WindowKeyboardEvent(event)),
+        onKeyEvent: (event) => AffogatoEvents.windowKeyboardEventsController
+            .add(WindowKeyboardEvent(event)),
         child: GestureDetector(
           onTap: () => ContextMenuController.removeAny(),
           child: Container(
@@ -366,16 +188,17 @@ class AffogatoWindowState extends State<AffogatoWindow>
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         PrimaryBar(
+                          api: api,
                           workspaceConfigs: widget.workspaceConfigs,
                           editorTheme:
                               widget.workspaceConfigs.themeBundle.editorTheme,
                         ),
                         PaneLayoutCellWidget(
                           key: paneLayoutKey,
+                          api: api,
                           cellId: widget
                               .workspaceConfigs.paneManager.panesLayout.id,
                           workspaceConfigs: widget.workspaceConfigs,
-                          extensionsEngine: extensionsEngine,
                           performanceConfigs: widget.performanceConfigs,
                           windowKey: windowKey,
                         ),
@@ -385,6 +208,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
                   SizedBox(
                     height: utils.AffogatoConstants.statusBarHeight,
                     child: StatusBar(
+                      api: api,
                       stylingConfigs: widget.workspaceConfigs.stylingConfigs,
                       workspaceConfigs: widget.workspaceConfigs,
                     ),
@@ -401,50 +225,39 @@ class AffogatoWindowState extends State<AffogatoWindow>
   @override
   void dispose() async {
     BrowserContextMenu.enableContextMenu();
-    AffogatoEvents.windowCloseEvents.add(const WindowCloseEvent());
+    AffogatoEvents.windowClosedEventsController.add(const WindowClosedEvent());
     cancelSubscriptions();
-    extensionsEngine.deinit();
-    await AffogatoEvents.editorInstanceSetActiveEvents.close();
-    await AffogatoEvents.editorPaneLayoutChangedEvents.close();
-    await AffogatoEvents.editorInstanceSetActiveEvents.close();
-    await AffogatoEvents.windowEditorInstanceUnsetActiveEvents.close();
-    await AffogatoEvents.windowKeyboardEvents.close();
-    await AffogatoEvents.editorInstanceCreateEvents.close();
-    await AffogatoEvents.editorInstanceLoadedEvents.close();
-    await AffogatoEvents.editorKeyEvents.close();
-    await AffogatoEvents.editorDocumentChangedEvents.close();
-    await AffogatoEvents.editorDocumentRequestChangeEvents.close();
-    await AffogatoEvents.windowEditorInstanceClosedEvents.close();
-    await AffogatoEvents.editorPaneAddInstanceEvents.close();
-    await AffogatoEvents.editorInstanceRequestReloadEvents.close();
-    await AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.close();
-    await AffogatoEvents.vfsStructureChangedEvents.close();
-    await AffogatoEvents.windowCloseEvents.close();
+    await AffogatoEvents.windowStartupFinishedEventsController.close();
+    await AffogatoEvents.windowPaneLayoutChangedEventsController.close();
+    await AffogatoEvents.windowInstanceDidSetActiveEventsController.close();
+    await AffogatoEvents.windowInstanceDidUnsetActiveEventsController.close();
+    await AffogatoEvents.windowRequestDocumentSetActiveEventsController.close();
+    await AffogatoEvents.windowPaneRequestReloadEventsController.close();
+    await AffogatoEvents.windowKeyboardEventsController.close();
+    await AffogatoEvents.editorInstanceLoadedEventsController.close();
+    await AffogatoEvents.editorInstanceClosedEventsController.close();
+    await AffogatoEvents.editorKeyEventsController.close();
+    await AffogatoEvents.editorInstanceRequestReloadEventsController.close();
+    await AffogatoEvents
+        .editorInstanceRequestToggleSearchOverlayEventsController
+        .close();
+    await AffogatoEvents.vfsDocumentChangedEventsController.close();
+    await AffogatoEvents.vfsDocumentRequestChangeEventsController.close();
+    await AffogatoEvents.vfsStructureChangedEventsController.close();
+    await AffogatoEvents.windowClosedEventsController.close();
     super.dispose();
   }
 
   void registerBuiltInKeyboardShortcuts() {
-    extensionsEngine.shortcutsDispatcher
+    api.extensions.engine.shortcutsDispatcher
       ..overrideShortcut(
         [LogicalKeyboardKey.metaLeft, LogicalKeyboardKey.keyB],
-        requestEditorInstanceShowFindOverlay,
+        api.editor.requestCurrentInstanceToggleSearchOverlay,
       )
       ..overrideShortcut(
         [LogicalKeyboardKey.metaRight, LogicalKeyboardKey.keyB],
-        requestEditorInstanceShowFindOverlay,
+        api.editor.requestCurrentInstanceToggleSearchOverlay,
       );
-  }
-
-  void requestEditorInstanceShowFindOverlay() async {
-    if (widget.workspaceConfigs.activeDocument == null) {
-      return;
-    } else {
-      AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.add(
-        EditorInstanceRequestToggleSearchOverlayEvent(
-          widget.workspaceConfigs.activeDocument!,
-        ),
-      );
-    }
   }
 }
 

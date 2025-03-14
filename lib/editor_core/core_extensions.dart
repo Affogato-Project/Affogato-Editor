@@ -13,22 +13,17 @@ class PairMatcherExtension extends AffogatoExtension {
       : super(
           name: 'affogato_pair_matcher',
           displayName: 'Pair Matcher',
-          bindTriggers: const [AffogatoBindTriggers.onStartupFinished()],
+          bindTriggers: const ['startupFinished'],
         );
 
   @override
-  void loadExtension({
-    required AffogatoVFS vfs,
-    required AffogatoWorkspaceConfigs workspaceConfigs,
-  }) {
+  void loadExtension(AffogatoAPI api) {
     // Need to
     /**
      * TODO:
-     *  1. prohibit access to the underlying [StreamController] in future versions
      *  2. handle bracket wrapping by keeping track of previous [TextSelection] in EditingContext
-     *  3. use Editor API to make document change requests, not through the StreamController
      */
-    AffogatoEvents.editorKeyEvents.stream.listen((event) {
+    api.editor.keyEventsStream.listen((event) {
       if (event.keyEvent is KeyDownEvent || event.keyEvent is KeyRepeatEvent) {
         if (triggerChars.containsKey(event.keyEvent.character)) {
           final String newText = event.editingContext.selection
@@ -36,8 +31,13 @@ class PairMatcherExtension extends AffogatoExtension {
               triggerChars[event.keyEvent.character]! +
               event.editingContext.selection
                   .textAfter(event.editingContext.content);
-          AffogatoEvents.editorDocumentRequestChangeEvents.add(
-            EditorDocumentRequestChangeEvent(
+          api.vfs.documentRequestChange(
+            VFSDocumentRequestChangeEvent(
+              entityId: api.workspace.workspaceConfigs.entitiesLocation.entries
+                  .firstWhere((entry) =>
+                      entry.value.$1 ==
+                      api.workspace.workspaceConfigs.activeInstance!)
+                  .key,
               editorAction: EditorAction(
                 editingValue: TextEditingValue(
                   text: newText,
@@ -57,8 +57,14 @@ class PairMatcherExtension extends AffogatoExtension {
                 event.editingContext.selection
                     .textAfter(event.editingContext.content)
                     .substring(1);
-            AffogatoEvents.editorDocumentRequestChangeEvents.add(
-              EditorDocumentRequestChangeEvent(
+            api.vfs.documentRequestChange(
+              VFSDocumentRequestChangeEvent(
+                entityId: api
+                    .workspace.workspaceConfigs.entitiesLocation.entries
+                    .firstWhere((entry) =>
+                        entry.value.$1 ==
+                        api.workspace.workspaceConfigs.activeInstance!)
+                    .key,
                 editorAction: EditorAction(
                   editingValue: TextEditingValue(
                     text: newText,
@@ -75,6 +81,7 @@ class PairMatcherExtension extends AffogatoExtension {
 }
 
 final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
+  late AffogatoAPI api;
   static const triggerChars = {
     '(': ')',
     '[': ']',
@@ -85,7 +92,7 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
           keys: [LogicalKeyboardKey.enter],
           name: 'affogato_auto_indenter',
           displayName: 'Auto Indenter',
-          bindTriggers: const [AffogatoBindTriggers.onStartupFinished()],
+          bindTriggers: const ['startupFinished'],
         );
 
   @override
@@ -118,8 +125,13 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
 
         final String newText = precedentText + insertText + succeedingText;
 
-        AffogatoEvents.editorDocumentRequestChangeEvents.add(
-          EditorDocumentRequestChangeEvent(
+        api.vfs.documentRequestChange(
+          VFSDocumentRequestChangeEvent(
+            entityId: api.workspace.workspaceConfigs.entitiesLocation.entries
+                .firstWhere((entry) =>
+                    entry.value.$1 ==
+                    api.workspace.workspaceConfigs.activeInstance!)
+                .key,
             editorAction: EditorAction(
               editingValue: TextEditingValue(
                 text: newText,
@@ -140,11 +152,9 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
   }
 
   @override
-  void loadExtension({
-    required AffogatoVFS vfs,
-    required AffogatoWorkspaceConfigs workspaceConfigs,
-  }) {
-    AffogatoEvents.editorKeyEvents.stream
+  void loadExtension(AffogatoAPI api) {
+    this.api = api;
+    api.editor.keyEventsStream
         .where((event) => event.keyEvent.logicalKey == LogicalKeyboardKey.enter)
         .listen((event) {});
   }

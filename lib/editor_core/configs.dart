@@ -59,13 +59,16 @@ class AffogatoWorkspaceConfigs {
   /// A mapping of pane IDs to the IDs of the [PaneInstance]s contained by that pane
   final Map<String, PaneData> panesData;
 
-  String? activePane;
+  String? activeInstance;
 
   bool isPrimaryBarExpanded = false;
 
   /// Stores the instance states for opened instances in the various panes, each one
   /// associated with its corresponding [PaneInstanceData] object
   final Map<String, PaneInstanceData> instancesData;
+
+  /// A mapping of entity IDs to (instanceId, paneId) that contains the entity.
+  final Map<String, (String, String)> entitiesLocation = {};
 
   final AffogatoVFS vfs;
 
@@ -79,10 +82,11 @@ class AffogatoWorkspaceConfigs {
 
   final AffogatoStylingConfigs stylingConfigs;
 
-  String? activeDocument;
+  late String activePane;
 
   AffogatoWorkspaceConfigs({
-    Map<String, PaneData>? panesData,
+    Map<String, PaneData>? defaultPanesData,
+    String? activePane,
     PaneManager? paneManager,
     required this.projectName,
     required this.instancesData,
@@ -90,7 +94,8 @@ class AffogatoWorkspaceConfigs {
     required this.languageBundles,
     required this.stylingConfigs,
     required this.extensions,
-  })  : panesData = panesData ?? {},
+  })  : panesData =
+            defaultPanesData ?? {utils.generateId(): PaneData(instances: [])},
         vfs = AffogatoVFS(
           root: AffogatoVFSEntity.dir(
             entityId: utils.generateId(),
@@ -100,6 +105,7 @@ class AffogatoWorkspaceConfigs {
           ),
         ) {
     if (paneManager != null) this.paneManager = paneManager;
+    this.activePane = activePane ?? panesData.keys.first;
   }
 
   LanguageBundle? detectLanguage(String extension) {

@@ -21,6 +21,8 @@ class AffogatoEditorInstanceData extends PaneInstanceData {
 
 class AffogatoEditorInstance extends PaneInstance<AffogatoEditorInstanceData> {
   AffogatoEditorInstance({
+    required super.api,
+    required super.paneId,
     required super.layoutConfigs,
     required super.editorTheme,
     required super.workspaceConfigs,
@@ -135,15 +137,19 @@ class AffogatoEditorInstanceState
           .parseAllWordsInDocument(content: textController.text));
 
       // Set off the event
-      AffogatoEvents.editorInstanceLoadedEvents
-          .add(EditorInstanceLoadedEvent(data.documentId));
-      widget.workspaceConfigs.activeDocument = data.documentId;
+      AffogatoEvents.editorInstanceLoadedEventsController.add(
+        EditorInstanceLoadedEvent(
+          documentId: data.documentId,
+          instanceId: widget.instanceId,
+          paneId: widget.paneId,
+        ),
+      );
 
       // Link the text controller to the document
       textController.addListener(() {
         currentDoc.addVersion(textController.text);
-        AffogatoEvents.editorDocumentChangedEvents.add(
-          EditorDocumentChangedEvent(
+        AffogatoEvents.vfsDocumentChangedEventsController.add(
+          VFSDocumentChangedEvent(
             newContent: textController.text,
             documentId: data.documentId,
             selection: textController.selection,
@@ -154,7 +160,7 @@ class AffogatoEditorInstanceState
 
       // the actual document parsing and interceptors
       registerListener(
-        AffogatoEvents.editorKeyEvents.stream
+        widget.api.editor.keyEventsStream
             .where((e) => e.instanceId == widget.instanceId),
         (event) {
           if (event.keyEvent is KeyDownEvent) {
@@ -179,13 +185,12 @@ class AffogatoEditorInstanceState
       );
 
       registerListener(
-        AffogatoEvents.editorDocumentRequestChangeEvents.stream,
+        widget.api.vfs.documentRequestChangeStream,
         (event) {
           textController.value = event.editorAction.editingValue;
           setState(() {});
-
-          AffogatoEvents.editorDocumentChangedEvents.add(
-            EditorDocumentChangedEvent(
+          AffogatoEvents.vfsDocumentChangedEventsController.add(
+            VFSDocumentChangedEvent(
               newContent: textController.text,
               documentId: data.documentId,
               selection: textController.selection,
@@ -195,7 +200,7 @@ class AffogatoEditorInstanceState
       );
 
       registerListener(
-        AffogatoEvents.editorInstanceRequestToggleSearchOverlayEvents.stream
+        widget.api.editor.instanceRequestToggleSearchOverlay
             .where((event) => event.documentId == data.documentId),
         (_) => setState(() {
           searchAndReplaceController.toggle();
@@ -208,7 +213,7 @@ class AffogatoEditorInstanceState
 
     // And register a listener to call whenever the instance needs to be reloaded
     registerListener(
-      AffogatoEvents.editorInstanceRequestReloadEvents.stream,
+      widget.api.editor.instanceRequestReloadStream,
       (event) {
         setState(() {
           // `saveInstance()`
@@ -378,8 +383,8 @@ class AffogatoEditorInstanceState
         offset: (textBefore + insertText).length,
       ),
     );
-    AffogatoEvents.editorDocumentChangedEvents.add(
-      EditorDocumentChangedEvent(
+    AffogatoEvents.vfsDocumentChangedEventsController.add(
+      VFSDocumentChangedEvent(
         newContent: textController.text,
         documentId: data.documentId,
         selection: textController.selection,
@@ -472,7 +477,8 @@ class AffogatoEditorInstanceState
                               ),
                             );
 
-                            AffogatoEvents.editorKeyEvents.add(keyEvent);
+                            AffogatoEvents.editorKeyEventsController
+                                .add(keyEvent);
 
                             return widget.extensionsEngine
                                 .triggerEditorKeybindings(keyEvent);

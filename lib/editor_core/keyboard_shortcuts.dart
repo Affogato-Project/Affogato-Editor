@@ -6,8 +6,10 @@ class KeyboardShortcutsDispatcher {
   final List<LogicalKeyboardKey> sequence = [];
   final Map<String, VoidCallback> shortcuts = {};
 
-  KeyboardShortcutsDispatcher() {
-    AffogatoEvents.windowKeyboardEvents.stream.listen(handleKeystroke);
+  KeyboardShortcutsDispatcher({
+    required Stream<WindowKeyboardEvent> stream,
+  }) {
+    stream.listen(handleKeystroke);
   }
 
   void handleKeystroke(WindowKeyboardEvent event) {

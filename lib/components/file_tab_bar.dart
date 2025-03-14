@@ -6,8 +6,10 @@ class FileTabBar extends StatefulWidget {
   final String? currentInstanceId;
   final String paneId;
   final AffogatoWorkspaceConfigs workspaceConfigs;
+  final AffogatoAPI api;
 
   const FileTabBar({
+    required this.api,
     required this.stylingConfigs,
     required this.workspaceConfigs,
     required this.instanceIds,
@@ -45,16 +47,17 @@ class FileTabBarState extends State<FileTabBar>
           instanceId: widget.instanceIds[i],
           paneId: widget.paneId,
           onTap: () {
-            AffogatoEvents.editorInstanceSetActiveEvents.add(
-              WindowEditorInstanceSetActiveEvent(
-                instanceId: widget.instanceIds[i],
-              ),
+            widget.api.window.setActiveInstance(
+              instanceId: widget.instanceIds[i],
+              paneId: widget.api.workspace.workspaceConfigs.activePane,
             );
+
             setState(() {});
           },
           onClose: () {
-            AffogatoEvents.windowEditorInstanceClosedEvents.add(
-              WindowEditorInstanceClosedEvent(
+            widget.api.editor.closeInstance(instanceId: widget.instanceIds[i]);
+            AffogatoEvents.editorInstanceClosedEventsController.add(
+              EditorInstanceClosedEvent(
                 instanceId: widget.instanceIds[i],
                 paneId: widget.paneId,
               ),

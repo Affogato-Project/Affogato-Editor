@@ -110,8 +110,8 @@ class PaneManager {
               width: anchorCell.width,
               height: anchorCell.height,
             );
-      AffogatoEvents.editorPaneLayoutChangedEvents
-          .add(EditorPaneLayoutChangedEvent(panesLayout.id));
+      AffogatoEvents.windowPaneLayoutChangedEventsController
+          .add(WindowPaneLayoutChangedEvent(panesLayout.id));
     } else {
       final path = (panesLayout as MultiplePaneList).pathToPane(anchorPaneId);
       MultiplePaneList parentOfAnchor =
@@ -167,8 +167,8 @@ class PaneManager {
           }
         }
       }
-      AffogatoEvents.editorPaneLayoutChangedEvents
-          .add(EditorPaneLayoutChangedEvent(parentOfAnchor.id));
+      AffogatoEvents.windowPaneLayoutChangedEventsController
+          .add(WindowPaneLayoutChangedEvent(parentOfAnchor.id));
     }
   }
 

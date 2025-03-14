@@ -14,15 +14,19 @@ part of affogato.editor;
 /// an entry for the given [instanceId] exists in the workspace configs.
 abstract class PaneInstance<T extends PaneInstanceData> extends StatefulWidget {
   final String instanceId;
+  final String paneId;
   final EditorTheme<Color, TextStyle> editorTheme;
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoExtensionsEngine extensionsEngine;
   final LayoutConfigs layoutConfigs;
+  final AffogatoAPI api;
 
   PaneInstance({
+    required this.api,
     required this.editorTheme,
     required this.workspaceConfigs,
     required this.extensionsEngine,
+    required this.paneId,
     required this.instanceId,
     required this.layoutConfigs,
   }) : super(

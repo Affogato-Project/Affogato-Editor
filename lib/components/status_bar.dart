@@ -3,8 +3,10 @@ part of affogato.editor;
 class StatusBar extends StatefulWidget {
   final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoStylingConfigs stylingConfigs;
+  final AffogatoAPI api;
 
   StatusBar({
+    required this.api,
     required this.stylingConfigs,
     required this.workspaceConfigs,
   }) : super(
@@ -22,15 +24,7 @@ class StatusBarState extends State<StatusBar>
   @override
   void initState() {
     registerListener(
-      AffogatoEvents.windowEditorPaneAddedEvents.stream,
-      (event) {
-        widget.workspaceConfigs.activePane = event.paneId;
-        setState(() {});
-      },
-    );
-
-    registerListener(
-      AffogatoEvents.editorInstanceSetActiveEvents.stream,
+      widget.api.window.instanceDidSetActive,
       (event) {
         setState(() {
           currentInstanceId = event.instanceId;

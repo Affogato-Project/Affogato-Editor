@@ -33,7 +33,6 @@ void main(List<String> args) {
               fileAssociationContributions: [],
             ): ['md'],
           },
-          panesData: {},
           instancesData: {},
           stylingConfigs: const AffogatoStylingConfigs(
             windowWidth: 1100,

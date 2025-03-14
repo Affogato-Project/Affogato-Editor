@@ -1,6 +1,6 @@
 part of affogato.apis;
 
-class AffogatoExtensionsEngine {
+class AffogatoExtensionsEngine extends AffogatoAPIComponent {
   static final Iterable<LogicalKeyboardKey> allKeys =
       LogicalKeyboardKey.knownLogicalKeys;
 
@@ -10,15 +10,18 @@ class AffogatoExtensionsEngine {
       editorKeybindingExtensions = {};
   final List<AffogatoExtension> extensions = [];
 
-  final AffogatoVFS vfs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
-  final KeyboardShortcutsDispatcher shortcutsDispatcher =
-      KeyboardShortcutsDispatcher();
+  late final KeyboardShortcutsDispatcher shortcutsDispatcher;
 
   AffogatoExtensionsEngine({
-    required this.vfs,
     required this.workspaceConfigs,
   });
+
+  @override
+  void init() {
+    shortcutsDispatcher =
+        KeyboardShortcutsDispatcher(stream: api.window.keyboardEventStream);
+  }
 
   void registerEditorKeybindingExtension(
       AffogatoEditorKeybindingExtension ext) {
@@ -36,7 +39,7 @@ class AffogatoExtensionsEngine {
     if (editorKeybindingExtensions.containsKey(event.keyEvent.logicalKey)) {
       return editorKeybindingExtensions[event.keyEvent.logicalKey]!.handle(
         editorKeyEvent: event,
-        vfs: vfs,
+        vfs: api.workspace.workspaceConfigs.vfs,
         workspaceConfigs: workspaceConfigs,
       );
     } else {
