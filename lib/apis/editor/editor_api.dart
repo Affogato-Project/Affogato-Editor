@@ -41,7 +41,7 @@ class AffogatoEditorAPI extends AffogatoAPIComponent {
     if (paneId == null) {
       throw Exception('$instanceId is not in an existing pane');
     } else {
-      late int removeIndex;
+      int removeIndex = 0;
       // loop through each instanceId in the pane to determine the index of the instance to be removed
       // so that it can be used later on to set the next active instance
       for (int i = 0;
@@ -55,9 +55,9 @@ class AffogatoEditorAPI extends AffogatoAPIComponent {
           break;
         }
       }
+      api.window.unsetActiveInstance(instanceId: instanceId);
       api.workspace.workspaceConfigs.panesData[paneId]!.instances
           .removeAt(removeIndex);
-      api.window.unsetActiveInstance(instanceId: instanceId);
       if (removeIndex != 0) {
         api.window.setActiveInstance(
           paneId: paneId,
@@ -66,6 +66,12 @@ class AffogatoEditorAPI extends AffogatoAPIComponent {
         );
       }
     }
+    AffogatoEvents.editorInstanceClosedEventsController.add(
+      EditorInstanceClosedEvent(
+        instanceId: instanceId,
+        paneId: paneId,
+      ),
+    );
   }
 
   /// Essentially, this causes the search-and-replace overlay to be toggled.

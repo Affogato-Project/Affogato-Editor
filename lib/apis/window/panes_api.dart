@@ -153,6 +153,7 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
               .pathToPane(anchorPaneId);
       MultiplePaneList parentOfAnchor =
           path?.last ?? (throw Exception('Parent of anchor not found'));
+
       final int index = parentOfAnchor.value.indexWhere(
           (pane) => pane is SinglePaneList && pane.paneId == anchorPaneId);
       final PaneList anchorCell = parentOfAnchor.value[index];
@@ -174,11 +175,13 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
                 items,
                 width: anchorCell.width,
                 height: anchorCell.height,
+                id: parentOfAnchor.value[index].id,
               )
             : VerticalPaneList(
                 items,
                 width: anchorCell.width,
                 height: anchorCell.height,
+                id: parentOfAnchor.value[index].id,
               );
       } else {
         final double newWidth = axis == Axis.horizontal

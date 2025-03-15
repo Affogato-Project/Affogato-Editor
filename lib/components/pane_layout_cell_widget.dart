@@ -1,7 +1,7 @@
 part of affogato.editor;
 
 /// The widget responsible for laying out and sizing panes in the [AffogatoWindow],
-/// based on the [AffogatoWorkspaceConfigs.paneManager.panesLayout]. It also handles resizing and docking
+/// based on the [AffogatoWorkspaceConfigs.panesLayout]. It also handles resizing and docking
 /// of drag-and-drop for [PaneInstance]s.
 class PaneLayoutCellWidget extends StatefulWidget {
   final AffogatoAPI api;
@@ -37,15 +37,15 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
       widget.api.window.panes.cellRequestReloadStream
           .where((event) => event.cellId == widget.cellId),
       (_) {
+        loadData();
+
         if (cellState is MultiplePaneList) {
           for (final child in (cellState as MultiplePaneList).value) {
             AffogatoEvents.windowPaneCellRequestReloadEventsController
                 .add(WindowPaneCellRequestReloadEvent(child.id));
           }
-        }
-        setState(() {
-          loadData();
-        });
+        } else {}
+        setState(() {});
       },
     );
     super.initState();
@@ -58,7 +58,6 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
         width: cellState.width,
         height: cellState.height,
         child: EditorPane(
-          paneId: (cellState as SinglePaneList).paneId,
           cellId: cellState.id,
           layoutConfigs: LayoutConfigs(
             width: cellState.width,

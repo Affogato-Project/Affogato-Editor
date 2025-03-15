@@ -68,10 +68,7 @@ class AffogatoWindowAPI extends AffogatoAPIComponent {
         paneId = pane.key;
         if (pane.value.activeInstance == instanceId) {
           api.workspace.workspaceConfigs.panesData[pane.key]!.activeInstance =
-              pane.value.instances.length > 1
-                  ? pane.value
-                      .instances[pane.value.instances.indexOf(instanceId) - 1]
-                  : null;
+              null;
         }
 
         break;

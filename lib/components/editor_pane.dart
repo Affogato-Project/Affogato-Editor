@@ -5,7 +5,6 @@ class EditorPane extends StatefulWidget {
   final LayoutConfigs layoutConfigs;
   final AffogatoAPI api;
   final GlobalKey<AffogatoWindowState> windowKey;
-  final String paneId;
   final String cellId;
 
   EditorPane({
@@ -13,7 +12,6 @@ class EditorPane extends StatefulWidget {
     required this.layoutConfigs,
     required this.api,
     required this.windowKey,
-    required this.paneId,
   });
   // key: ValueKey( "${api.workspace.workspaceConfigs.panesData[paneId]}${layoutConfigs.width}-${layoutConfigs.height}-$paneId-$cellId")
 
@@ -31,8 +29,11 @@ class EditorPaneState extends State<EditorPane>
   @override
   void initState() {
     registerListener(
-      widget.api.window.panes.requestReloadStream
-          .where((event) => event.paneId == widget.paneId),
+      widget.api.window.panes.requestReloadStream.where((event) =>
+          event.paneId ==
+          (widget.api.window.panes.findCellById(widget.cellId)
+                  as SinglePaneList)
+              .paneId),
       (_) {
         setState(() {});
       },
@@ -79,12 +80,16 @@ class EditorPaneState extends State<EditorPane>
 
   @override
   Widget build(BuildContext context) {
+    final String currentPaneId =
+        (widget.api.window.panes.findCellById(widget.cellId) as SinglePaneList)
+            .paneId;
+
     return SizedBox(
       width: widget.layoutConfigs.width,
       height: widget.layoutConfigs.height,
       child: GestureDetector(
         onTap: () =>
-            widget.api.workspace.workspaceConfigs.activePane = widget.paneId,
+            widget.api.workspace.workspaceConfigs.activePane = currentPaneId,
         child: DragTarget<List<AffogatoVFSEntity>>(
           onWillAcceptWithDetails: (details) {
             final bool willAccept =
@@ -113,28 +118,28 @@ class EditorPaneState extends State<EditorPane>
               case DragAreaSegment.left:
                 widget.api.window.panes.addPaneLeft(
                   newPaneId: newPaneId,
-                  anchorPaneId: widget.paneId,
+                  anchorPaneId: currentPaneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.right:
                 widget.api.window.panes.addPaneRight(
                   newPaneId: newPaneId,
-                  anchorPaneId: widget.paneId,
+                  anchorPaneId: currentPaneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.bottom:
                 widget.api.window.panes.addPaneBottom(
                   newPaneId: newPaneId,
-                  anchorPaneId: widget.paneId,
+                  anchorPaneId: currentPaneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.top:
                 widget.api.window.panes.addPaneTop(
                   newPaneId: newPaneId,
-                  anchorPaneId: widget.paneId,
+                  anchorPaneId: currentPaneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
@@ -142,7 +147,7 @@ class EditorPaneState extends State<EditorPane>
                 widget.api.workspace.addInstancesToPane(
                   instanceIds: widget.api.workspace
                       .createEditorInstancesForEntities(entities: details.data),
-                  paneId: widget.paneId,
+                  paneId: currentPaneId,
                 );
                 break;
             }
@@ -155,7 +160,7 @@ class EditorPaneState extends State<EditorPane>
           builder: (context, _, __) {
             return DragTarget<FileTabDragData>(
                 onWillAcceptWithDetails: (details) {
-                  final bool willAccept = widget.paneId != details.data.paneId;
+                  final bool willAccept = currentPaneId != details.data.paneId;
                   if (willAccept) {
                     setState(() {
                       isDragTarget = willAccept;
@@ -177,28 +182,28 @@ class EditorPaneState extends State<EditorPane>
                   switch (dragAreaSegment!) {
                     case DragAreaSegment.left:
                       widget.api.window.panes.addPaneLeft(
-                        anchorPaneId: widget.paneId,
+                        anchorPaneId: currentPaneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.right:
                       widget.api.window.panes.addPaneRight(
-                        anchorPaneId: widget.paneId,
+                        anchorPaneId: currentPaneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.bottom:
                       widget.api.window.panes.addPaneBottom(
-                        anchorPaneId: widget.paneId,
+                        anchorPaneId: currentPaneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.top:
                       widget.api.window.panes.addPaneTop(
-                        anchorPaneId: widget.paneId,
+                        anchorPaneId: currentPaneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
@@ -206,7 +211,7 @@ class EditorPaneState extends State<EditorPane>
                     case DragAreaSegment.centre:
                       widget.api.workspace.addInstancesToPane(
                         instanceIds: [details.data.instanceId],
-                        paneId: widget.paneId,
+                        paneId: currentPaneId,
                       );
 
                       break;
@@ -221,24 +226,27 @@ class EditorPaneState extends State<EditorPane>
                   return Column(
                     children: [
                       if (widget.api.workspace.workspaceConfigs
-                          .panesData[widget.paneId]!.instances.isNotEmpty)
+                          .panesData[currentPaneId]!.instances.isNotEmpty)
                         FileTabBar(
+                          key: ValueKey(
+                              "${widget.api.workspace.workspaceConfigs.panesData[currentPaneId]!.activeInstance}${widget.api.workspace.workspaceConfigs.panesData[currentPaneId]!.instances}"
+                                  .hashCode),
                           api: widget.api,
                           instanceIds: widget.api.workspace.workspaceConfigs
-                              .panesData[widget.paneId]!.instances,
+                              .panesData[currentPaneId]!.instances,
                           currentInstanceId: widget
                               .api
                               .workspace
                               .workspaceConfigs
-                              .panesData[widget.paneId]!
+                              .panesData[currentPaneId]!
                               .activeInstance,
-                          paneId: widget.paneId,
+                          paneId: currentPaneId,
                         ),
                       Container(
                         clipBehavior: Clip.hardEdge,
                         width: double.infinity,
                         height: (widget.api.workspace.workspaceConfigs
-                                .panesData[widget.paneId]!.instances.isEmpty
+                                .panesData[currentPaneId]!.instances.isEmpty
                             ? widget.layoutConfigs.height
                             : widget.layoutConfigs.height -
                                 widget.api.workspace.workspaceConfigs
@@ -270,17 +278,17 @@ class EditorPaneState extends State<EditorPane>
                                         .api
                                         .workspace
                                         .workspaceConfigs
-                                        .panesData[widget.paneId]!
+                                        .panesData[currentPaneId]!
                                         .activeInstance !=
                                     null
                                 ? AffogatoEditorInstance(
                                     api: widget.api,
-                                    paneId: widget.paneId,
+                                    paneId: currentPaneId,
                                     instanceId: widget
                                         .api
                                         .workspace
                                         .workspaceConfigs
-                                        .panesData[widget.paneId]!
+                                        .panesData[currentPaneId]!
                                         .activeInstance!,
                                     layoutConfigs: LayoutConfigs(
                                       width: widget.layoutConfigs.width,
@@ -288,7 +296,7 @@ class EditorPaneState extends State<EditorPane>
                                                   .api
                                                   .workspace
                                                   .workspaceConfigs
-                                                  .panesData[widget.paneId]!
+                                                  .panesData[currentPaneId]!
                                                   .instances
                                                   .isEmpty
                                               ? widget.layoutConfigs.height

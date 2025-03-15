@@ -10,6 +10,8 @@ sealed class PaneList {
     required this.height,
     String? id,
   }) : id = id ?? utils.generateId();
+
+  String toTree(int indent);
 }
 
 class SinglePaneList extends PaneList {
@@ -21,6 +23,9 @@ class SinglePaneList extends PaneList {
     required super.height,
     super.id,
   });
+
+  @override
+  String toTree(int indent) => "${' ' * indent}|-SINGLE($id) -> $paneId";
 }
 
 sealed class MultiplePaneList extends PaneList {
@@ -43,7 +48,7 @@ sealed class MultiplePaneList extends PaneList {
     for (final val in value) {
       if (val is SinglePaneList) {
         if (val.paneId == paneId) {
-          value.remove(val);
+          if (removeGivenPane) value.remove(val);
           return [this];
         }
       } else {
@@ -63,6 +68,12 @@ class VerticalPaneList extends MultiplePaneList {
     required super.height,
     super.id,
   });
+
+  @override
+  String toTree(int indent) => [
+        "${' ' * indent}|-VERT($id) [${value.length}]",
+        ...[for (final val in value) val.toTree(indent + 2)]
+      ].join('\n');
 }
 
 class HorizontalPaneList extends MultiplePaneList {
@@ -72,4 +83,10 @@ class HorizontalPaneList extends MultiplePaneList {
     required super.height,
     super.id,
   });
+
+  @override
+  String toTree(int indent) => [
+        "${' ' * indent}|-HORZ($id) [${value.length}]",
+        ...[for (final val in value) val.toTree(indent + 2)]
+      ].join('\n');
 }
