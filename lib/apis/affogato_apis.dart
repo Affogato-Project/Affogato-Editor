@@ -15,6 +15,7 @@ part './workspace/workspace_api.dart';
 part './vfs/vfs_api.dart';
 part './extensions/extension_api.dart';
 part './extensions/extensions_engine.dart';
+part './extensions/affogato_extension.dart';
 
 abstract class AffogatoAPIComponent {
   late final AffogatoAPI api;

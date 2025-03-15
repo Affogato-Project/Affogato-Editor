@@ -37,11 +37,8 @@ class AffogatoExtensionsEngine extends AffogatoAPIComponent {
 
   KeyEventResult triggerEditorKeybindings(EditorKeyEvent event) {
     if (editorKeybindingExtensions.containsKey(event.keyEvent.logicalKey)) {
-      return editorKeybindingExtensions[event.keyEvent.logicalKey]!.handle(
-        editorKeyEvent: event,
-        vfs: api.workspace.workspaceConfigs.vfs,
-        workspaceConfigs: workspaceConfigs,
-      );
+      return editorKeybindingExtensions[event.keyEvent.logicalKey]!
+          .handle(editorKeyEvent: event, api: api);
     } else {
       return KeyEventResult.ignored;
     }

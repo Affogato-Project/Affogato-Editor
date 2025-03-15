@@ -34,9 +34,7 @@ class PairMatcherExtension extends AffogatoExtension {
           api.vfs.documentRequestChange(
             VFSDocumentRequestChangeEvent(
               entityId: api.workspace.workspaceConfigs.entitiesLocation.entries
-                  .firstWhere((entry) =>
-                      entry.value.$1 ==
-                      api.workspace.workspaceConfigs.activeInstance!)
+                  .firstWhere((entry) => entry.value.$1 == event.instanceId)
                   .key,
               editorAction: EditorAction(
                 editingValue: TextEditingValue(
@@ -63,9 +61,7 @@ class PairMatcherExtension extends AffogatoExtension {
                 originId: name,
                 entityId: api
                     .workspace.workspaceConfigs.entitiesLocation.entries
-                    .firstWhere((entry) =>
-                        entry.value.$1 ==
-                        api.workspace.workspaceConfigs.activeInstance!)
+                    .firstWhere((entry) => entry.value.$1 == event.instanceId)
                     .key,
                 editorAction: EditorAction(
                   editingValue: TextEditingValue(
@@ -99,9 +95,8 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
 
   @override
   KeyEventResult handle({
+    required AffogatoAPI api,
     required EditorKeyEvent editorKeyEvent,
-    required AffogatoVFS vfs,
-    required AffogatoWorkspaceConfigs workspaceConfigs,
   }) {
     if (!editorKeyEvent.editingContext.selection.isCollapsed ||
         editorKeyEvent.editingContext.selection.start - 1 < 0) {
@@ -117,7 +112,7 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
             numSpacesBeforeFirstChar(precedentText.split('\n').last);
 
         final int tabSizeInSpaces =
-            workspaceConfigs.stylingConfigs.tabSizeInSpaces;
+            api.workspace.workspaceConfigs.stylingConfigs.tabSizeInSpaces;
 
         final String insertText =
             "\n${' ' * (numSpaces + tabSizeInSpaces)}\n${' ' * numSpaces}";
@@ -131,9 +126,8 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
           VFSDocumentRequestChangeEvent(
             originId: name,
             entityId: api.workspace.workspaceConfigs.entitiesLocation.entries
-                .firstWhere((entry) =>
-                    entry.value.$1 ==
-                    api.workspace.workspaceConfigs.activeInstance!)
+                .firstWhere(
+                    (entry) => entry.value.$1 == editorKeyEvent.instanceId)
                 .key,
             editorAction: EditorAction(
               editingValue: TextEditingValue(
@@ -142,7 +136,8 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
                   offset: precedentText.length +
                       1 +
                       numSpaces +
-                      workspaceConfigs.stylingConfigs.tabSizeInSpaces,
+                      api.workspace.workspaceConfigs.stylingConfigs
+                          .tabSizeInSpaces,
                 ),
               ),
             ),
