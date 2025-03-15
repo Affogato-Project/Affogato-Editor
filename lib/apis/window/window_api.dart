@@ -39,9 +39,6 @@ class AffogatoWindowAPI extends AffogatoAPIComponent {
       if (entity != null) {
         final List<String> instanceIds =
             api.workspace.createEditorInstancesForEntities(entities: [entity]);
-        if (api.workspace.workspaceConfigs.panesData.isEmpty) {
-          api.window.panes.addDefaultPane();
-        }
         instanceToSetActive = instanceIds.first;
       } else {
         throw Exception('Entity ID $entityId is not a valid ID');
@@ -58,21 +55,47 @@ class AffogatoWindowAPI extends AffogatoAPIComponent {
   }
 
   /// Called when the instance given by [instanceId] is no longer the active instance.
-  /// 1. Notifies listeners
+  /// 1. Unsets the globally active instance
+  /// 2. If [instanceId] is the active instance for its pane, it is unset as the active instance for that pane
+  /// 3. Notifies listeners
   void unsetActiveInstance({
     required String instanceId,
   }) {
+    String? paneId;
+    api.workspace.workspaceConfigs.activeInstance = null;
+    for (final pane in api.workspace.workspaceConfigs.panesData.entries) {
+      if (pane.value.instances.contains(instanceId)) {
+        paneId = pane.key;
+        if (pane.value.activeInstance == instanceId) {
+          api.workspace.workspaceConfigs.panesData[pane.key]!.activeInstance =
+              pane.value.instances.length > 1
+                  ? pane.value
+                      .instances[pane.value.instances.indexOf(instanceId) - 1]
+                  : null;
+        }
+
+        break;
+      }
+    }
+
     AffogatoEvents.windowInstanceDidUnsetActiveEventsController.add(
       WindowInstanceDidUnsetActiveEvent(
         instanceId: instanceId,
       ),
     );
+    if (paneId != null) {
+      AffogatoEvents.windowPaneRequestReloadEventsController
+          .add(WindowPaneRequestReloadEvent(paneId));
+    }
   }
 
   /// Called to set the instance given by [instanceId] as the active instance in the pane
   /// given by [paneId].
   /// 1. Adds the instanceId to the pane's data (if not already present)
-  /// 2. Notifies listeners
+  /// 2. Updates the globally active instance
+  /// 3. Updates the active instance for the pane given by [paneId]
+  /// 4. Updates the active pane
+  /// 5. Notifies listeners
   void setActiveInstance({
     required String instanceId,
     required String paneId,
@@ -82,6 +105,10 @@ class AffogatoWindowAPI extends AffogatoAPIComponent {
       api.workspace
           .addInstancesToPane(instanceIds: [instanceId], paneId: paneId);
     }
+    api.workspace.workspaceConfigs
+      ..activeInstance = instanceId
+      ..activePane = paneId
+      ..panesData[paneId]!.activeInstance = instanceId;
     AffogatoEvents.windowPaneRequestReloadEventsController
         .add(WindowPaneRequestReloadEvent(paneId));
   }

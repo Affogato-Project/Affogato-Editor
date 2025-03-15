@@ -15,23 +15,19 @@ part of affogato.editor;
 abstract class PaneInstance<T extends PaneInstanceData> extends StatefulWidget {
   final String instanceId;
   final String paneId;
-  final EditorTheme<Color, TextStyle> editorTheme;
-  final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoExtensionsEngine extensionsEngine;
   final LayoutConfigs layoutConfigs;
   final AffogatoAPI api;
 
   PaneInstance({
     required this.api,
-    required this.editorTheme,
-    required this.workspaceConfigs,
     required this.extensionsEngine,
     required this.paneId,
     required this.instanceId,
     required this.layoutConfigs,
   }) : super(
           key: ValueKey(
-            "$instanceId${editorTheme.hashCode}${workspaceConfigs.hashCode}${extensionsEngine.hashCode}$layoutConfigs",
+            "$instanceId${api.workspace.workspaceConfigs.themeBundle.editorTheme.hashCode}${api.workspace.workspaceConfigs.hashCode}${extensionsEngine.hashCode}$layoutConfigs",
           ),
         );
 }
@@ -46,9 +42,9 @@ mixin PaneInstanceStateManager<T extends PaneInstanceData>
     T Function()? onNull,
     T Function(PaneInstanceData?)? onWrongDataType,
   }) {
-    final givenData =
-        (widget.workspaceConfigs.instancesData[widget.instanceId] ??
-            onNull?.call());
+    final givenData = (widget
+            .api.workspace.workspaceConfigs.instancesData[widget.instanceId] ??
+        onNull?.call());
     if (givenData is T) {
       data = givenData;
     } else {

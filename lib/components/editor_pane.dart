@@ -3,8 +3,6 @@ part of affogato.editor;
 /// An [EditorPane] corresponds to what VSCode calls the "EditorGroup".
 class EditorPane extends StatefulWidget {
   final LayoutConfigs layoutConfigs;
-  final AffogatoStylingConfigs stylingConfigs;
-  final AffogatoPerformanceConfigs performanceConfigs;
   final AffogatoAPI api;
   final GlobalKey<AffogatoWindowState> windowKey;
   final String paneId;
@@ -12,9 +10,7 @@ class EditorPane extends StatefulWidget {
 
   EditorPane({
     required this.cellId,
-    required this.stylingConfigs,
     required this.layoutConfigs,
-    required this.performanceConfigs,
     required this.api,
     required this.windowKey,
     required this.paneId,
@@ -110,31 +106,33 @@ class EditorPaneState extends State<EditorPane>
           onAcceptWithDetails: (details) {
             final String newPaneId = utils.generateId();
             widget.api.workspace.workspaceConfigs.panesData[newPaneId] =
-                PaneData(instances: createInstancesFromEntities(details.data));
+                PaneData(
+              instances: createInstancesFromEntities(details.data),
+            );
             switch (dragAreaSegment!) {
               case DragAreaSegment.left:
-                widget.api.workspace.workspaceConfigs.paneManager.addPaneLeft(
+                widget.api.window.panes.addPaneLeft(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.right:
-                widget.api.workspace.workspaceConfigs.paneManager.addPaneRight(
+                widget.api.window.panes.addPaneRight(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.bottom:
-                widget.api.workspace.workspaceConfigs.paneManager.addPaneBottom(
+                widget.api.window.panes.addPaneBottom(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
                 );
                 break;
               case DragAreaSegment.top:
-                widget.api.workspace.workspaceConfigs.paneManager.addPaneTop(
+                widget.api.window.panes.addPaneTop(
                   newPaneId: newPaneId,
                   anchorPaneId: widget.paneId,
                   anchorCellId: widget.cellId,
@@ -178,32 +176,28 @@ class EditorPaneState extends State<EditorPane>
 
                   switch (dragAreaSegment!) {
                     case DragAreaSegment.left:
-                      widget.api.workspace.workspaceConfigs.paneManager
-                          .addPaneLeft(
+                      widget.api.window.panes.addPaneLeft(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.right:
-                      widget.api.workspace.workspaceConfigs.paneManager
-                          .addPaneRight(
+                      widget.api.window.panes.addPaneRight(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.bottom:
-                      widget.api.workspace.workspaceConfigs.paneManager
-                          .addPaneBottom(
+                      widget.api.window.panes.addPaneBottom(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
                       );
                       break;
                     case DragAreaSegment.top:
-                      widget.api.workspace.workspaceConfigs.paneManager
-                          .addPaneTop(
+                      widget.api.window.panes.addPaneTop(
                         anchorPaneId: widget.paneId,
                         newPaneId: details.data.instanceId,
                         anchorCellId: widget.cellId,
@@ -230,11 +224,8 @@ class EditorPaneState extends State<EditorPane>
                           .panesData[widget.paneId]!.instances.isNotEmpty)
                         FileTabBar(
                           api: widget.api,
-                          stylingConfigs: widget.stylingConfigs,
                           instanceIds: widget.api.workspace.workspaceConfigs
                               .panesData[widget.paneId]!.instances,
-                          workspaceConfigs:
-                              widget.api.workspace.workspaceConfigs,
                           currentInstanceId: widget
                               .api
                               .workspace
@@ -250,7 +241,8 @@ class EditorPaneState extends State<EditorPane>
                                 .panesData[widget.paneId]!.instances.isEmpty
                             ? widget.layoutConfigs.height
                             : widget.layoutConfigs.height -
-                                widget.stylingConfigs.tabBarHeight),
+                                widget.api.workspace.workspaceConfigs
+                                    .stylingConfigs.tabBarHeight),
                         decoration: BoxDecoration(
                           color: widget.api.workspace.workspaceConfigs
                               .themeBundle.editorTheme.editorBackground,
@@ -290,8 +282,6 @@ class EditorPaneState extends State<EditorPane>
                                         .workspaceConfigs
                                         .panesData[widget.paneId]!
                                         .activeInstance!,
-                                    workspaceConfigs:
-                                        widget.api.workspace.workspaceConfigs,
                                     layoutConfigs: LayoutConfigs(
                                       width: widget.layoutConfigs.width,
                                       height: (widget
@@ -303,18 +293,16 @@ class EditorPaneState extends State<EditorPane>
                                                   .isEmpty
                                               ? widget.layoutConfigs.height
                                               : widget.layoutConfigs.height -
-                                                  widget.stylingConfigs
+                                                  widget
+                                                      .api
+                                                      .workspace
+                                                      .workspaceConfigs
+                                                      .stylingConfigs
                                                       .tabBarHeight) -
                                           utils.AffogatoConstants
                                                   .tabBarPadding *
                                               2,
                                     ),
-                                    editorTheme: widget
-                                        .api
-                                        .workspace
-                                        .workspaceConfigs
-                                        .themeBundle
-                                        .editorTheme,
                                     extensionsEngine:
                                         widget.api.extensions.engine,
                                   )

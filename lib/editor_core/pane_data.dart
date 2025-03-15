@@ -2,10 +2,10 @@ part of affogato.editor;
 
 class PaneData {
   final List<String> instances;
-  final String? activeInstance;
+  String? activeInstance;
 
   PaneData({
     required this.instances,
-    this.activeInstance,
-  });
+    String? activeInstance,
+  }) : activeInstance = activeInstance ?? instances.firstOrNull;
 }

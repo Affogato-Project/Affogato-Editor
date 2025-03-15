@@ -4,19 +4,19 @@ class SearchAndReplaceWidget extends StatefulWidget {
   final void Function(String) onSearchTextChanged;
   final void Function(String) onReplaceTextChanged;
   final double width;
-  final EditorTheme<Color, TextStyle> editorTheme;
   final TextStyle textStyle;
   final List<Widget> searchActionItems;
   final List<Widget> replaceActionItems;
+  final AffogatoAPI api;
 
   const SearchAndReplaceWidget({
+    required this.api,
     required this.textStyle,
     required this.width,
     required this.onSearchTextChanged,
     required this.onReplaceTextChanged,
     required this.searchActionItems,
     required this.replaceActionItems,
-    required this.editorTheme,
     super.key,
   });
 
@@ -39,16 +39,23 @@ class SearchAndReplaceWidgetState extends State<SearchAndReplaceWidget> {
           : utils.AffogatoConstants.searchAndReplaceRowItemHeight +
               utils.AffogatoConstants.searchAndReplacePadding * 2,
       decoration: BoxDecoration(
-        color: widget.editorTheme.editorBackground,
+        color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+            .editorBackground,
         border: Border(
           left: BorderSide(
-            color: widget.editorTheme.tabBorder ?? Colors.red,
+            color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .tabBorder ??
+                Colors.red,
           ),
           right: BorderSide(
-            color: widget.editorTheme.tabBorder ?? Colors.red,
+            color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .tabBorder ??
+                Colors.red,
           ),
           bottom: BorderSide(
-            color: widget.editorTheme.tabBorder ?? Colors.red,
+            color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .tabBorder ??
+                Colors.red,
           ),
         ),
         borderRadius: const BorderRadius.only(
@@ -66,7 +73,7 @@ class SearchAndReplaceWidgetState extends State<SearchAndReplaceWidget> {
       child: Row(
         children: [
           AffogatoButton(
-            editorTheme: widget.editorTheme,
+            api: widget.api,
             isPrimary: false,
             width: 28,
             height: isExpanded
@@ -100,11 +107,13 @@ class SearchAndReplaceWidgetState extends State<SearchAndReplaceWidget> {
                         onChanged: widget.onSearchTextChanged,
                         focusNode: searchFieldFocusNode,
                         decoration: InputDecoration(
-                          fillColor: widget.editorTheme.inputBackground,
+                          fillColor: widget.api.workspace.workspaceConfigs
+                              .themeBundle.editorTheme.inputBackground,
                           border: OutlineInputBorder(
                             borderSide: BorderSide(
                               color: (searchFieldFocusNode.hasFocus
-                                      ? widget.editorTheme.inputBorder
+                                      ? widget.api.workspace.workspaceConfigs
+                                          .themeBundle.editorTheme.inputBorder
                                       : Colors.green) ??
                                   Colors.red,
                             ),
@@ -127,11 +136,13 @@ class SearchAndReplaceWidgetState extends State<SearchAndReplaceWidget> {
                       Expanded(
                         child: TextField(
                           decoration: InputDecoration(
-                            fillColor: widget.editorTheme.inputBackground,
+                            fillColor: widget.api.workspace.workspaceConfigs
+                                .themeBundle.editorTheme.inputBackground,
                             border: OutlineInputBorder(
                               borderSide: BorderSide(
                                 color: (searchFieldFocusNode.hasFocus
-                                        ? widget.editorTheme.inputBorder
+                                        ? widget.api.workspace.workspaceConfigs
+                                            .themeBundle.editorTheme.inputBorder
                                         : Colors.green) ??
                                     Colors.red,
                               ),

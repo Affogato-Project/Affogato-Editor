@@ -19,7 +19,7 @@ part './editor_core/events.dart';
 part './editor_core/editor_actions.dart';
 part './editor_core/pane_instance_data.dart';
 part './editor_core/pane_data.dart';
-part './editor_core/pane_manager.dart';
+part 'editor_core/pane_list.dart';
 part './editor_core/virtual_file_system.dart';
 part './editor_core/core_extensions.dart';
 part './editor_core/keyboard_shortcuts.dart';
@@ -64,7 +64,6 @@ class AffogatoWindowState extends State<AffogatoWindow>
   final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
   final FocusNode keyboardListenerFocusNode = FocusNode();
   late final AffogatoAPI api;
-  UniqueKey paneLayoutKey = UniqueKey();
 
   @override
   void initState() {
@@ -95,7 +94,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
     // since the editor must always have at least one pane
 
     api.window.panes
-        .initPaneManager(api.workspace.workspaceConfigs.panesData.keys.first);
+        .addDefaultPane(api.workspace.workspaceConfigs.panesData.keys.first);
 
     // in order to show our own context menu, this achieves the `e.preventDefault()`
     // behaviour for every right-click action
@@ -187,18 +186,10 @@ class AffogatoWindowState extends State<AffogatoWindow>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        PrimaryBar(
-                          api: api,
-                          workspaceConfigs: widget.workspaceConfigs,
-                          editorTheme:
-                              widget.workspaceConfigs.themeBundle.editorTheme,
-                        ),
+                        PrimaryBar(api: api),
                         PaneLayoutCellWidget(
-                          key: paneLayoutKey,
                           api: api,
-                          cellId: widget
-                              .workspaceConfigs.paneManager.panesLayout.id,
-                          workspaceConfigs: widget.workspaceConfigs,
+                          cellId: api.workspace.workspaceConfigs.panesLayout.id,
                           performanceConfigs: widget.performanceConfigs,
                           windowKey: windowKey,
                         ),
@@ -209,8 +200,6 @@ class AffogatoWindowState extends State<AffogatoWindow>
                     height: utils.AffogatoConstants.statusBarHeight,
                     child: StatusBar(
                       api: api,
-                      stylingConfigs: widget.workspaceConfigs.stylingConfigs,
-                      workspaceConfigs: widget.workspaceConfigs,
                     ),
                   ),
                 ],
@@ -228,11 +217,12 @@ class AffogatoWindowState extends State<AffogatoWindow>
     AffogatoEvents.windowClosedEventsController.add(const WindowClosedEvent());
     cancelSubscriptions();
     await AffogatoEvents.windowStartupFinishedEventsController.close();
-    await AffogatoEvents.windowPaneLayoutChangedEventsController.close();
+    await AffogatoEvents.windowPaneCellLayoutChangedEventsController.close();
+    await AffogatoEvents.windowPaneCellRequestReloadEventsController.close();
+    await AffogatoEvents.windowPaneRequestReloadEventsController.close();
     await AffogatoEvents.windowInstanceDidSetActiveEventsController.close();
     await AffogatoEvents.windowInstanceDidUnsetActiveEventsController.close();
     await AffogatoEvents.windowRequestDocumentSetActiveEventsController.close();
-    await AffogatoEvents.windowPaneRequestReloadEventsController.close();
     await AffogatoEvents.windowKeyboardEventsController.close();
     await AffogatoEvents.editorInstanceLoadedEventsController.close();
     await AffogatoEvents.editorInstanceClosedEventsController.close();

@@ -1,14 +1,10 @@
 part of affogato.editor;
 
 class PrimaryBar extends StatefulWidget {
-  final EditorTheme<Color, TextStyle> editorTheme;
-  final AffogatoWorkspaceConfigs workspaceConfigs;
   final AffogatoAPI api;
 
   const PrimaryBar({
     required this.api,
-    required this.editorTheme,
-    required this.workspaceConfigs,
     super.key,
   });
 
@@ -47,25 +43,30 @@ class PrimaryBarState extends State<PrimaryBar>
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: (widget.workspaceConfigs.isPrimaryBarExpanded
+      width: (widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded
               ? utils.AffogatoConstants.primaryBarExpandedWidth +
                   utils.AffogatoConstants.primaryBarClosedWidth
               : utils.AffogatoConstants.primaryBarClosedWidth) +
           2,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: widget.editorTheme.panelBackground,
+        color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+            .panelBackground,
         border: Border(
           left: BorderSide(
-            color: widget.editorTheme.panelBorder ?? Colors.red,
+            color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .panelBorder ??
+                Colors.red,
           ),
           right: BorderSide(
-            color: widget.editorTheme.panelBorder ?? Colors.red,
+            color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .panelBorder ??
+                Colors.red,
           ),
         ),
       ),
       child: SizedBox(
-        width: widget.workspaceConfigs.isPrimaryBarExpanded
+        width: widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded
             ? utils.AffogatoConstants.primaryBarExpandedWidth +
                 utils.AffogatoConstants.primaryBarClosedWidth
             : utils.AffogatoConstants.primaryBarClosedWidth,
@@ -76,34 +77,43 @@ class PrimaryBarState extends State<PrimaryBar>
             Container(
               width: utils.AffogatoConstants.primaryBarClosedWidth,
               height: double.infinity,
-              decoration: widget.workspaceConfigs.isPrimaryBarExpanded
-                  ? BoxDecoration(
-                      color: widget.editorTheme.panelBackground,
-                      border: Border(
-                        left: BorderSide(
-                          color: widget.editorTheme.panelBorder ?? Colors.red,
-                        ),
-                        right: BorderSide(
-                          color: widget.editorTheme.panelBorder ?? Colors.red,
-                        ),
-                      ),
-                    )
-                  : null,
+              decoration:
+                  widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded
+                      ? BoxDecoration(
+                          color: widget.api.workspace.workspaceConfigs
+                              .themeBundle.editorTheme.panelBackground,
+                          border: Border(
+                            left: BorderSide(
+                              color: widget.api.workspace.workspaceConfigs
+                                      .themeBundle.editorTheme.panelBorder ??
+                                  Colors.red,
+                            ),
+                            right: BorderSide(
+                              color: widget.api.workspace.workspaceConfigs
+                                      .themeBundle.editorTheme.panelBorder ??
+                                  Colors.red,
+                            ),
+                          ),
+                        )
+                      : null,
               child: Column(
                 children: [
                   AffogatoButton(
+                    api: widget.api,
                     isPrimary: false,
                     width: utils.AffogatoConstants.primaryBarClosedWidth,
                     height: utils.AffogatoConstants.primaryBarClosedWidth,
-                    editorTheme: widget.editorTheme,
                     onTap: () {
                       setState(() {
-                        widget.workspaceConfigs.isPrimaryBarExpanded =
-                            !widget.workspaceConfigs.isPrimaryBarExpanded;
-
-                        AffogatoEvents.windowPaneLayoutChangedEventsController
-                            .add(WindowPaneLayoutChangedEvent(widget
-                                .workspaceConfigs.paneManager.panesLayout.id));
+                        widget.api.workspace.workspaceConfigs
+                                .isPrimaryBarExpanded =
+                            !widget.api.workspace.workspaceConfigs
+                                .isPrimaryBarExpanded;
+                        // trigger a full re-layout from the root pane
+                        AffogatoEvents
+                            .windowPaneCellLayoutChangedEventsController
+                            .add(WindowPaneCellLayoutChangedEvent(widget.api
+                                .workspace.workspaceConfigs.panesLayout.id));
                       });
                     },
                     child: Padding(
@@ -112,7 +122,13 @@ class PrimaryBarState extends State<PrimaryBar>
                         child: Icon(
                           Icons.file_copy,
                           size: 28,
-                          color: widget.editorTheme.buttonSecondaryForeground,
+                          color: widget
+                              .api
+                              .workspace
+                              .workspaceConfigs
+                              .themeBundle
+                              .editorTheme
+                              .buttonSecondaryForeground,
                         ),
                       ),
                     ),
@@ -120,16 +136,14 @@ class PrimaryBarState extends State<PrimaryBar>
                 ],
               ),
             ),
-            if (widget.workspaceConfigs.isPrimaryBarExpanded)
+            if (widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded)
               SizedBox(
                 width: utils.AffogatoConstants.primaryBarExpandedWidth,
                 child: FileBrowserButton(
                   api: widget.api,
                   isRoot: true,
-                  entry: widget.workspaceConfigs.vfs.root,
+                  entry: widget.api.workspace.workspaceConfigs.vfs.root,
                   indent: 0,
-                  editorTheme: widget.editorTheme,
-                  workspaceConfigs: widget.workspaceConfigs,
                 ),
               ),
           ],

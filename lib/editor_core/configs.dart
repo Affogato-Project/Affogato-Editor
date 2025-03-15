@@ -54,7 +54,7 @@ class AffogatoWorkspaceConfigs {
 
   final List<AffogatoExtension> extensions;
 
-  late final PaneManager paneManager;
+  late PaneList panesLayout;
 
   /// A mapping of pane IDs to the IDs of the [PaneInstance]s contained by that pane
   final Map<String, PaneData> panesData;
@@ -87,7 +87,7 @@ class AffogatoWorkspaceConfigs {
   AffogatoWorkspaceConfigs({
     Map<String, PaneData>? defaultPanesData,
     String? activePane,
-    PaneManager? paneManager,
+    PaneList? panesLayout,
     required this.projectName,
     required this.instancesData,
     required this.themeBundle,
@@ -104,7 +104,7 @@ class AffogatoWorkspaceConfigs {
             subdirs: [],
           ),
         ) {
-    if (paneManager != null) this.paneManager = paneManager;
+    if (panesLayout != null) this.panesLayout = panesLayout;
     this.activePane = activePane ?? panesData.keys.first;
   }
 

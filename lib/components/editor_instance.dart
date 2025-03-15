@@ -24,8 +24,6 @@ class AffogatoEditorInstance extends PaneInstance<AffogatoEditorInstanceData> {
     required super.api,
     required super.paneId,
     required super.layoutConfigs,
-    required super.editorTheme,
-    required super.workspaceConfigs,
     required super.extensionsEngine,
     required super.instanceId,
   });
@@ -87,10 +85,12 @@ class AffogatoEditorInstanceState
     // All actions needed to spin up a new editor instance
     void loadUpInstance() {
       codeTextStyle = TextStyle(
-        color: widget.editorTheme.editorForeground,
+        color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+            .editorForeground,
         fontFamily: 'IBMPlexMono',
         height: utils.AffogatoConstants.lineHeight,
-        fontSize: widget.workspaceConfigs.stylingConfigs.editorFontSize,
+        fontSize:
+            widget.api.workspace.workspaceConfigs.stylingConfigs.editorFontSize,
       );
       // Create a single Text character using the editor's font style and paint it on an imaginary canvas
       // to observe its width and height. This massively increases performance as font-dependent spacing operations
@@ -112,7 +112,7 @@ class AffogatoEditorInstanceState
       textController = AffogatoEditorFieldController(
         languageBundle: data.languageBundle,
         themeBundle: data.themeBundle,
-        workspaceConfigs: widget.workspaceConfigs,
+        workspaceConfigs: widget.api.workspace.workspaceConfigs,
       )..addListener(() {
           if (textController.text.isNotEmpty) {
             for (int i = textController.selection.baseOffset; i >= 1; i--) {
@@ -127,8 +127,9 @@ class AffogatoEditorInstanceState
           }
         });
 
-      currentDoc =
-          widget.workspaceConfigs.vfs.accessEntity(data.documentId)!.document!;
+      currentDoc = widget.api.workspace.workspaceConfigs.vfs
+          .accessEntity(data.documentId)!
+          .document!;
       // Assume instant autosave
       textController.text = currentDoc.content;
 
@@ -169,7 +170,8 @@ class AffogatoEditorInstanceState
             if (event.keyEvent.logicalKey == LogicalKeyboardKey.tab) {
               setState(() {
                 insertTextAtCursorPos(' ' *
-                    widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces);
+                    widget.api.workspace.workspaceConfigs.stylingConfigs
+                        .tabSizeInSpaces);
               });
             }
 
@@ -261,7 +263,9 @@ class AffogatoEditorInstanceState
         for (int i = 0; i < line.length; i++) {
           if (line[i] == ' ') {
             // add an indentation ruler at every tab
-            if (i % widget.workspaceConfigs.stylingConfigs.tabSizeInSpaces ==
+            if (i %
+                    widget.api.workspace.workspaceConfigs.stylingConfigs
+                        .tabSizeInSpaces ==
                 0) {
               rowItems.add(
                 Container(
@@ -269,16 +273,16 @@ class AffogatoEditorInstanceState
                     border: Border(
                       left: BorderSide(
                         width: 0.5,
-                        color:
-                            widget.editorTheme.editorIndentGuideBackground1 ??
-                                Colors.red,
+                        color: widget.api.workspace.workspaceConfigs.themeBundle
+                                .editorTheme.editorIndentGuideBackground1 ??
+                            Colors.red,
                       ),
                     ),
                   ),
                   child: SizedBox(
                       width: cellWidth *
-                          widget
-                              .workspaceConfigs.stylingConfigs.tabSizeInSpaces,
+                          widget.api.workspace.workspaceConfigs.stylingConfigs
+                              .tabSizeInSpaces,
                       height: cellHeight),
                 ),
               );
@@ -327,8 +331,10 @@ class AffogatoEditorInstanceState
               textAlign: TextAlign.right,
               style: codeTextStyle.copyWith(
                 color: i == activeLineNum
-                    ? widget.editorTheme.editorLineNumberActiveForeground
-                    : widget.editorTheme.editorLineNumberForeground,
+                    ? widget.api.workspace.workspaceConfigs.themeBundle
+                        .editorTheme.editorLineNumberActiveForeground
+                    : widget.api.workspace.workspaceConfigs.themeBundle
+                        .editorTheme.editorLineNumberForeground,
               ),
             ),
           ),
@@ -345,7 +351,7 @@ class AffogatoEditorInstanceState
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: widget.editorTheme.defaultTextColor.withOpacity(0.1),
+                  color: widget.api.workspace.workspaceConfigs.themeBundle.editorTheme.defaultTextColor.withOpacity(0.1),
                   width: 1,
                 ),
               ),
@@ -468,7 +474,8 @@ class AffogatoEditorInstanceState
                               instanceId: widget.instanceId,
                               keyEvent: key,
                               editingContext: EditingContext(
-                                content: widget.workspaceConfigs.vfs
+                                content: widget
+                                    .api.workspace.workspaceConfigs.vfs
                                     .accessEntity(data.documentId,
                                         isDir: false)!
                                     .document!
@@ -486,9 +493,19 @@ class AffogatoEditorInstanceState
                           child: Theme(
                             data: ThemeData(
                               textSelectionTheme: TextSelectionThemeData(
-                                cursorColor:
-                                    widget.editorTheme.editorForeground,
-                                selectionColor: widget.editorTheme
+                                cursorColor: widget
+                                    .api
+                                    .workspace
+                                    .workspaceConfigs
+                                    .themeBundle
+                                    .editorTheme
+                                    .editorForeground,
+                                selectionColor: widget
+                                        .api
+                                        .workspace
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme
                                         .editorSelectionHighlightBackground ??
                                     Colors.red,
                               ),
@@ -507,7 +524,12 @@ class AffogatoEditorInstanceState
                                   decoration: null,
                                   style: codeTextStyle.copyWith(
                                       color: widget
-                                          .editorTheme.textPreformatForeground),
+                                          .api
+                                          .workspace
+                                          .workspaceConfigs
+                                          .themeBundle
+                                          .editorTheme
+                                          .textPreformatForeground),
                                 ),
                                 MouseRegion(
                                   opaque: false,
@@ -557,7 +579,8 @@ class AffogatoEditorInstanceState
                   currentCharNum * cellWidth,
               width: utils.AffogatoConstants.completionsMenuWidth,
               child: AffogatoCompletionsWidget(
-                editorTheme: widget.editorTheme,
+                editorTheme: widget
+                    .api.workspace.workspaceConfigs.themeBundle.editorTheme,
                 controller: completionsController,
               ),
             ),
@@ -569,10 +592,10 @@ class AffogatoEditorInstanceState
               position:
                   searchAndReplaceController.searchAndReplaceOffsetAnimation,
               child: SearchAndReplaceWidget(
+                api: widget.api,
                 key: searchAndReplaceController.overlayKey,
                 width: utils.AffogatoConstants.searchAndReplaceWidgetWidth,
                 textStyle: codeTextStyle,
-                editorTheme: widget.editorTheme,
                 onSearchTextChanged: (newText) {
                   searchAndReplaceController.regenerateMatches(
                       newText: newText);
@@ -584,8 +607,11 @@ class AffogatoEditorInstanceState
                 searchActionItems: [
                   Text(
                     "${searchAndReplaceController.searchItemCurrentIndex} of ${searchAndReplaceController.matches.length}",
-                    style: widget.editorTheme.defaultTextStyle.copyWith(
-                      color: widget.editorTheme.buttonSecondaryForeground,
+                    style: widget.api.workspace.workspaceConfigs.themeBundle
+                        .editorTheme.defaultTextStyle
+                        .copyWith(
+                      color: widget.api.workspace.workspaceConfigs.themeBundle
+                          .editorTheme.buttonSecondaryForeground,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -596,7 +622,7 @@ class AffogatoEditorInstanceState
                     height:
                         utils.AffogatoConstants.searchAndReplaceRowItemHeight -
                             10,
-                    editorTheme: widget.editorTheme,
+                    api: widget.api,
                     isPrimary: false,
                     onTap: () => setState(() {
                       searchAndReplaceController
@@ -613,7 +639,8 @@ class AffogatoEditorInstanceState
                       size: utils
                               .AffogatoConstants.searchAndReplaceRowItemHeight -
                           10,
-                      color: widget.editorTheme.buttonSecondaryForeground,
+                      color: widget.api.workspace.workspaceConfigs.themeBundle
+                          .editorTheme.buttonSecondaryForeground,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -624,7 +651,7 @@ class AffogatoEditorInstanceState
                     height:
                         utils.AffogatoConstants.searchAndReplaceRowItemHeight -
                             10,
-                    editorTheme: widget.editorTheme,
+                    api: widget.api,
                     isPrimary: false,
                     onTap: () => setState(() {
                       searchAndReplaceController
@@ -641,7 +668,8 @@ class AffogatoEditorInstanceState
                       size: utils
                               .AffogatoConstants.searchAndReplaceRowItemHeight -
                           10,
-                      color: widget.editorTheme.buttonSecondaryForeground,
+                      color: widget.api.workspace.workspaceConfigs.themeBundle
+                          .editorTheme.buttonSecondaryForeground,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -652,7 +680,7 @@ class AffogatoEditorInstanceState
                     height:
                         utils.AffogatoConstants.searchAndReplaceRowItemHeight -
                             10,
-                    editorTheme: widget.editorTheme,
+                    api: widget.api,
                     isPrimary: false,
                     onTap: () {
                       searchAndReplaceController.dismiss();
@@ -663,7 +691,8 @@ class AffogatoEditorInstanceState
                       size: utils
                               .AffogatoConstants.searchAndReplaceRowItemHeight -
                           10,
-                      color: widget.editorTheme.buttonSecondaryForeground,
+                      color: widget.api.workspace.workspaceConfigs.themeBundle
+                          .editorTheme.buttonSecondaryForeground,
                     ),
                   )
                 ],
@@ -675,7 +704,7 @@ class AffogatoEditorInstanceState
                     height:
                         utils.AffogatoConstants.searchAndReplaceRowItemHeight -
                             10,
-                    editorTheme: widget.editorTheme,
+                    api: widget.api,
                     isPrimary: false,
                     onTap: () => setState(() {
                       searchAndReplaceController.replaceCurrentMatch();
@@ -685,7 +714,8 @@ class AffogatoEditorInstanceState
                       size: utils
                               .AffogatoConstants.searchAndReplaceRowItemHeight -
                           10,
-                      color: widget.editorTheme.buttonSecondaryForeground,
+                      color: widget.api.workspace.workspaceConfigs.themeBundle
+                          .editorTheme.buttonSecondaryForeground,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -696,7 +726,7 @@ class AffogatoEditorInstanceState
                     height:
                         utils.AffogatoConstants.searchAndReplaceRowItemHeight -
                             10,
-                    editorTheme: widget.editorTheme,
+                    api: widget.api,
                     isPrimary: false,
                     onTap: () => setState(() {
                       searchAndReplaceController.replaceAllMatches();
@@ -706,7 +736,8 @@ class AffogatoEditorInstanceState
                       size: utils
                               .AffogatoConstants.searchAndReplaceRowItemHeight -
                           10,
-                      color: widget.editorTheme.buttonSecondaryForeground,
+                      color: widget.api.workspace.workspaceConfigs.themeBundle
+                          .editorTheme.buttonSecondaryForeground,
                     ),
                   ),
                 ],
@@ -723,8 +754,8 @@ class AffogatoEditorInstanceState
               width: double.infinity,
               height: utils.AffogatoConstants.breadcrumbHeight,
               decoration: BoxDecoration(
-                color: widget
-                    .workspaceConfigs.themeBundle.editorTheme.editorBackground,
+                color: widget.api.workspace.workspaceConfigs.themeBundle
+                    .editorTheme.editorBackground,
                 boxShadow: hasScrolled
                     ? [
                         BoxShadow(
@@ -740,12 +771,15 @@ class AffogatoEditorInstanceState
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    widget.workspaceConfigs.vfs.pathToEntity(data.documentId) ??
+                    widget.api.workspace.workspaceConfigs.vfs
+                            .pathToEntity(data.documentId) ??
                         'Unsaved',
-                    style: widget.editorTheme.defaultTextStyle.copyWith(
-                        fontSize: widget.workspaceConfigs.stylingConfigs
-                                .editorFontSize -
-                            3),
+                    style: widget.api.workspace.workspaceConfigs.themeBundle
+                        .editorTheme.defaultTextStyle
+                        .copyWith(
+                            fontSize: widget.api.workspace.workspaceConfigs
+                                    .stylingConfigs.editorFontSize -
+                                3),
                   ),
                 ),
               ),

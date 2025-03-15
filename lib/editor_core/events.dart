@@ -27,12 +27,25 @@ class AffogatoEvents {
   static final StreamController<WindowStartupFinishedEvent>
       windowStartupFinishedEventsController = StreamController.broadcast();
 
-  /* static final StreamController<WindowPaneReloadEvent>
-      windowPaneRequestReloadEvents = StreamController.broadcast(); */
+  /// Emitted to request a specific pane to reload its state, due to changes in its data.
+  /// For reloads pertaining to changes in layout, see [windowPaneCellRequestReloadEventsController],
+  /// which rebuilds of descendants as well.
+  static final StreamController<WindowPaneRequestReloadEvent>
+      windowPaneRequestReloadEventsController = StreamController.broadcast();
 
-  /// Emitted whenever the layout of panes in the window changes.
-  static final StreamController<WindowPaneLayoutChangedEvent>
-      windowPaneLayoutChangedEventsController = StreamController.broadcast();
+  /// Emitted whenever the layout of panes in the window changes. A listener in the Panes API
+  /// then re-computes the new layout and requests affected pane cells to rebuild via the [windowPaneCellRequestReloadEventsController].
+  static final StreamController<WindowPaneCellLayoutChangedEvent>
+      windowPaneCellLayoutChangedEventsController =
+      StreamController.broadcast();
+
+  /// Emitted to request a specific pane cell to relayout its children based on new
+  /// constraints (assuming the constraints have already been computed and stored in the workspace data).
+  /// Each pane cell then emits an event with the cell ID of its immediate children. For reload requests due
+  /// to changes in the data of a specific pane, see [windowPaneRequestReloadEventsController].
+  static final StreamController<WindowPaneCellRequestReloadEvent>
+      windowPaneCellRequestReloadEventsController =
+      StreamController.broadcast();
 
   /// Emitted whenever an instance has been set as the active instance
   static final StreamController<WindowInstanceDidSetActiveEvent>
@@ -49,13 +62,6 @@ class AffogatoEvents {
   static final StreamController<WindowRequestDocumentSetActiveEvent>
       windowRequestDocumentSetActiveEventsController =
       StreamController.broadcast();
-
-  static final StreamController<WindowPaneRequestReloadEvent>
-      windowPaneRequestReloadEventsController = StreamController.broadcast();
-  /* /// Emitted to ask for a specific instance to be added to a specific pane.
-  static final StreamController<WindowPaneRequestAddInstanceEvent>
-      windowPaneRequestAddInstanceEventsController =
-      StreamController.broadcast(); */
 
   /// Emitted for key presses while no instance is currently in focus. If an instance is
   /// in focus, listen instead for events on [editorKeyEventsController].
@@ -127,18 +133,27 @@ abstract class WindowPaneEvent extends WindowEvent {
 }
 
 /// Indicates that a layout change has occurred and descendants of the cell given by
-/// [cellId] need to be rebuilt. Each pane cell listens to events from this stream that have
-/// their [cellId]. Once such an event is received, `setState` is called and that widget will then
-/// emit more such [WindowPaneLayoutChangedEvent]s, one for each [cellId] in its immediate children.
-class WindowPaneLayoutChangedEvent extends WindowPaneEvent {
+/// [cellId] need to be rebuilt. Usually, the new constraints are computed and then
+/// a [WindowPaneCellRequestReloadEvent] is emitted.
+class WindowPaneCellLayoutChangedEvent extends WindowPaneEvent {
   final String cellId;
-  const WindowPaneLayoutChangedEvent(this.cellId) : super('layoutChanged');
+  const WindowPaneCellLayoutChangedEvent(this.cellId)
+      : super('cellLayoutChanged');
 }
 
-/// Requests the pane specified by [paneId] to perform a reload of its state
+/// Requests the [PaneLayoutCellWidget] given by [cellId] to reload itself and its
+/// descendants. Each pane cell listens to events from this stream that have
+/// their [cellId]. Once such an event is received, `setState` is called and that widget will then
+/// emit more such [WindowPaneCellRequestReloadEvent]s, one for each [cellId] in its immediate children.
+class WindowPaneCellRequestReloadEvent extends WindowPaneEvent {
+  final String cellId;
+  const WindowPaneCellRequestReloadEvent(this.cellId)
+      : super('cellRequestReload');
+}
+
 class WindowPaneRequestReloadEvent extends WindowPaneEvent {
   final String paneId;
-  const WindowPaneRequestReloadEvent(this.paneId) : super('requestReload');
+  const WindowPaneRequestReloadEvent(this.paneId) : super('paneRequestReload');
 }
 
 abstract class WindowInstanceEvent extends WindowEvent {
@@ -197,7 +212,6 @@ class EditorInstanceLoadedEvent extends EditorInstanceEvent {
     required this.instanceId,
     required this.paneId,
     required this.documentId,
-
   }) : super('loaded');
 }
 

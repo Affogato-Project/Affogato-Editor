@@ -3,10 +3,8 @@ part of affogato.editor;
 enum QuartetButtonState { none, hovered, pressed, active }
 
 class FileBrowserButton extends StatefulWidget {
-  final EditorTheme<Color, TextStyle> editorTheme;
   final double indent;
   final AffogatoVFSEntity entry;
-  final AffogatoWorkspaceConfigs workspaceConfigs;
   final bool isRoot;
   final AffogatoAPI api;
 
@@ -14,8 +12,6 @@ class FileBrowserButton extends StatefulWidget {
     required this.api,
     required this.entry,
     required this.indent,
-    required this.editorTheme,
-    required this.workspaceConfigs,
     this.isRoot = false,
   }) : super(key: ValueKey(entry.entityId));
 
@@ -40,21 +36,29 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
   Widget build(BuildContext context) {
     final Color buttonColor;
     if (widget.entry.isDirectory) {
-      if (widget.workspaceConfigs.instancesData.values
+      if (widget.api.workspace.workspaceConfigs.instancesData.values
           .whereType<AffogatoEditorInstanceData>()
           .map((data) => data.documentId)
           .contains(widget.entry.entityId)) {
         buttonColor = hasFocus
-            ? widget.editorTheme.buttonBackground ?? Colors.red
-            : widget.editorTheme.buttonSecondaryBackground ?? Colors.red;
+            ? widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .buttonBackground ??
+                Colors.red
+            : widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .buttonSecondaryBackground ??
+                Colors.red;
       } else {
         buttonColor = buttonState == QuartetButtonState.hovered
-            ? widget.editorTheme.buttonSecondaryHoverBackground ?? Colors.red
+            ? widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                    .buttonSecondaryHoverBackground ??
+                Colors.red
             : Colors.transparent;
       }
     } else {
       buttonColor = buttonState == QuartetButtonState.hovered
-          ? widget.editorTheme.buttonSecondaryHoverBackground ?? Colors.red
+          ? widget.api.workspace.workspaceConfigs.themeBundle.editorTheme
+                  .buttonSecondaryHoverBackground ??
+              Colors.red
           : Colors.transparent;
     }
     return TapRegion(
@@ -68,9 +72,13 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
-              color: widget.editorTheme.buttonBackground?.withOpacity(0.4),
+              color: widget.api.workspace.workspaceConfigs.themeBundle
+                  .editorTheme.buttonBackground
+                  ?.withOpacity(0.4),
               border: Border.all(
-                color: widget.editorTheme.buttonBackground ?? Colors.red,
+                color: widget.api.workspace.workspaceConfigs.themeBundle
+                        .editorTheme.buttonBackground ??
+                    Colors.red,
               ),
             ),
             child: Padding(
@@ -84,7 +92,9 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                 widget.entry.isDirectory
                     ? "${widget.entry.files.length + widget.entry.subdirs.length} items"
                     : widget.entry.name,
-                style: TextStyle(color: widget.editorTheme.buttonForeground),
+                style: TextStyle(
+                    color: widget.api.workspace.workspaceConfigs.themeBundle
+                        .editorTheme.buttonForeground),
               ),
             ),
           ),
@@ -108,7 +118,8 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                         label: 'New File',
                         onPressed: () {
                           final String docId = utils.generateId();
-                          widget.workspaceConfigs.vfs.createEntity(
+                          widget.api.workspace.workspaceConfigs.vfs
+                              .createEntity(
                             dirId: widget.entry.entityId,
                             AffogatoVFSEntity.file(
                               entityId: docId,
@@ -129,7 +140,8 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                       ContextMenuButtonItem(
                         label: 'New Folder',
                         onPressed: () {
-                          widget.workspaceConfigs.vfs.createEntity(
+                          widget.api.workspace.workspaceConfigs.vfs
+                              .createEntity(
                             dirId: widget.entry.entityId,
                             AffogatoVFSEntity.dir(
                               entityId: utils.generateId(),
@@ -206,7 +218,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
 
                       onAcceptWithDetails: (details) {
                         for (final item in details.data) {
-                          widget.workspaceConfigs.vfs.moveEntity(
+                          widget.api.workspace.workspaceConfigs.vfs.moveEntity(
                             entityId: item.entityId,
                             newDirId: widget.entry.entityId,
                           );
@@ -233,7 +245,12 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                                             ? Icons.keyboard_arrow_down
                                             : Icons.chevron_right),
                                         size: 24,
-                                        color: widget.editorTheme
+                                        color: widget
+                                            .api
+                                            .workspace
+                                            .workspaceConfigs
+                                            .themeBundle
+                                            .editorTheme
                                             .buttonSecondaryForeground,
                                       ),
                                     ),
@@ -245,7 +262,12 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                                       child: Icon(
                                         Icons.description,
                                         size: 24,
-                                        color: widget.editorTheme
+                                        color: widget
+                                            .api
+                                            .workspace
+                                            .workspaceConfigs
+                                            .themeBundle
+                                            .editorTheme
                                             .buttonSecondaryForeground,
                                       ),
                                     ),
@@ -255,9 +277,15 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                             widget.entry.name,
                             style: TextStyle(
                               color: !widget.entry.isDirectory && hasFocus
-                                  ? widget.editorTheme.buttonForeground
+                                  ? widget.api.workspace.workspaceConfigs
+                                      .themeBundle.editorTheme.buttonForeground
                                   : widget
-                                      .editorTheme.buttonSecondaryForeground,
+                                      .api
+                                      .workspace
+                                      .workspaceConfigs
+                                      .themeBundle
+                                      .editorTheme
+                                      .buttonSecondaryForeground,
                             ),
                           ),
                         ],
@@ -276,8 +304,6 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                         api: widget.api,
                         entry: subentry,
                         indent: widget.indent + 1,
-                        editorTheme: widget.editorTheme,
-                        workspaceConfigs: widget.workspaceConfigs,
                       ),
                     ),
                   for (final subentry in widget.entry.files)
@@ -290,8 +316,6 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                         api: widget.api,
                         entry: subentry,
                         indent: widget.indent + 1,
-                        editorTheme: widget.editorTheme,
-                        workspaceConfigs: widget.workspaceConfigs,
                       ),
                     ),
                 ],

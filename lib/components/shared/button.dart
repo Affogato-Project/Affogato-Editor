@@ -3,18 +3,18 @@ part of affogato.editor;
 class AffogatoButton extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
-  final EditorTheme<Color, TextStyle> editorTheme;
   final double width;
   final double height;
   final bool isPrimary;
+  final AffogatoAPI api;
 
   const AffogatoButton({
     required this.width,
     required this.height,
     required this.child,
     required this.onTap,
-    required this.editorTheme,
     required this.isPrimary,
+    required this.api,
     super.key,
   });
 
@@ -29,9 +29,9 @@ class AffogatoButtonState extends State<AffogatoButton> {
     final Color? buttonColor;
     if (hovered) {
       if (widget.isPrimary) {
-        buttonColor = widget.editorTheme.buttonHoverBackground;
+        buttonColor = widget.api.workspace.workspaceConfigs.themeBundle.editorTheme.buttonHoverBackground;
       } else {
-        buttonColor = widget.editorTheme.buttonSecondaryHoverBackground;
+        buttonColor = widget.api.workspace.workspaceConfigs.themeBundle.editorTheme.buttonSecondaryHoverBackground;
       }
     } else {
       buttonColor = Colors.transparent;
