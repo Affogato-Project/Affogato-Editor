@@ -267,8 +267,16 @@ abstract class VFSEvent extends Event {
   const VFSEvent(String id) : super('vfs.$id');
 }
 
+/// [originId] can be any identifier to distinguish between different sources
+/// of a [VFSDocumentEvent]. Since some components read and write to the same stream,
+/// checking against the [originId] helps prevent infinite loops of responding to their
+/// own events.
 abstract class VFSDocumentEvent extends Event {
-  const VFSDocumentEvent(String id) : super('document.$id');
+  final String originId;
+  const VFSDocumentEvent(
+    String id, {
+    required this.originId,
+  }) : super('document.$id');
 }
 
 class VFSStructureChangedEvent extends VFSEvent {
@@ -284,6 +292,7 @@ class VFSDocumentChangedEvent extends VFSDocumentEvent {
     required this.newContent,
     required this.documentId,
     required this.selection,
+    required super.originId,
   }) : super('documentChanged');
 }
 
@@ -294,5 +303,6 @@ class VFSDocumentRequestChangeEvent extends VFSDocumentEvent {
   const VFSDocumentRequestChangeEvent({
     required this.entityId,
     required this.editorAction,
+    required super.originId,
   }) : super('documentRequestChange');
 }

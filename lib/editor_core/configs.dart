@@ -82,7 +82,7 @@ class AffogatoWorkspaceConfigs {
 
   final AffogatoStylingConfigs stylingConfigs;
 
-  late String activePane;
+  String? activePane;
 
   AffogatoWorkspaceConfigs({
     Map<String, PaneData>? defaultPanesData,
@@ -105,7 +105,7 @@ class AffogatoWorkspaceConfigs {
           ),
         ) {
     if (panesLayout != null) this.panesLayout = panesLayout;
-    this.activePane = activePane ?? panesData.keys.first;
+    activePane = activePane ?? panesData.keys.first;
   }
 
   LanguageBundle? detectLanguage(String extension) {

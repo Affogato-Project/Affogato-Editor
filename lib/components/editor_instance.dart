@@ -42,7 +42,6 @@ class AffogatoEditorInstanceState
   late AffogatoEditorFieldController textController;
   final FocusNode textFieldFocusNode = FocusNode();
   late final CompletionsController completionsController;
-  late AffogatoDocument currentDoc;
   late TextStyle codeTextStyle;
   late double cellWidth;
   late double cellHeight;
@@ -127,11 +126,9 @@ class AffogatoEditorInstanceState
           }
         });
 
-      currentDoc = widget.api.workspace.workspaceConfigs.vfs
-          .accessEntity(data.documentId)!
-          .document!;
       // Assume instant autosave
-      textController.text = currentDoc.content;
+      textController.text =
+          widget.api.vfs.accessEntity(data.documentId)!.document!.content;
 
       // Set up completions and LSP (if applicable)
       completionsController.dictionary.addAll(completionsController
@@ -148,16 +145,39 @@ class AffogatoEditorInstanceState
 
       // Link the text controller to the document
       textController.addListener(() {
-        currentDoc.addVersion(textController.text);
+        widget.api.vfs.accessEntity(
+          data.documentId,
+          isDir: false,
+          action: (entity) {
+            if (entity != null) {
+              entity.document!.addVersion(textController.text);
+            }
+          },
+        );
         AffogatoEvents.vfsDocumentChangedEventsController.add(
           VFSDocumentChangedEvent(
             newContent: textController.text,
             documentId: data.documentId,
             selection: textController.selection,
+            originId: widget.instanceId,
           ),
         );
         setState(() {});
       });
+
+      registerListener(
+        widget.api.vfs.documentChangedStream.where((event) =>
+            event.documentId == data.documentId &&
+            event.originId != widget.instanceId),
+        (event) {
+          setState(() {
+            textController.text = widget.api.vfs
+                .accessEntity(data.documentId, isDir: false)!
+                .document!
+                .content;
+          });
+        },
+      );
 
       // the actual document parsing and interceptors
       registerListener(
@@ -196,6 +216,7 @@ class AffogatoEditorInstanceState
               newContent: textController.text,
               documentId: data.documentId,
               selection: textController.selection,
+              originId: widget.instanceId,
             ),
           );
         },
@@ -394,6 +415,7 @@ class AffogatoEditorInstanceState
         newContent: textController.text,
         documentId: data.documentId,
         selection: textController.selection,
+        originId: widget.instanceId,
       ),
     );
     textFieldFocusNode.requestFocus();
@@ -462,6 +484,12 @@ class AffogatoEditorInstanceState
                       // Editing Field
                       Expanded(
                         child: Focus(
+                          onFocusChange: (hasFocus) {
+                            if (hasFocus) {
+                              widget.api.workspace
+                                  .setActivePaneFromInstance(widget.instanceId);
+                            }
+                          },
                           onKeyEvent: (_, key) {
                             if (searchAndReplaceController.isShown) {
                               searchAndReplaceController.dismiss();
@@ -474,8 +502,7 @@ class AffogatoEditorInstanceState
                               instanceId: widget.instanceId,
                               keyEvent: key,
                               editingContext: EditingContext(
-                                content: widget
-                                    .api.workspace.workspaceConfigs.vfs
+                                content: widget.api.vfs
                                     .accessEntity(data.documentId,
                                         isDir: false)!
                                     .document!
@@ -517,7 +544,11 @@ class AffogatoEditorInstanceState
                                 TextField(
                                   selectionControls:
                                       EmptyTextSelectionControls(),
-                                  readOnly: currentDoc.readOnly,
+                                  readOnly: widget.api.vfs
+                                      .accessEntity(data.documentId,
+                                          isDir: false)!
+                                      .document!
+                                      .readOnly,
                                   focusNode: textFieldFocusNode,
                                   maxLines: null,
                                   controller: textController,
@@ -771,9 +802,7 @@ class AffogatoEditorInstanceState
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    widget.api.workspace.workspaceConfigs.vfs
-                            .pathToEntity(data.documentId) ??
-                        'Unsaved',
+                    widget.api.vfs.pathToEntity(data.documentId) ?? 'Unsaved',
                     style: widget.api.workspace.workspaceConfigs.themeBundle
                         .editorTheme.defaultTextStyle
                         .copyWith(

@@ -1,6 +1,7 @@
 library affogato.apis;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:affogato_editor/affogato_editor.dart';
 import 'package:affogato_editor/utils/utils.dart' as utils;

@@ -10,6 +10,22 @@ class AffogatoWorkspaceAPI extends AffogatoAPIComponent {
   @override
   void init() {}
 
+  /// Sets the active pane as the one which contains [instanceId]
+  String? setActivePaneFromInstance(String instanceId) {
+    if (api.workspace.workspaceConfigs.activeInstance != null) {
+      for (final pane in api.workspace.workspaceConfigs.panesData.entries) {
+        if (pane.value.instances
+            .contains(api.workspace.workspaceConfigs.activeInstance)) {
+          return pane.key;
+        }
+      }
+    }
+    return null;
+  }
+
+  void setActivePane(String paneId) =>
+      api.workspace.workspaceConfigs.activePane = paneId;
+
   /// Adds the speicified list of [instanceIds] to the panes data for the pane specified
   /// by [paneId].
   void addInstancesToPane({
@@ -35,10 +51,8 @@ class AffogatoWorkspaceAPI extends AffogatoAPIComponent {
         final String instanceId = utils.generateId();
         workspaceConfigs.instancesData[instanceId] = AffogatoEditorInstanceData(
           documentId: entity.entityId,
-          languageBundle: workspaceConfigs.detectLanguage(workspaceConfigs.vfs
-              .accessEntity(entity.entityId)!
-              .document!
-              .extension),
+          languageBundle: workspaceConfigs.detectLanguage(
+              api.vfs.accessEntity(entity.entityId)!.document!.extension),
           themeBundle: workspaceConfigs.themeBundle,
         );
         instanceIds.add(instanceId);

@@ -28,7 +28,7 @@ class FileTabBar extends StatelessWidget {
               Colors.red;
       tabs.add(
         FileTab(
-          label: api.workspace.workspaceConfigs.vfs
+          label: api.vfs
               .accessEntity(
                   (api.workspace.workspaceConfigs.instancesData[instanceIds[i]]
                           as AffogatoEditorInstanceData)

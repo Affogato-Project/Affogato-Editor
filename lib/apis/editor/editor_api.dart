@@ -17,8 +17,10 @@ class AffogatoEditorAPI extends AffogatoAPIComponent {
   @override
   init() {
     instanceLoadedStream.listen((event) {
-      api.workspace.workspaceConfigs.entitiesLocation[event.documentId] =
-          (event.instanceId, event.paneId);
+      api.workspace
+        ..workspaceConfigs.entitiesLocation[event.documentId] =
+            (event.instanceId, event.paneId)
+        ..setActivePaneFromInstance(event.instanceId);
     });
     instanceClosedStream.listen((event) {
       api.workspace.workspaceConfigs.entitiesLocation.removeWhere(

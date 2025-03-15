@@ -118,8 +118,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                         label: 'New File',
                         onPressed: () {
                           final String docId = utils.generateId();
-                          widget.api.workspace.workspaceConfigs.vfs
-                              .createEntity(
+                          widget.api.vfs.createEntity(
                             dirId: widget.entry.entityId,
                             AffogatoVFSEntity.file(
                               entityId: docId,
@@ -140,8 +139,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                       ContextMenuButtonItem(
                         label: 'New Folder',
                         onPressed: () {
-                          widget.api.workspace.workspaceConfigs.vfs
-                              .createEntity(
+                          widget.api.vfs.createEntity(
                             dirId: widget.entry.entityId,
                             AffogatoVFSEntity.dir(
                               entityId: utils.generateId(),
@@ -218,7 +216,7 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
 
                       onAcceptWithDetails: (details) {
                         for (final item in details.data) {
-                          widget.api.workspace.workspaceConfigs.vfs.moveEntity(
+                          widget.api.vfs.moveEntity(
                             entityId: item.entityId,
                             newDirId: widget.entry.entityId,
                           );

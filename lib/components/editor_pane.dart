@@ -67,10 +67,7 @@ class EditorPaneState extends State<EditorPane>
           AffogatoEditorInstanceData(
         documentId: entity.entityId,
         languageBundle: widget.api.workspace.workspaceConfigs.detectLanguage(
-            widget.api.workspace.workspaceConfigs.vfs
-                .accessEntity(entity.entityId)!
-                .document!
-                .extension),
+            widget.api.vfs.accessEntity(entity.entityId)!.document!.extension),
         themeBundle: widget.api.workspace.workspaceConfigs.themeBundle,
       );
       results.add(id);
@@ -88,8 +85,7 @@ class EditorPaneState extends State<EditorPane>
       width: widget.layoutConfigs.width,
       height: widget.layoutConfigs.height,
       child: GestureDetector(
-        onTap: () =>
-            widget.api.workspace.workspaceConfigs.activePane = currentPaneId,
+        onTap: () => widget.api.workspace.setActivePane(currentPaneId),
         child: DragTarget<List<AffogatoVFSEntity>>(
           onWillAcceptWithDetails: (details) {
             final bool willAccept =

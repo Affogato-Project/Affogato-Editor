@@ -44,6 +44,7 @@ class PairMatcherExtension extends AffogatoExtension {
                   selection: event.editingContext.selection,
                 ),
               ),
+              originId: name,
             ),
           );
         } else if (event.keyEvent.logicalKey == LogicalKeyboardKey.backspace &&
@@ -59,6 +60,7 @@ class PairMatcherExtension extends AffogatoExtension {
                     .substring(1);
             api.vfs.documentRequestChange(
               VFSDocumentRequestChangeEvent(
+                originId: name,
                 entityId: api
                     .workspace.workspaceConfigs.entitiesLocation.entries
                     .firstWhere((entry) =>
@@ -127,6 +129,7 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
 
         api.vfs.documentRequestChange(
           VFSDocumentRequestChangeEvent(
+            originId: name,
             entityId: api.workspace.workspaceConfigs.entitiesLocation.entries
                 .firstWhere((entry) =>
                     entry.value.$1 ==

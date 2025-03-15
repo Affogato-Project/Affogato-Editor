@@ -1,7 +1,6 @@
 library affogato.editor;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -101,7 +100,7 @@ class AffogatoWindowState extends State<AffogatoWindow>
     BrowserContextMenu.disableContextMenu();
 
     // initialise the virtual file system
-    api.workspace.workspaceConfigs.vfs.createEntity(
+    api.vfs.createEntity(
       AffogatoVFSEntity.dir(
         entityId: utils.generateId(),
         name: 'Dir_1',

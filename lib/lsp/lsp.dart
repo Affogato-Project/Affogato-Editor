@@ -46,7 +46,7 @@ class LSPClient {
   void sendInit({
     required AffogatoVFS vfs,
   }) {
-    print(vfs.pathToEntity(vfs.root.entityId));
+    // print(vfs.pathToEntity(vfs.root.entityId));
     return;
     send({
       "jsonrpc": "2.0",
