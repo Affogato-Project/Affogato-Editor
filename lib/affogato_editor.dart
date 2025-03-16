@@ -29,6 +29,9 @@ part './components/shared/context_menu_region.dart';
 part './components/shared/search_and_replace_widget.dart';
 part './components/shared/button.dart';
 
+part './components/file_tree_icons/icons_map.dart';
+part './components/file_tree_icons/seti_ui_icondata.dart';
+
 part './components/editor_pane.dart';
 part './components/pane_instance.dart';
 part './components/pane_layout_cell_widget.dart';

@@ -10,8 +10,8 @@ This is an outline of Affogato's existing and planned features. The version numb
 
 | Feature                         | Sub-Features                              | Status                                                                                                  |
 |---------------------------------|-------------------------------------------|---------------------------------------------------------------------------------------------------------|
-| File Operations                 | Create, Open, Modify, Save                | ![ stable - 1.0.0 ]( https://img.shields.io/static/v1?label=stable&message=1.0.0&color=4D8646 )         |
-|                                 | Loading files from local FS via Orca      | ![ underway - 0.1.0 ]( https://img.shields.io/static/v1?label=underway&message=0.1.0&color=3890A8 )     |
+| File Operations                 | Create, Open, Modify, Save                | ![ stable - 0.1.0 ]( https://img.shields.io/static/v1?label=stable&message=1.0.0&color=4D8646 )         |
+|                                 | Loading files from local FS via Orca      | ![ underway - 2.0.0 ]( https://img.shields.io/static/v1?label=underway&message=0.1.0&color=3890A8 )     |
 |                                 | Loading files from VC/cloud storage       | ![ future - -- ]( https://img.shields.io/static/v1?label=future&message=--&color=685369 )               |
 | File Handling UI                | Directory Tree                            | ![ stable - 1.0.0 ]( https://img.shields.io/static/v1?label=stable&message=1.0.0&color=4D8646 )         |
 |                                 | Setting/Unsetting Active Document         | ![ stable - 1.0.0 ]( https://img.shields.io/static/v1?label=stable&message=1.0.0&color=4D8646 )         |
@@ -37,7 +37,7 @@ This is an outline of Affogato's existing and planned features. The version numb
 |---------------------------------|-------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | Syntax Highlighting             | Markdown                                  | ![stable - 1.0.0](https://img.shields.io/static/v1?label=stable&message=1.0.0&color=4D8646)             |
 |                                 | Generic (HighlightJS)                     | ![stable - 1.0.0](https://img.shields.io/static/v1?label=stable&message=1.0.0&color=4D8646)             |
-|                                 | Custom Affogato Language Bundle           | ![stable - 1.0.0](https://img.shields.io/static/v1?label=stable&message=1.0.0&color=4D8646)             |
+|                                 | Custom Affogato Language Bundle           | ![future - --](https://img.shields.io/static/v1?label=future&message=--&color=685369)                   |
 | Advanced Text Editing           | Search-and-replace                        | ![future - --](https://img.shields.io/static/v1?label=future&message=--&color=685369)                   |
 |                                 | Multi-file search                         | ![future - --](https://img.shields.io/static/v1?label=future&message=--&color=685369)                   |
 | Static Analysis                 | Semantic Highlighting                     | ![future - --](https://img.shields.io/static/v1?label=future&message=--&color=685369)                   |
@@ -82,3 +82,14 @@ This is an outline of Affogato's existing and planned features. The version numb
 
 > [!WARNING]  
 > Experimental features are subject to drastic changes, and dependent projects should not rely on those features until they reach a stable release.
+
+# Acknowledgements
+
+The Affogato Project is an open-source project that would not have been possible without the invaluable and selfless contributions of the open-source community:
+
+- Much love and respect to the [Reqable](https://reqable.com/en-US/) project for:
+    - the [`re_highlight`](https://pub.dev/packages/re_highlight) submodule which contains HighlightJS syntax highlighting rules rewritten in Dart.
+
+    - the amazing work on their own high-performance code editor, [`re_editor`](https://pub.dev/packages/re_editor), which, as I have come to realise, is an ambitious undertaking
+- Many thanks to the open-source [Seti UI Theme](https://github.com/jesseweed/seti-ui) which maintains the icons used by the file explorers in VSCode and other editors.
+- and to the [FlutterIcon](https://www.fluttericon.com) tool for helping convert the SVG icons to TTF files that can be imported into Flutter and used as `IconData`.

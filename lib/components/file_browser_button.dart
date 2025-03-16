@@ -34,6 +34,14 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
 
   @override
   Widget build(BuildContext context) {
+    IconData? fileIconData;
+    Color? fileIconColor;
+    if (!widget.entry.isDirectory) {
+      final entry = iconsMap.entries
+          .firstWhere((entry) => widget.entry.name.endsWith(entry.key));
+      fileIconData = entry.value.$2;
+      fileIconColor = entry.value.$3.color;
+    }
     final Color buttonColor;
     if (widget.entry.isDirectory) {
       if (widget.api.workspace.workspaceConfigs.instancesData.values
@@ -240,52 +248,33 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          const SizedBox(
+                              height: utils.AffogatoConstants
+                                  .primaryBarFileTreeItemHeight),
                           Padding(
                             padding: const EdgeInsets.only(
                                 right: utils.AffogatoConstants
                                     .primaryBarFileTreeItemIconTextPadding),
                             child: widget.entry.isDirectory
-                                ? SizedBox(
-                                    width: utils.AffogatoConstants
-                                        .primaryBarFileTreeItemHeight,
-                                    height: utils.AffogatoConstants
-                                        .primaryBarFileTreeItemHeight,
-                                    child: Center(
-                                      child: Icon(
-                                        (expanded!
-                                            ? Icons.keyboard_arrow_down
-                                            : Icons.chevron_right),
-                                        size: utils.AffogatoConstants
-                                            .primaryBarFileTreeItemDirIconSize,
-                                        color: widget
-                                            .api
-                                            .workspace
-                                            .workspaceConfigs
-                                            .themeBundle
-                                            .editorTheme
-                                            .buttonSecondaryForeground,
-                                      ),
-                                    ),
+                                ? Icon(
+                                    (expanded!
+                                        ? Icons.keyboard_arrow_down
+                                        : Icons.chevron_right),
+                                    size: utils.AffogatoConstants
+                                        .primaryBarFileTreeItemDirIconSize,
+                                    color: widget
+                                        .api
+                                        .workspace
+                                        .workspaceConfigs
+                                        .themeBundle
+                                        .editorTheme
+                                        .buttonSecondaryForeground,
                                   )
-                                : SizedBox(
-                                    width: utils.AffogatoConstants
-                                        .primaryBarFileTreeItemHeight,
-                                    height: utils.AffogatoConstants
-                                        .primaryBarFileTreeItemHeight,
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.description,
-                                        size: utils.AffogatoConstants
-                                            .primaryBarFileTreeItemDirIconSize,
-                                        color: widget
-                                            .api
-                                            .workspace
-                                            .workspaceConfigs
-                                            .themeBundle
-                                            .editorTheme
-                                            .buttonSecondaryForeground,
-                                      ),
-                                    ),
+                                : Icon(
+                                    fileIconData!,
+                                    size: utils.AffogatoConstants
+                                        .primaryBarFileTreeItemFileIconSize,
+                                    color: fileIconColor!,
                                   ),
                           ),
                           Text(

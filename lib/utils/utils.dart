@@ -35,8 +35,8 @@ class AffogatoConstants {
   static const double searchAndReplacePadding = 4;
   static const double searchAndReplaceTextFieldWidth = 340;
   static const double searchAndReplaceWidgetWidth = 380;
-  static const double primaryBarFileTreeItemHeight = 28;
-  static const double primaryBarFileTreeItemFileIconSize = 18;
+  static const double primaryBarFileTreeItemHeight = 26;
+  static const double primaryBarFileTreeItemFileIconSize = 24;
   static const double primaryBarFileTreeItemDirIconSize = 22;
   static const double primaryBarFileTreeItemIconTextPadding = 2;
 }
