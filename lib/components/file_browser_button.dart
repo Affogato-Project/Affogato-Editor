@@ -3,15 +3,15 @@ part of affogato.editor;
 enum QuartetButtonState { none, hovered, pressed, active }
 
 class FileBrowserButton extends StatefulWidget {
-  final double indent;
   final AffogatoVFSEntity entry;
   final bool isRoot;
   final AffogatoAPI api;
+  final bool showIndentGuides;
 
   FileBrowserButton({
     required this.api,
     required this.entry,
-    required this.indent,
+    required this.showIndentGuides,
     this.isRoot = false,
   }) : super(key: ValueKey(entry.entityId));
 
@@ -102,6 +102,15 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
+            border: widget.showIndentGuides
+                ? Border(
+                    left: BorderSide(
+                      color: widget.api.workspace.workspaceConfigs.themeBundle
+                              .editorTheme.editorIndentGuideBackground1 ??
+                          Colors.red,
+                    ),
+                  )
+                : null,
             color: isDragTarget
                 ? !widget.entry.isDirectory || !isValidDragTarget
                     ? Colors.transparent
@@ -232,17 +241,22 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(left: 4, right: 4),
+                            padding: const EdgeInsets.only(
+                                right: utils.AffogatoConstants
+                                    .primaryBarFileTreeItemIconTextPadding),
                             child: widget.entry.isDirectory
                                 ? SizedBox(
-                                    width: 36,
-                                    height: 36,
+                                    width: utils.AffogatoConstants
+                                        .primaryBarFileTreeItemHeight,
+                                    height: utils.AffogatoConstants
+                                        .primaryBarFileTreeItemHeight,
                                     child: Center(
                                       child: Icon(
                                         (expanded!
                                             ? Icons.keyboard_arrow_down
                                             : Icons.chevron_right),
-                                        size: 24,
+                                        size: utils.AffogatoConstants
+                                            .primaryBarFileTreeItemDirIconSize,
                                         color: widget
                                             .api
                                             .workspace
@@ -254,12 +268,15 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                                     ),
                                   )
                                 : SizedBox(
-                                    width: 36,
-                                    height: 36,
+                                    width: utils.AffogatoConstants
+                                        .primaryBarFileTreeItemHeight,
+                                    height: utils.AffogatoConstants
+                                        .primaryBarFileTreeItemHeight,
                                     child: Center(
                                       child: Icon(
                                         Icons.description,
-                                        size: 24,
+                                        size: utils.AffogatoConstants
+                                            .primaryBarFileTreeItemDirIconSize,
                                         color: widget
                                             .api
                                             .workspace
@@ -294,26 +311,24 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
                 if (widget.entry.isDirectory && expanded!) ...[
                   for (final subentry in widget.entry.subdirs)
                     Padding(
-                      padding: EdgeInsets.only(
-                          left: (widget.indent + 1) *
-                              utils.AffogatoConstants
-                                  .primaryBarFileTreeIndentSize),
+                      padding: const EdgeInsets.only(
+                          left: utils
+                              .AffogatoConstants.primaryBarFileTreeIndentSize),
                       child: FileBrowserButton(
                         api: widget.api,
                         entry: subentry,
-                        indent: widget.indent + 1,
+                        showIndentGuides: widget.showIndentGuides,
                       ),
                     ),
                   for (final subentry in widget.entry.files)
                     Padding(
-                      padding: EdgeInsets.only(
-                          left: (widget.indent + 1) *
-                              utils.AffogatoConstants
-                                  .primaryBarFileTreeIndentSize),
+                      padding: const EdgeInsets.only(
+                          left: utils
+                              .AffogatoConstants.primaryBarFileTreeIndentSize),
                       child: FileBrowserButton(
                         api: widget.api,
                         entry: subentry,
-                        indent: widget.indent + 1,
+                        showIndentGuides: widget.showIndentGuides,
                       ),
                     ),
                 ],

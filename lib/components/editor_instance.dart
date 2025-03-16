@@ -211,8 +211,6 @@ class AffogatoEditorInstanceState
             .where((event) => event.entityId == data.documentId),
         (event) {
           textController.value = event.editorAction.editingValue;
-          print(
-              "${textController.text.substring(0, 5)} pane(${widget.paneId}) instance(${widget.instanceId}) doc(${widget.api.workspace.workspaceConfigs.entitiesLocation.entries.firstWhere((e) => e.value.$1 == widget.instanceId).key})");
           setState(() {});
           AffogatoEvents.vfsDocumentChangedEventsController.add(
             VFSDocumentChangedEvent(

@@ -26,7 +26,7 @@ class AffogatoConstants {
   static const double overscrollAmount = 200;
   static const double breadcrumbHeight = 26;
   static const double lineHeight = 1.5;
-  static const double primaryBarFileTreeIndentSize = 10;
+  static const double primaryBarFileTreeIndentSize = 12;
   static const double primaryBarClosedWidth = 60;
   static const double primaryBarExpandedWidth = 350;
   static const double completionsMenuItemHeight = 24;
@@ -35,6 +35,10 @@ class AffogatoConstants {
   static const double searchAndReplacePadding = 4;
   static const double searchAndReplaceTextFieldWidth = 340;
   static const double searchAndReplaceWidgetWidth = 380;
+  static const double primaryBarFileTreeItemHeight = 28;
+  static const double primaryBarFileTreeItemFileIconSize = 18;
+  static const double primaryBarFileTreeItemDirIconSize = 22;
+  static const double primaryBarFileTreeItemIconTextPadding = 2;
 }
 
 mixin StreamSubscriptionManager<T extends StatefulWidget> {
