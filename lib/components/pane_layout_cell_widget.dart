@@ -6,13 +6,11 @@ part of affogato.editor;
 class PaneLayoutCellWidget extends StatefulWidget {
   final AffogatoAPI api;
   final AffogatoPerformanceConfigs performanceConfigs;
-  final GlobalKey<AffogatoWindowState> windowKey;
   final String cellId;
 
   const PaneLayoutCellWidget({
     required this.api,
     required this.performanceConfigs,
-    required this.windowKey,
     required this.cellId,
     super.key,
   });
@@ -64,7 +62,6 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
             height: cellState.height,
           ),
           api: widget.api,
-          windowKey: widget.windowKey,
         ),
       );
     } else if (cellState is HorizontalPaneList) {
@@ -78,7 +75,6 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
                 cellId: child.id,
                 api: widget.api,
                 performanceConfigs: widget.performanceConfigs,
-                windowKey: widget.windowKey,
               ),
           ],
         ),
@@ -94,7 +90,6 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
                 cellId: child.id,
                 api: widget.api,
                 performanceConfigs: widget.performanceConfigs,
-                windowKey: widget.windowKey,
               ),
           ],
         ),

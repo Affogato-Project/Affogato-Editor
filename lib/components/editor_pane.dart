@@ -4,14 +4,12 @@ part of affogato.editor;
 class EditorPane extends StatefulWidget {
   final LayoutConfigs layoutConfigs;
   final AffogatoAPI api;
-  final GlobalKey<AffogatoWindowState> windowKey;
   final String cellId;
 
   EditorPane({
     required this.cellId,
     required this.layoutConfigs,
     required this.api,
-    required this.windowKey,
   });
   // key: ValueKey( "${api.workspace.workspaceConfigs.panesData[paneId]}${layoutConfigs.width}-${layoutConfigs.height}-$paneId-$cellId")
 

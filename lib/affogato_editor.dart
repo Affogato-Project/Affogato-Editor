@@ -63,7 +63,6 @@ class AffogatoWindow extends StatefulWidget {
 
 class AffogatoWindowState extends State<AffogatoWindow>
     with utils.StreamSubscriptionManager {
-  final GlobalKey<AffogatoWindowState> windowKey = GlobalKey();
   final FocusNode keyboardListenerFocusNode = FocusNode();
   late final AffogatoAPI api;
 
@@ -156,7 +155,6 @@ class AffogatoWindowState extends State<AffogatoWindow>
   @override
   Widget build(BuildContext context) {
     return Material(
-      key: windowKey,
       child: KeyboardListener(
         focusNode: keyboardListenerFocusNode,
         onKeyEvent: (event) => AffogatoEvents.windowKeyboardEventsController
@@ -193,7 +191,6 @@ class AffogatoWindowState extends State<AffogatoWindow>
                           api: api,
                           cellId: api.workspace.workspaceConfigs.panesLayout.id,
                           performanceConfigs: widget.performanceConfigs,
-                          windowKey: windowKey,
                         ),
                       ],
                     ),
