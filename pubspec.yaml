@@ -1,7 +1,9 @@
 name: affogato_editor
-description: "A new Flutter package project."
+description: "A feature-rich and extensible code workspace for Flutter Web."
 version: 0.0.1
 homepage:
+repository: https://github.com/Affogato-Project/Affogato-Editor
+issue_tracker: https://github.com/Affogato-Project/Affogato-Editor/issues
 
 environment:
   sdk: ^3.5.4
