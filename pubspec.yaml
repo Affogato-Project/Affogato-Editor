@@ -10,8 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  affogato_core:
-    path: ../AffogatoCore
   re_highlight: ^0.0.3
 
 dev_dependencies:

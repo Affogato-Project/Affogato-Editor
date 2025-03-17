@@ -1,6 +1,6 @@
 library affogato.editor.battery.themes.vscode_modern_dark;
 
-import 'package:affogato_core/affogato_core.dart';
+import 'package:affogato_editor/apis/affogato_apis.dart';
 import 'package:flutter/material.dart';
 
 part './token_mapping.dart';

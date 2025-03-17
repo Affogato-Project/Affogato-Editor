@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:affogato_editor/apis/affogato_apis.dart';
-import 'package:affogato_core/affogato_core.dart';
 import 'package:affogato_editor/utils/utils.dart' as utils;
 import 'package:affogato_editor/lsp/lsp_client.dart' as lsp;
 import 'package:re_highlight/languages/all.dart';

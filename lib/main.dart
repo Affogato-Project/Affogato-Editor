@@ -1,7 +1,7 @@
-import 'package:affogato_core/affogato_core.dart';
 import 'package:affogato_editor/battery_themes/vscode_modern_dark/theme_bundle.dart';
 import 'package:flutter/material.dart';
 import 'package:affogato_editor/affogato_editor.dart';
+import 'package:affogato_editor/apis/affogato_apis.dart';
 
 void main(List<String> args) {
   runApp(
