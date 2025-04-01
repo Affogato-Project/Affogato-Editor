@@ -1,7 +1,7 @@
 name: affogato_editor
 description: "A feature-rich and extensible code workspace for Flutter Web."
-version: 0.0.1
-homepage:
+version: 0.3.0
+homepage: affogato.obsivision.com
 repository: https://github.com/Affogato-Project/Affogato-Editor
 issue_tracker: https://github.com/Affogato-Project/Affogato-Editor/issues
 
