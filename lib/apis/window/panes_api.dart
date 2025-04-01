@@ -30,10 +30,37 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
               api.workspace.workspaceConfigs.stylingConfigs.windowHeight -
                   utils.AffogatoConstants.statusBarHeight;
 
+        _recomputeChildConstraints(api.workspace.workspaceConfigs.panesLayout);
+
         AffogatoEvents.windowPaneCellRequestReloadEventsController
             .add(WindowPaneCellRequestReloadEvent(event.cellId));
       },
     );
+  }
+
+  /// Given the updated constraints of [target], recursively updates all children
+  /// with the new constraints.s
+  void _recomputeChildConstraints(PaneList target) {
+    final double newChildHeight;
+    final double newChildWidth;
+    if (target is SinglePaneList) {
+      return;
+    } else if (target is VerticalPaneList) {
+      newChildHeight = target.height / target.value.length;
+      newChildWidth = target.width;
+    } else if (target is HorizontalPaneList) {
+      newChildHeight = target.height;
+      newChildWidth = target.width / target.value.length;
+    } else {
+      throw Exception('impossible');
+    }
+
+    for (int i = 0; i < (target as MultiplePaneList).value.length; i++) {
+      target.value[i]
+        ..width = newChildWidth
+        ..height = newChildHeight;
+      _recomputeChildConstraints(target.value[i]);
+    }
   }
 
   /// Traverse via BFS
@@ -148,15 +175,19 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
           WindowPaneCellRequestReloadEvent(
               api.workspace.workspaceConfigs.panesLayout.id));
     } else {
+      // find the path to the anchor pane
       final path =
           (api.workspace.workspaceConfigs.panesLayout as MultiplePaneList)
               .pathToPane(anchorPaneId);
+      // determine the parent of the anchor
       MultiplePaneList parentOfAnchor =
           path?.last ?? (throw Exception('Parent of anchor not found'));
 
+      // determine the index of the anchor cell
       final int index = parentOfAnchor.value.indexWhere(
           (pane) => pane is SinglePaneList && pane.paneId == anchorPaneId);
       final PaneList anchorCell = parentOfAnchor.value[index];
+      // resolve any axis conflicts
       final Axis childAxis =
           parentOfAnchor is VerticalPaneList ? Axis.vertical : Axis.horizontal;
       final bool axisIsConflicting = axis != childAxis;

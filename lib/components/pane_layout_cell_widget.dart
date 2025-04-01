@@ -36,7 +36,6 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
           .where((event) => event.cellId == widget.cellId),
       (_) {
         loadData();
-
         if (cellState is MultiplePaneList) {
           for (final child in (cellState as MultiplePaneList).value) {
             AffogatoEvents.windowPaneCellRequestReloadEventsController
