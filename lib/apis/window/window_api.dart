@@ -106,5 +106,7 @@ class AffogatoWindowAPI extends AffogatoAPIComponent {
       ..panesData[paneId]!.activeInstance = instanceId;
     AffogatoEvents.windowPaneRequestReloadEventsController
         .add(WindowPaneRequestReloadEvent(paneId));
+    AffogatoEvents.windowInstanceDidSetActiveEventsController
+        .add(WindowInstanceDidSetActiveEvent(instanceId: instanceId));
   }
 }
