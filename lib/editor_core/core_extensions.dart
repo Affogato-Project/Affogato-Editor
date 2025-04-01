@@ -78,6 +78,12 @@ class PairMatcherExtension extends AffogatoExtension {
   }
 }
 
+enum _IndentType {
+  none,
+  add,
+  maintain,
+}
+
 final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
   late AffogatoAPI api;
   static const triggerChars = {
@@ -105,23 +111,30 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
     if (editorKeyEvent.keyEvent is KeyDownEvent) {
       final String prevChar = editorKeyEvent.editingContext
           .content[editorKeyEvent.editingContext.selection.start - 1];
-      if (triggerChars.containsKey(prevChar)) {
+      final _IndentType indentType = triggerChars.containsKey(prevChar)
+          ? _IndentType.add
+          : editorKeyEvent.keyEvent.logicalKey == LogicalKeyboardKey.enter
+              ? _IndentType.maintain
+              : _IndentType.none;
+      if (indentType == _IndentType.add || indentType == _IndentType.maintain) {
         final String precedentText = editorKeyEvent.editingContext.selection
             .textBefore(editorKeyEvent.editingContext.content);
+
         final int numSpaces =
             numSpacesBeforeFirstChar(precedentText.split('\n').last);
-
+        if (numSpaces == 0 && indentType == _IndentType.maintain) {
+          return KeyEventResult.ignored;
+        }
         final int tabSizeInSpaces =
             api.workspace.workspaceConfigs.stylingConfigs.tabSizeInSpaces;
 
         final String insertText =
-            "\n${' ' * (numSpaces + tabSizeInSpaces)}\n${' ' * numSpaces}";
+            "\n${' ' * (indentType == _IndentType.add ? (numSpaces + tabSizeInSpaces) : 0)}${indentType == _IndentType.add ? '\n' : ''}${' ' * numSpaces}";
 
         final String succeedingText = editorKeyEvent.editingContext.selection
             .textAfter(editorKeyEvent.editingContext.content);
 
         final String newText = precedentText + insertText + succeedingText;
-
         api.vfs.documentRequestChange(
           VFSDocumentRequestChangeEvent(
             originId: name,
@@ -136,8 +149,10 @@ final class AutoIndenterExtension extends AffogatoEditorKeybindingExtension {
                   offset: precedentText.length +
                       1 +
                       numSpaces +
-                      api.workspace.workspaceConfigs.stylingConfigs
-                          .tabSizeInSpaces,
+                      (indentType == _IndentType.add
+                          ? api.workspace.workspaceConfigs.stylingConfigs
+                              .tabSizeInSpaces
+                          : 0),
                 ),
               ),
             ),
