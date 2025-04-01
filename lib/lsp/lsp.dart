@@ -48,7 +48,7 @@ class LSPClient {
   }) {
     // print(vfs.pathToEntity(vfs.root.entityId));
     return;
-    send({
+    /* send({
       "jsonrpc": "2.0",
       "method": "initialize",
       "params": {
@@ -102,7 +102,7 @@ class LSPClient {
           {"uri": "file:///path/to/project", "name": "project"}
         ]
       }
-    });
+    }); */
   }
 
   void notifyTextDocumentDidOpen({

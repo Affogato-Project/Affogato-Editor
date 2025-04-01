@@ -22,7 +22,7 @@ class Token {
       "[${tokenType.value}] $start..$end $lexeme (${literal ?? ''})";
 
   @override
-  bool operator ==(Object? other) =>
+  bool operator ==(Object other) =>
       (other is Token) &&
       start == other.start &&
       end == other.end &&

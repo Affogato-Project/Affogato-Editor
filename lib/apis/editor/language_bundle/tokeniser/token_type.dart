@@ -52,6 +52,6 @@ class TokenType {
   const TokenType.unkown() : value = 'Unknown';
 
   @override
-  bool operator ==(Object? other) =>
+  bool operator ==(Object other) =>
       (other is TokenType) && (value == other.value);
 }
