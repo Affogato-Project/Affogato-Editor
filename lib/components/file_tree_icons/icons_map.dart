@@ -827,4 +827,6 @@ const Map<String, (String, IconData, SetiIconColor)> iconsMap = {
     SetiIconColor.ignore
   ),
   ".DS_Store": ("ignored", SetiUiIcons.ignored, SetiIconColor.ignore),
+
+  "unknown": ("unknown", SetiUiIcons.default_icon, SetiIconColor.white),
 };

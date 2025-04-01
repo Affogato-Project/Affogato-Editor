@@ -37,8 +37,10 @@ class FileBrowserButtonState extends State<FileBrowserButton> {
     IconData? fileIconData;
     Color? fileIconColor;
     if (!widget.entry.isDirectory) {
-      final entry = iconsMap.entries
-          .firstWhere((entry) => widget.entry.name.endsWith(entry.key));
+      final entry = iconsMap.entries.firstWhere(
+        (entry) => widget.entry.name.endsWith(entry.key),
+        orElse: () => MapEntry('unknown', iconsMap['unknown']!),
+      );
       fileIconData = entry.value.$2;
       fileIconColor = entry.value.$3.color;
     }
