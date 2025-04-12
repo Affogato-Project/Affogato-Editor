@@ -88,6 +88,7 @@ class AffogatoWorkspaceConfigs {
     Map<String, PaneData>? defaultPanesData,
     String? activePane,
     PaneList? panesLayout,
+    AffogatoVFSEntity? rootDirectory,
     required this.projectName,
     required this.instancesData,
     required this.themeBundle,
@@ -97,15 +98,20 @@ class AffogatoWorkspaceConfigs {
   })  : panesData =
             defaultPanesData ?? {utils.generateId(): PaneData(instances: [])},
         vfs = AffogatoVFS(
-          root: AffogatoVFSEntity.dir(
-            entityId: utils.generateId(),
-            name: projectName,
-            files: [],
-            subdirs: [],
-          ),
+          root: rootDirectory ??
+              AffogatoVFSEntity.dir(
+                entityId: utils.generateId(),
+                name: projectName,
+                files: [],
+                subdirs: [],
+              ),
         ) {
     if (panesLayout != null) this.panesLayout = panesLayout;
     activePane = activePane ?? panesData.keys.first;
+    if (rootDirectory != null && !rootDirectory.isDirectory) {
+      throw Exception(
+          "The file entity provided to the 'rootDirectory' argument must be a directory, not a file.");
+    }
   }
 
   LanguageBundle? detectLanguage(String extension) {

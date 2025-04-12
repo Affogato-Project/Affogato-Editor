@@ -100,49 +100,6 @@ class AffogatoWindowState extends State<AffogatoWindow>
     // behaviour for every right-click action
     BrowserContextMenu.disableContextMenu();
 
-    // initialise the virtual file system
-    api.vfs.createEntity(
-      AffogatoVFSEntity.dir(
-        entityId: utils.generateId(),
-        name: 'Dir_1',
-        files: [
-          AffogatoVFSEntity.file(
-            entityId: utils.generateId(),
-            doc: AffogatoDocument(
-              docName: 'main.dart',
-              srcContent: '// this is a comment',
-              maxVersioningLimit: 5,
-            ),
-          ),
-        ],
-        subdirs: [
-          AffogatoVFSEntity.dir(
-            entityId: utils.generateId(),
-            name: 'inside',
-            files: [
-              AffogatoVFSEntity.file(
-                entityId: utils.generateId(),
-                doc: AffogatoDocument(
-                  docName: 'MyDoc.md',
-                  srcContent: '# Hello',
-                  maxVersioningLimit: 5,
-                ),
-              ),
-              AffogatoVFSEntity.file(
-                entityId: utils.generateId(),
-                doc: AffogatoDocument(
-                  docName: 'some_script.js',
-                  srcContent: 'function f() => 2;',
-                  maxVersioningLimit: 5,
-                ),
-              ),
-            ],
-            subdirs: [],
-          ),
-        ],
-      ),
-    );
-
     // finally, notify that the window has been started up
     AffogatoEvents.windowStartupFinishedEventsController
         .add(const WindowStartupFinishedEvent());

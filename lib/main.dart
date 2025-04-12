@@ -2,6 +2,7 @@ import 'package:affogato_editor/battery_themes/vscode_modern_dark/theme_bundle.d
 import 'package:flutter/material.dart';
 import 'package:affogato_editor/affogato_editor.dart';
 import 'package:affogato_editor/apis/affogato_apis.dart';
+import 'package:affogato_editor/utils/utils.dart' as utils;
 
 void main(List<String> args) {
   runApp(
@@ -34,6 +35,45 @@ void main(List<String> args) {
             ): ['md'],
           },
           instancesData: {},
+          rootDirectory: AffogatoVFSEntity.dir(
+            entityId: utils.generateId(),
+            name: 'Dir_1',
+            files: [
+              AffogatoVFSEntity.file(
+                entityId: utils.generateId(),
+                doc: AffogatoDocument(
+                  docName: 'main.dart',
+                  srcContent: '// this is a comment',
+                  maxVersioningLimit: 5,
+                ),
+              ),
+            ],
+            subdirs: [
+              AffogatoVFSEntity.dir(
+                entityId: utils.generateId(),
+                name: 'inside',
+                files: [
+                  AffogatoVFSEntity.file(
+                    entityId: utils.generateId(),
+                    doc: AffogatoDocument(
+                      docName: 'MyDoc.md',
+                      srcContent: '# Hello',
+                      maxVersioningLimit: 5,
+                    ),
+                  ),
+                  AffogatoVFSEntity.file(
+                    entityId: utils.generateId(),
+                    doc: AffogatoDocument(
+                      docName: 'some_script.js',
+                      srcContent: 'function f() => 2;',
+                      maxVersioningLimit: 5,
+                    ),
+                  ),
+                ],
+                subdirs: [],
+              ),
+            ],
+          ),
           stylingConfigs: const AffogatoStylingConfigs(
             windowWidth: 1100,
             windowHeight: 786,
