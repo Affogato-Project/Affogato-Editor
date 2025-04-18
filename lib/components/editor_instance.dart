@@ -363,6 +363,21 @@ class AffogatoEditorInstanceState
         ),
       );
 
+      // check if the current line is too long and has been wrapped in the TextField
+
+      if (textController.text.split('\n')[i - 1].length + 1 >
+          ((widget.layoutConfigs.width -
+                  utils.AffogatoConstants.lineNumbersColWidth -
+                  utils.AffogatoConstants.lineNumbersGutterWidth) /
+              cellWidth)) {
+        lineNumbers.add(
+          SizedBox(
+            width: utils.AffogatoConstants.lineNumbersColWidth,
+            height: cellHeight,
+          ),
+        );
+      }
+
       /* leftGutterIndicators.add(
         Padding(
           padding: const EdgeInsets.only(
