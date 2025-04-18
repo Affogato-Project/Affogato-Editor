@@ -12,6 +12,12 @@ class PrimaryBar extends StatefulWidget {
   State<StatefulWidget> createState() => PrimaryBarState();
 }
 
+enum PrimaryBarMode {
+  collapsed,
+  files,
+  search,
+}
+
 class PrimaryBarState extends State<PrimaryBar>
     with utils.StreamSubscriptionManager {
   bool mouseIsOverPrimaryBar = false;
@@ -52,7 +58,8 @@ class PrimaryBarState extends State<PrimaryBar>
         mouseIsOverPrimaryBar = false;
       }),
       child: Container(
-        width: (widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded
+        width: (widget.api.workspace.workspaceConfigs.primaryBarMode !=
+                    PrimaryBarMode.collapsed
                 ? utils.AffogatoConstants.primaryBarExpandedWidth +
                     utils.AffogatoConstants.primaryBarClosedWidth
                 : utils.AffogatoConstants.primaryBarClosedWidth) +
@@ -75,7 +82,8 @@ class PrimaryBarState extends State<PrimaryBar>
           ),
         ),
         child: SizedBox(
-          width: widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded
+          width: widget.api.workspace.workspaceConfigs.primaryBarMode !=
+                  PrimaryBarMode.collapsed
               ? utils.AffogatoConstants.primaryBarExpandedWidth +
                   utils.AffogatoConstants.primaryBarClosedWidth
               : utils.AffogatoConstants.primaryBarClosedWidth,
@@ -87,7 +95,8 @@ class PrimaryBarState extends State<PrimaryBar>
                 width: utils.AffogatoConstants.primaryBarClosedWidth,
                 height: double.infinity,
                 decoration:
-                    widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded
+                    widget.api.workspace.workspaceConfigs.primaryBarMode !=
+                            PrimaryBarMode.collapsed
                         ? BoxDecoration(
                             color: widget.api.workspace.workspaceConfigs
                                 .themeBundle.editorTheme.panelBackground,
@@ -114,10 +123,12 @@ class PrimaryBarState extends State<PrimaryBar>
                       height: utils.AffogatoConstants.primaryBarClosedWidth,
                       onTap: () {
                         setState(() {
-                          widget.api.workspace.workspaceConfigs
-                                  .isPrimaryBarExpanded =
-                              !widget.api.workspace.workspaceConfigs
-                                  .isPrimaryBarExpanded;
+                          widget.api.workspace.workspaceConfigs.primaryBarMode =
+                              widget.api.workspace.workspaceConfigs
+                                          .primaryBarMode ==
+                                      PrimaryBarMode.files
+                                  ? PrimaryBarMode.collapsed
+                                  : PrimaryBarMode.files;
                           // trigger a full re-layout from the root pane
                           AffogatoEvents
                               .windowPaneCellLayoutChangedEventsController
@@ -142,19 +153,66 @@ class PrimaryBarState extends State<PrimaryBar>
                         ),
                       ),
                     ),
+                    AffogatoButton(
+                      api: widget.api,
+                      isPrimary: false,
+                      width: utils.AffogatoConstants.primaryBarClosedWidth,
+                      height: utils.AffogatoConstants.primaryBarClosedWidth,
+                      onTap: () {
+                        setState(() {
+                          widget.api.workspace.workspaceConfigs.primaryBarMode =
+                              widget.api.workspace.workspaceConfigs
+                                          .primaryBarMode ==
+                                      PrimaryBarMode.search
+                                  ? PrimaryBarMode.collapsed
+                                  : PrimaryBarMode.search;
+                          // trigger a full re-layout from the root pane
+                          AffogatoEvents
+                              .windowPaneCellLayoutChangedEventsController
+                              .add(WindowPaneCellLayoutChangedEvent(widget.api
+                                  .workspace.workspaceConfigs.panesLayout.id));
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Center(
+                          child: Icon(
+                            Icons.search,
+                            size: 28,
+                            color: widget
+                                .api
+                                .workspace
+                                .workspaceConfigs
+                                .themeBundle
+                                .editorTheme
+                                .buttonSecondaryForeground,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              if (widget.api.workspace.workspaceConfigs.isPrimaryBarExpanded)
-                SizedBox(
-                  width: utils.AffogatoConstants.primaryBarExpandedWidth,
-                  child: FileBrowserButton(
-                    api: widget.api,
-                    isRoot: true,
-                    entry: widget.api.workspace.workspaceConfigs.vfs.root,
-                    showIndentGuides: mouseIsOverPrimaryBar,
+              switch (widget.api.workspace.workspaceConfigs.primaryBarMode) {
+                PrimaryBarMode.files => SizedBox(
+                    width: utils.AffogatoConstants.primaryBarExpandedWidth,
+                    child: FileBrowserButton(
+                      api: widget.api,
+                      isRoot: true,
+                      entry: widget.api.workspace.workspaceConfigs.vfs.root,
+                      showIndentGuides: mouseIsOverPrimaryBar,
+                    ),
                   ),
-                ),
+                PrimaryBarMode.search => const SizedBox(),
+                /* SizedBox(
+                    width: utils.AffogatoConstants.primaryBarExpandedWidth,
+                    child: SearchAndReplacePanel(
+                      api: widget.api,
+                      width: utils.AffogatoConstants.primaryBarExpandedWidth,
+                    ),
+                  ), */
+                PrimaryBarMode.collapsed => const SizedBox(),
+              }
             ],
           ),
         ),

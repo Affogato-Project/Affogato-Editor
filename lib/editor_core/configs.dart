@@ -61,7 +61,7 @@ class AffogatoWorkspaceConfigs {
 
   String? activeInstance;
 
-  bool isPrimaryBarExpanded = false;
+  PrimaryBarMode primaryBarMode = PrimaryBarMode.collapsed;
 
   /// Stores the instance states for opened instances in the various panes, each one
   /// associated with its corresponding [PaneInstanceData] object

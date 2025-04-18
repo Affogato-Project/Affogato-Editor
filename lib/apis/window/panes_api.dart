@@ -19,7 +19,8 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
         // assume that all layout changes occur from the root,
         // and that we don't have to update the parent's constraints
         api.workspace.workspaceConfigs.panesLayout
-          ..width = (api.workspace.workspaceConfigs.isPrimaryBarExpanded
+          ..width = (api.workspace.workspaceConfigs.primaryBarMode !=
+                      PrimaryBarMode.collapsed
                   ? api.workspace.workspaceConfigs.stylingConfigs.windowWidth -
                       (utils.AffogatoConstants.primaryBarExpandedWidth +
                           utils.AffogatoConstants.primaryBarClosedWidth)
@@ -301,7 +302,8 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
   void addDefaultPane(String paneId) {
     api.workspace.workspaceConfigs.panesLayout = SinglePaneList(
       paneId,
-      width: (api.workspace.workspaceConfigs.isPrimaryBarExpanded
+      width: (api.workspace.workspaceConfigs.primaryBarMode !=
+                  PrimaryBarMode.collapsed
               ? api.workspace.workspaceConfigs.stylingConfigs.windowWidth -
                   (utils.AffogatoConstants.primaryBarExpandedWidth +
                       utils.AffogatoConstants.primaryBarClosedWidth)

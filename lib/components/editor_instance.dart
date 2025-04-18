@@ -49,8 +49,8 @@ class AffogatoEditorInstanceState
   int currentLineNum = 0;
   int currentCharNum = 0;
 
-  late final LocalSearchAndReplaceController searchAndReplaceController =
-      LocalSearchAndReplaceController(
+  late final SearchAndReplaceController searchAndReplaceController =
+      SearchAndReplaceController.local(
     tickerProvider: this,
     onDismiss: () {
       textFieldFocusNode.requestFocus();
@@ -58,7 +58,7 @@ class AffogatoEditorInstanceState
     },
     cellHeight: cellHeight,
     cellWidth: cellWidth,
-    textController: textController,
+    localScope: LocalSearchableDocumentsScope(controller: textController),
   );
 
   @override
