@@ -46,6 +46,8 @@ part './components/editor/local_search_and_replace.dart';
 
 part './syntax_highlighter/syntax_highlighter.dart';
 
+late final AffogatoAPI api;
+
 class AffogatoWindow extends StatefulWidget {
   final AffogatoPerformanceConfigs performanceConfigs;
   final AffogatoWorkspaceConfigs workspaceConfigs;
@@ -63,7 +65,6 @@ class AffogatoWindow extends StatefulWidget {
 class AffogatoWindowState extends State<AffogatoWindow>
     with utils.StreamSubscriptionManager {
   final FocusNode keyboardListenerFocusNode = FocusNode();
-  late final AffogatoAPI api;
 
   @override
   void initState() {
