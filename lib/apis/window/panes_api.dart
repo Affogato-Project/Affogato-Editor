@@ -40,18 +40,20 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
   }
 
   /// Given the updated constraints of [target], recursively updates all children
-  /// with the new constraints.s
+  /// with the new constraints
   void _recomputeChildConstraints(PaneList target) {
     final double newChildHeight;
     final double newChildWidth;
     if (target is SinglePaneList) {
       return;
     } else if (target is VerticalPaneList) {
-      newChildHeight = target.height / target.value.length;
+      newChildHeight =
+          (target.height - (target.value.length - 1)) / target.value.length;
       newChildWidth = target.width;
     } else if (target is HorizontalPaneList) {
       newChildHeight = target.height;
-      newChildWidth = target.width / target.value.length;
+      newChildWidth =
+          (target.width - (target.value.length - 1)) / target.value.length;
     } else {
       throw Exception('impossible');
     }
@@ -101,14 +103,14 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
       SinglePaneList(
         paneIdA,
         id: cellIdA,
-        width: axis == Axis.horizontal ? width / 2 : width,
-        height: axis == Axis.horizontal ? height : height / 2,
+        width: axis == Axis.horizontal ? (width - 1) / 2 : width,
+        height: axis == Axis.horizontal ? height : (height - 1) / 2,
       ),
       SinglePaneList(
         paneIdB,
         id: cellIdB,
-        width: axis == Axis.horizontal ? width / 2 : width,
-        height: axis == Axis.horizontal ? height : height / 2,
+        width: axis == Axis.horizontal ? (width - 1) / 2 : width,
+        height: axis == Axis.horizontal ? height : (height - 1) / 2,
       )
     ];
   }
@@ -316,4 +318,35 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
   }
 
   void removePane() {}
+
+  void resizePane(
+    String paneId, {
+    required MultiplePaneList parent,
+    double? deltaLeft,
+    double? deltaRight,
+    double? deltaTop,
+    double? deltaBottom,
+  }) {
+    for (int i = 0; i < parent.value.length; i++) {
+      if (parent.value[i].id == paneId) {
+        if (parent is VerticalPaneList) {
+          if (deltaTop != null) {
+            parent.value[i].height += deltaTop;
+            parent.value[i - 1].height -= deltaTop;
+          } else if (deltaBottom != null) {
+            parent.value[i].height += deltaBottom;
+            parent.value[i + 1].height -= deltaBottom;
+          }
+        } else if (parent is HorizontalPaneList) {
+          if (deltaLeft != null) {
+            parent.value[i].width += deltaLeft;
+            parent.value[i - 1].width -= deltaLeft;
+          } else if (deltaRight != null) {
+            parent.value[i].width += deltaRight;
+            parent.value[i + 1].width -= deltaRight;
+          }
+        }
+      }
+    }
+  }
 }
