@@ -3,6 +3,7 @@ part of affogato.editor;
 class AffogatoButton extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
+  final void Function(TapUpDetails)? onTapUp;
   final double width;
   final double height;
   final bool isPrimary;
@@ -15,6 +16,7 @@ class AffogatoButton extends StatefulWidget {
     required this.onTap,
     required this.isPrimary,
     required this.api,
+    this.onTapUp,
     super.key,
   });
 
@@ -29,9 +31,11 @@ class AffogatoButtonState extends State<AffogatoButton> {
     final Color? buttonColor;
     if (hovered) {
       if (widget.isPrimary) {
-        buttonColor = widget.api.workspace.workspaceConfigs.themeBundle.editorTheme.buttonHoverBackground;
+        buttonColor = widget.api.workspace.workspaceConfigs.themeBundle
+            .editorTheme.buttonHoverBackground;
       } else {
-        buttonColor = widget.api.workspace.workspaceConfigs.themeBundle.editorTheme.buttonSecondaryHoverBackground;
+        buttonColor = widget.api.workspace.workspaceConfigs.themeBundle
+            .editorTheme.buttonSecondaryHoverBackground;
       }
     } else {
       buttonColor = Colors.transparent;
@@ -46,6 +50,7 @@ class AffogatoButtonState extends State<AffogatoButton> {
       }),
       child: GestureDetector(
         onTap: widget.onTap,
+        onTapUp: widget.onTapUp,
         child: Center(
           child: Container(
             width: widget.width,

@@ -21,6 +21,7 @@ enum PrimaryBarMode {
 class PrimaryBarState extends State<PrimaryBar>
     with utils.StreamSubscriptionManager {
   bool mouseIsOverPrimaryBar = false;
+  final ContextMenuController menuController = ContextMenuController();
 
   @override
   void initState() {
@@ -116,6 +117,81 @@ class PrimaryBarState extends State<PrimaryBar>
                         : null,
                 child: Column(
                   children: [
+                    AffogatoButton(
+                      api: widget.api,
+                      isPrimary: false,
+                      width: utils.AffogatoConstants.primaryBarClosedWidth,
+                      height: utils.AffogatoConstants.primaryBarClosedWidth,
+                      onTap: () {
+                        menuController.show(
+                          context: context,
+                          contextMenuBuilder: (context) {
+                            return AdaptiveTextSelectionToolbar.buttonItems(
+                              anchors: const TextSelectionToolbarAnchors(
+                                primaryAnchor: Offset(
+                                  utils.AffogatoConstants.primaryBarClosedWidth,
+                                  utils.AffogatoConstants
+                                              .primaryBarClosedWidth /
+                                          2 -
+                                      10,
+                                ),
+                              ),
+                              buttonItems: <ContextMenuButtonItem>[
+                                ContextMenuButtonItem(
+                                  onPressed: () {
+                                    ContextMenuController.removeAny();
+                                    final String newPaneId = utils.generateId();
+                                    if (widget.api.workspace.workspaceConfigs
+                                        .panesLayout is VerticalPaneList) {
+                                      widget.api.window.panes.addPaneBottom(
+                                        anchorCellId: (widget
+                                                    .api
+                                                    .workspace
+                                                    .workspaceConfigs
+                                                    .panesLayout
+                                                as VerticalPaneList)
+                                            .value
+                                            .last
+                                            .id,
+                                        anchorPaneId: (widget
+                                                    .api
+                                                    .workspace
+                                                    .workspaceConfigs
+                                                    .panesLayout
+                                                as VerticalPaneList)
+                                            .value
+                                            .whereType<SinglePaneList>()
+                                            .first
+                                            .paneId,
+                                        newPaneId: newPaneId,
+                                      );
+                                    }
+                                    setState(() {});
+                                  },
+                                  label: 'Add Terminal',
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Center(
+                          child: Icon(
+                            Icons.menu,
+                            size: 28,
+                            color: widget
+                                .api
+                                .workspace
+                                .workspaceConfigs
+                                .themeBundle
+                                .editorTheme
+                                .buttonSecondaryForeground,
+                          ),
+                        ),
+                      ),
+                    ),
                     AffogatoButton(
                       api: widget.api,
                       isPrimary: false,
