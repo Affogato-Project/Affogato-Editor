@@ -104,13 +104,13 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
         paneIdA,
         id: cellIdA,
         width: axis == Axis.horizontal ? (width - 1) / 2 : width,
-        height: axis == Axis.horizontal ? height : (height - 1) / 2,
+        height: axis == Axis.horizontal ? height : (height - 2) / 2,
       ),
       SinglePaneList(
         paneIdB,
         id: cellIdB,
         width: axis == Axis.horizontal ? (width - 1) / 2 : width,
-        height: axis == Axis.horizontal ? height : (height - 1) / 2,
+        height: axis == Axis.horizontal ? height : (height - 2) / 2,
       )
     ];
   }

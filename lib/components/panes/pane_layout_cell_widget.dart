@@ -96,7 +96,6 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
                             .editorTheme.focusBorder ??
                         Colors.red,
                   ),
-                  childWhenDragging: const SizedBox(),
                   child: Container(
                     width: 1,
                     height: cellState.height,
@@ -139,10 +138,9 @@ class PaneLayoutCellWidgetState extends State<PaneLayoutCellWidget>
                     height: 2,
                     width: cellState.width,
                     color: widget.api.workspace.workspaceConfigs.themeBundle
-                            .editorTheme.panelBorder ??
+                            .editorTheme.focusBorder ??
                         Colors.red,
                   ),
-                  childWhenDragging: const SizedBox(),
                   child: Container(
                     height: 1,
                     width: cellState.width,
