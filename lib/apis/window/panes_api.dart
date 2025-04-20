@@ -219,11 +219,11 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
               );
       } else {
         final double newWidth = axis == Axis.horizontal
-            ? parentOfAnchor.width / (parentOfAnchor.value.length + 1)
+            ? (anchorCell.width - 1) / 2
             : anchorCell.width;
         final double newHeight = axis == Axis.horizontal
             ? anchorCell.height
-            : parentOfAnchor.height / (parentOfAnchor.value.length + 1);
+            : (anchorCell.height - 1) / 2;
 
         parentOfAnchor.value.insert(
           insertPrev ? index : index + 1,
@@ -233,16 +233,14 @@ class AffogatoPanesAPI extends AffogatoAPIComponent
             height: newHeight,
           ),
         );
-        for (int i = 0; i < parentOfAnchor.value.length; i++) {
-          if (i != index) {
-            axis == Axis.horizontal
-                ? parentOfAnchor.value[i].width = newWidth
-                : parentOfAnchor.value[i].height = newHeight;
-          }
+        if (insertPrev) {
+          axis == Axis.horizontal
+              ? parentOfAnchor.value[index - 1].width = newWidth
+              : parentOfAnchor.value[index - 1].height = newHeight;
         }
+        AffogatoEvents.windowPaneCellRequestReloadEventsController
+            .add(WindowPaneCellRequestReloadEvent(parentOfAnchor.id));
       }
-      AffogatoEvents.windowPaneCellRequestReloadEventsController
-          .add(WindowPaneCellRequestReloadEvent(parentOfAnchor.id));
     }
   }
 
